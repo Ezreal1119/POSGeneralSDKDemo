@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:id="@+id/tvIntro"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:textSize="25dp"
+        android:text="Others Demo - Patrick"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:layout_margin="7dp"
+        android:background="@drawable/border"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnGetDeviceInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Get Device Info"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnInstallManager"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Install Manager"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnKioskRelated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Kiosk Related"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnWifi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="WiFi"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnSwitches"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Switches"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnFactoryMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Factory Menu"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnLoadGMS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Load GMS"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnDebuglogger"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Debuglogger"
+                    android:textSize="15sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnUploadLog"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Upload Log"
+                    android:textSize="15sp"
+                    android:layout_margin="1dp"
+
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnShutDown"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Shut Down"
+                    android:textSize="15sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnReboot"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Reboot"
+                    android:textSize="15sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnReset"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Reset"
+                    android:textSize="15sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+
+    </ScrollView>
+
+
+</LinearLayout>

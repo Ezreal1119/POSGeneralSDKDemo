@@ -2,15 +2,84 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <queries>
+        <package android:name="com.google.android.gms" />
+        <package android:name="com.google.android.gsf" />
+        <package android:name="com.android.chrome" />
+        <package android:name="com.android.vending" />
+        <package android:name="com.urovo.uhome" />
+        <package android:name="com.urovo.appmarket" />
+        <package android:name="com.urovo.utms" />
+        <package android:name="com.urovo.utms.appmarket" />
+    </queries>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/shrug_jinx"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.POSGeneralSDKDemo">
+        <activity
+            android:name=".iccard.Sle4442Activity"
+            android:exported="false" />
+        <activity
+            android:name=".others.WifiActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ApiTestActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NewSerialPortActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EmvActivity"
+            android:exported="false" />
+        <activity
+            android:name=".others.SwitchesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".others.KioskRelatedActivity"
+            android:exported="false" />
+        <activity
+            android:name=".others.DeviceInfoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".others.InstallManager"
+            android:exported="false" />
+        <activity
+            android:name=".OthersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ICCardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MagCardReaderActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CameraScanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PrinterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PinpadActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LedActivity"
+            android:exported="false" />
+        <activity
+            android:name=".BeeperActivity"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

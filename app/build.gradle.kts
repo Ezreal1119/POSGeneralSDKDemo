@@ -45,4 +45,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation(files("libs/urovoSdkLibs_New_v1.0.23_release.aar"))
+    implementation("com.google.zxing:core:3.5.3") // For BarcodeFormat
+    implementation("com.squareup.okhttp3:okhttp:4.12.0") // For upload log
 }

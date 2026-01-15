@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:id="@+id/tvIntro"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:textSize="25dp"
+        android:text="Kiosk Demo - Patrick"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:layout_margin="5dp"
+        android:background="@drawable/border"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/border"
+        android:layout_margin="5dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="3dp">
+
+                <Button
+                    android:id="@+id/btnEnableHome"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Enable Home"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnDisenableHome"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Disenable Home"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="3dp">
+
+                <Button
+                    android:id="@+id/btnEnableRecent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Enable Recent"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnDisenableRecent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Disenable Recent"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="3dp">
+
+                <Button
+                    android:id="@+id/btnEnableStatusBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Enable StatusBar"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnDisenableStatusBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Disenable StatusBar"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="3dp">
+
+                <Button
+                    android:id="@+id/btnSetKiosk"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set Kiosk"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnCancelKiosk"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Cancel Kiosk"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnSetKioskPwd123456"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Set Kiosk Password 123456"
+                android:textSize="15sp"
+                android:layout_marginStart="3dp"
+                android:padding="0dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="3dp">
+
+                <Button
+                    android:id="@+id/btnSetAutoStart"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set AutoStart"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnCancelAutoStart"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Cancel AutoStart"
+                    android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnSetForceLockScreen"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Set Force Lock Screen"
+                android:textSize="15sp"
+                android:layout_marginStart="3dp"
+                android:padding="0dp"/>
+
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>
