@@ -29,14 +29,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Counts: "
+            android:text="Duration(ms): "
             android:gravity="center"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_margin="5dp"/>
 
         <Spinner
-            android:id="@+id/spCount"
+            android:id="@+id/spDuration"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -54,21 +54,23 @@
 
         <TextView
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="Duration(ms): "
+            android:text="Counts: "
             android:gravity="center"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_margin="5dp"/>
 
-        <Spinner
-            android:id="@+id/spDuration"
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderBeeperCount"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="5dp"
-            android:background="#CCCCCC"/>
+            android:layout_weight="3"
+            android:valueFrom="1"
+            android:valueTo="10"
+            android:value="1"
+            android:stepSize="1"/>
 
     </LinearLayout>
 
@@ -85,7 +87,6 @@
                 android:id="@+id/btnStartBeeper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
                 android:text="Start Beeper"
                 android:textSize="20sp"
                 android:padding="0dp"/>
@@ -94,7 +95,6 @@
                 android:id="@+id/btnStopBeeper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
                 android:text="Stop Beeper"
                 android:textSize="20sp"
                 android:padding="0dp"/>

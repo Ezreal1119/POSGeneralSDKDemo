@@ -58,4 +58,7 @@ object PinpadUtil {
             src1[i] = (src1[i].toInt() xor src2[i].toInt()).toByte()
         }
     }
+
+    fun ByteArray.toHexString(): String =
+        joinToString("") { "%02X".format(it) }
 }

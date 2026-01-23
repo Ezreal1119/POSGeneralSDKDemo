@@ -33,6 +33,15 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/INDEX.LIST",
+                "META-INF/io.netty.versions.properties"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -49,4 +58,6 @@ dependencies {
     implementation(files("libs/urovoSdkLibs_New_v1.0.23_release.aar"))
     implementation("com.google.zxing:core:3.5.3") // For BarcodeFormat
     implementation("com.squareup.okhttp3:okhttp:4.12.0") // For upload log
+    implementation("androidx.fragment:fragment-ktx:1.6.2") // sharedViewModel for EMV
+    implementation("com.hivemq:hivemq-mqtt-client:1.3.12") // For MQTT online Printer
 }

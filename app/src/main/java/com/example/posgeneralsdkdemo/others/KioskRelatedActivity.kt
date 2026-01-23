@@ -5,13 +5,9 @@ import android.content.ComponentName
 import android.device.DeviceManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.posgeneralsdkdemo.R
 import androidx.core.content.edit
 
@@ -21,7 +17,7 @@ private const val KEY_HOME_ENABLED = "home_enabled"
 private const val KEY_RECENT_ENABLED = "recent_enabled"
 private const val STATUS_BAR_ENABLED = "status_bar_enabled"
 private const val KIOSK_PASSWORD = "123456"
-private const val PACKAGE_COMPONENT = "com.example.posgeneralsdkdemo/com.example.posgeneralsdkdemo.MainActivity"
+const val PACKAGE_COMPONENT_MAIN = "com.example.posgeneralsdkdemo/com.example.posgeneralsdkdemo.MainActivity"
 
 class KioskRelatedActivity : AppCompatActivity() {
 
@@ -209,7 +205,7 @@ class KioskRelatedActivity : AppCompatActivity() {
 
     private fun onSetAutoStartButtonClicked() {
         runCatching {
-            DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString(PACKAGE_COMPONENT), 1)
+            DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN), 1)
         }.onSuccess {
             Toast.makeText(this, "Set AutoStart successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
@@ -220,7 +216,7 @@ class KioskRelatedActivity : AppCompatActivity() {
 
     private fun onCancelAutoStartButtonClicked() {
         runCatching {
-            DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString(PACKAGE_COMPONENT), 0)
+            DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN), 0)
         }.onSuccess {
             Toast.makeText(this, "Cancel AutoStart successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {

@@ -18,10 +18,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.utils.DataUtil
 import com.example.posgeneralsdkdemo.utils.DebugUtil
 import com.example.posgeneralsdkdemo.utils.PinpadUtil
+import com.example.posgeneralsdkdemo.utils.PinpadUtil.toHexString
 import com.urovo.sdk.pinpad.PinPadProviderImpl
+import com.urovo.sdk.pinpad.listener.OfflinePinInputListener
 import com.urovo.sdk.pinpad.listener.PinInputListener
 import com.urovo.sdk.pinpad.utils.Constant
 import com.urovo.sdk.utils.BytesUtil
+import kotlin.text.Charsets.UTF_8
 
 /**
  * Author: Patrick
@@ -32,7 +35,8 @@ import com.urovo.sdk.utils.BytesUtil
  */
 
 private const val TAG = "Pinpad_Patrick"
-private const val INDEX_NINETY_NINE = 99
+private const val INDEX_NINETY_NINE = 99 // MK/SK
+private const val INDEX_NINE = 9// RSA
 private const val TEK = "00000000000000000000000000000000" // 16 Bytes
 private const val TEK_KCV = "8CA64DE9C1B123A7" // 8 Bytes
 
@@ -68,12 +72,15 @@ private const val IPEK = "6AC292FAA1315B4D858AB3A3D7D5933A"
 private const val PAN = "6217003810042210743"
 private const val PAD_TITLE = "Patrick's Pin Pad"
 private const val PAD_MESSAGE = "Please enter the PIN :)"
+private const val LEFT = "LEFT"
+private const val RIGHT = "RIGHT"
+private const val CENTER = "CENTER"
 private const val SUPPORT_PIN_LENGTH = "4,6,12"
 private const val TIMEOUT_MS = 30 * 1000L
 
 class PinpadActivity : AppCompatActivity() {
     private val etKeySlot by lazy { findViewById<EditText>(R.id.etKeySlot) }
-    private val btnIfKeysExist by lazy { findViewById<Button>(R.id.btnIfKeysExist) }
+    private val btnIsKeysExist by lazy { findViewById<Button>(R.id.btnIsKeysExist) }
     private val btnDeleteKeys by lazy { findViewById<Button>(R.id.btnDeleteKeys) }
     private val btnDeleteAllKeys by lazy { findViewById<Button>(R.id.btnDeleteAllKeys) }
     private val btnLoadTEK by lazy { findViewById<Button>(R.id.btnLoadTEK) }
@@ -93,18 +100,23 @@ class PinpadActivity : AppCompatActivity() {
     private val btnEMVDec_Dukpt by lazy { findViewById<Button>(R.id.btnEMVDec_Dukpt) }
     private val btnPinBlockDukpt by lazy { findViewById<Button>(R.id.btnPinBlockDukpt) }
     private val btnPinBlockDukptCustom by lazy { findViewById<Button>(R.id.btnPinBlockDukptCustom) }
+    private val btnGenerateRsa by lazy { findViewById<Button>(R.id.btnGenerateRsa)}
+    private val btnReadRsaPublicKey by lazy { findViewById<Button>(R.id.btnReadRsaPublicKey)}
+    private val btnRsaEnc by lazy { findViewById<Button>(R.id.btnRsaEnc)}
+    private val btnRsaDec by lazy { findViewById<Button>(R.id.btnRsaDec)}
     private val btnClearAllKeys by lazy { findViewById<Button>(R.id.btnClearAllKeys) }
     private val pbWaiting by lazy { findViewById<ProgressBar>(R.id.pbWaiting) }
     private val tvIntro by lazy { findViewById<TextView>(R.id.tvIntro) }
     private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
 
     private val mPinpadManager = PinPadProviderImpl.getInstance()
+    private var encryptedDataCache: ByteArray? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pinpad)
 
-        btnIfKeysExist.setOnClickListener { onIfKeysExistButtonClicked() }
+        btnIsKeysExist.setOnClickListener { onIsKeysExistButtonClicked() }
         btnDeleteKeys.setOnClickListener { onDeleteKeysButtonClicked() }
         btnDeleteAllKeys.setOnClickListener { onDeleteAllKeysButtonClicked() }
         btnLoadTEK.setOnClickListener { onLoadTEKButtonClicked() }
@@ -124,12 +136,22 @@ class PinpadActivity : AppCompatActivity() {
         btnEMVDec_Dukpt.setOnClickListener { onEMVDecDukptButtonClicked() }
         btnPinBlockDukpt.setOnClickListener { onPinBlockDukptButtonClicked() }
         btnPinBlockDukptCustom.setOnClickListener { onPinBlockDukptCustomButtonClicked() }
+        btnGenerateRsa.setOnClickListener { onGenerateRsaButtonClicked() }
+        btnReadRsaPublicKey.setOnClickListener { onReadRsaPublicKeyButtonClicked() }
+        btnRsaEnc.setOnClickListener { onRsaEncButtonClicked() }
+        btnRsaDec.setOnClickListener { onRsaDecButtonClicked() }
         btnClearAllKeys.setOnClickListener { onClearAllKeysButtonClicked() }
     }
 
+    override fun onStart() {
+        super.onStart()
+        encryptedDataCache = null
+    }
+
+
     // ----------------------------------------- //
 
-    private fun onIfKeysExistButtonClicked() {
+    private fun onIsKeysExistButtonClicked() {
         // Check if a keySlot has these four types of keys or not. (Each slot can have this four types of keys, but only of its kind)
         val keySlot = etKeySlot.text.toString().trim().toIntOrNull()
         var checkMK= false
@@ -195,6 +217,19 @@ class PinpadActivity : AppCompatActivity() {
             .setPositiveButton("Delete") { dialog, which ->
                 pbWaiting.visibility = View.VISIBLE
                 tvIntro.visibility = View.INVISIBLE
+                tvResult.text = "Deleting all MK/SK Keys..."
+                btnIsKeysExist.isEnabled = false
+                btnDeleteKeys.isEnabled = false
+                btnDeleteAllKeys.isEnabled = false
+                btnLoadTEK.isEnabled = false
+                btnLoadMK.isEnabled = false
+                btnLoadEMK.isEnabled = false
+                btnLoadWK.isEnabled = false
+                btnCalcMac.isEnabled = false
+                btnCalcHash.isEnabled = false
+                btnEncDecData.isEnabled = false
+                btnPinBlockWKOnline.isEnabled = false
+                btnPinBlockWKOffline.isEnabled = false
                 Thread {
                     runCatching {
                         for (i in 1..255) {
@@ -217,7 +252,6 @@ class PinpadActivity : AppCompatActivity() {
                                 append(" - PIN_KEY from KeySlot=[1, 255]\n")
                                 append(" - MAC_KEY from KeySlot=[1, 255]")
                             }
-
                         }
                     }.onFailure {
                         runOnUiThread {
@@ -228,6 +262,18 @@ class PinpadActivity : AppCompatActivity() {
                     runOnUiThread {
                         pbWaiting.visibility = View.INVISIBLE
                         tvIntro.visibility = View.VISIBLE
+                        btnIsKeysExist.isEnabled = true
+                        btnDeleteKeys.isEnabled = true
+                        btnDeleteAllKeys.isEnabled = true
+                        btnLoadTEK.isEnabled = true
+                        btnLoadMK.isEnabled = true
+                        btnLoadEMK.isEnabled = true
+                        btnLoadWK.isEnabled = true
+                        btnCalcMac.isEnabled = true
+                        btnCalcHash.isEnabled = true
+                        btnEncDecData.isEnabled = true
+                        btnPinBlockWKOnline.isEnabled = true
+                        btnPinBlockWKOffline.isEnabled = true
                     }
                 }.start()
             }
@@ -512,17 +558,20 @@ class PinpadActivity : AppCompatActivity() {
     private fun onPinBlockWKOnlineButtonClicked() {
         // This is Absolutely Online PIN. Thus, PINBlock is a must, PIN_KEY is a must.
         val pinpadBundle = Bundle().apply {
-            putString(PinParams.CARD_NO.value, PAN) // The field is a Must for generating PINBlock
-            putString(PinParams.TITLE.value, PAD_TITLE) // "" by default
-            putString(PinParams.MESSAGE.value, PAD_MESSAGE) // "" by default
-            putBoolean(PinParams.ONLINE_PIN.value, true) // MK/SK PIN Pad for Online PIN
-            putBoolean(PinParams.SOUND.value, false) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
-            putBoolean(PinParams.BYPASS.value, false) // Support 0 PIN or not. false by default.
-            putString(PinParams.SUPPORT_PIN_LEN.value, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
-            putBoolean(PinParams.FULL_SCREEN.value, true) // true by default. Won't have Cancel button when half screen
-            putLong(PinParams.TIMEOUT_MS.value, TIMEOUT_MS) // Time out since opening the Pad. 0 by default, must set!
-            putBoolean(PinParams.RANDOM_KEYBOARD.value, false) // true by default.
-            putInt(PinParams.PIN_KEY_NO.value, INDEX_NINETY_NINE) // The keySlot of the PIN_KEY to use for encryption. Must Set since onlinePin must be encrypted!
+            putString(PinParams.CARD_NO.tag, PAN) // The field is a Must for generating PINBlock
+            putString(PinParams.TITLE.tag, PAD_TITLE) // "" by default
+            putString(PinParams.MESSAGE.tag, PAD_MESSAGE) // "" by default
+            putString(PinParams.INFO_LOCATION.tag, CENTER) // CENTER by default. Can change to LEFT or RIGHT
+            putBoolean(PinParams.ONLINE_PIN.tag, true) // MK/SK PIN Pad for Online PIN
+            putBoolean(PinParams.SOUND.tag, false) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
+            putBoolean(PinParams.BYPASS.tag, false) // Support 0 PIN or not. false by default.
+            putString(PinParams.SUPPORT_PIN_LEN.tag, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
+            putBoolean(PinParams.FULL_SCREEN.tag, true) // true by default. Won't have Cancel button when half screen
+            putLong(PinParams.TIMEOUT_MS.tag, TIMEOUT_MS) // Time out since opening the Pad. 0 by default, must set!
+            putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
+            putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.tag, false) // false by default. The keypad moving up & down for security reason
+            putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.tag, true) // false by default.
+            putInt(PinParams.PIN_KEY_NO.tag, INDEX_NINETY_NINE) // The keySlot of the PIN_KEY to use for encryption. Must Set since onlinePin must be encrypted!
         }
         runCatching {
             mPinpadManager.getPinBlockEx(pinpadBundle, mPinInputListener)
@@ -534,56 +583,22 @@ class PinpadActivity : AppCompatActivity() {
 
 
     private fun onPinBlockWKOfflineButtonClicked() {
-        Toast.makeText(this, "ERROR! Not yet implemented!", Toast.LENGTH_SHORT).show()
-//        val pinpadBundle = Bundle().apply {
-//            putString(PinParams.TITLE.value, PAD_TITLE)
-//            putString(PinParams.MESSAGE.value, PAD_MESSAGE)
-//            putBoolean(PinParams.SOUND.value, false)
-//            putBoolean(PinParams.BYPASS.value, false)
-//            putString(PinParams.SUPPORT_PIN_LEN.value, SUPPORT_PIN_LENGTH)
-//            putBoolean(PinParams.FULL_SCREEN.value, true)
-//            putLong(PinParams.TIMEOUT_MS.value, TIMEOUT_MS)
-//            putBoolean(PinParams.RANDOM_KEYBOARD.value, false)
-//
-//            putString("Module", "C6A13B3784C6F98D8A5D8E0C88B8F2C7E0D7F5C0F3A7B69C4E5C9A3B1F9D8C1BA5D8E4F2C7A9B1D3E6F8C0A7D9B5E3F14A7C8D9E0F1B2C3D4E5F60718293A4B5")
-//            putInt("ModeleLe", "C6A13B3784C6F98D8A5D8E0C88B8F2C7E0D7F5C0F3A7B69C4E5C9A3B1F9D8C1BA5D8E4F2C7A9B1D3E6F8C0A7D9B5E3F14A7C8D9E0F1B2C3D4E5F60718293A4B5".length)
-//            putString("Exponent", "010001")
-//            putInt("ExponentLen", 6)
-//            putInt(PinParams.INPUT_TYPE.value, 4)
-//        }
-//        mPinpadManager.getOfflinePinBlock(pinpadBundle, object: OfflinePinInputListener {
-//            override fun onInput(pinLen: Int, keyValue: Int) {
-//                Log.e(TAG, "onInput: {pinLen=$pinLen, keyValue=$keyValue")
-//            }
-//
-//            override fun onConfirm(resultCode: Int) {
-//                tvResult.text = "onConfirm - Result Code: $resultCode"
-//            }
-//
-//            override fun onCancel(errorCode: Int) {
-//                Log.e(TAG, "onCancel: {errorCode=$errorCode}")
-//            }
-//
-//            override fun onTimeOut(errorCode: Int) {
-//                Log.e(TAG, "onTimeOut: {errorCode=$errorCode}")
-//            }
-//
-//            override fun onError(errorCode: Int) {
-//                Log.e(TAG, "onError: {errorCode=$errorCode}")
-//            }
-//
-//            override fun onRetry(pinEntryType: Int, retryTimes: Int) {
-//                Log.e(TAG, "onRetry: {pinEntryType=$pinEntryType, retryTimes=$retryTimes}")
-//            }
-//        })
+        Toast.makeText(this, "Test this in EMV Module", Toast.LENGTH_SHORT).show()
     }
 
     private fun onDownloadDukptButtonClicked() {
         // Download the Dukpt_01(00 is for IPEK) into device (Four types together)
         pbWaiting.visibility = View.VISIBLE
         tvIntro.visibility = View.INVISIBLE
-        tvResult.text = ""
+        tvResult.text = "Downloading Dukpt..."
         btnDownloadDukpt.isEnabled = false
+        btnDukptGetKSN.isEnabled = false
+        btnDeleteDukpt.isEnabled = false
+        btnCalcMacDukpt.isEnabled = false
+        btnEMVEnc_Dukpt.isEnabled = false
+        btnEMVDec_Dukpt.isEnabled = false
+        btnPinBlockDukpt.isEnabled = false
+        btnPinBlockDukptCustom.isEnabled = false
         Thread {
             runCatching {
                 val result = buildString {
@@ -614,15 +629,23 @@ class PinpadActivity : AppCompatActivity() {
                 return@runCatching result
             }.onSuccess { result ->
                 runOnUiThread {
-                    pbWaiting.visibility = View.INVISIBLE
-                    tvIntro.visibility = View.VISIBLE
                     tvResult.text = result
-                    btnDownloadDukpt.isEnabled = true
                 }
             }.onFailure {
                 runOnUiThread { tvResult.text = it.message }
-                tvResult.text = it.message
                 it.printStackTrace()
+            }
+            runOnUiThread {
+                pbWaiting.visibility = View.INVISIBLE
+                tvIntro.visibility = View.VISIBLE
+                btnDownloadDukpt.isEnabled = true
+                btnDukptGetKSN.isEnabled = true
+                btnDeleteDukpt.isEnabled = true
+                btnCalcMacDukpt.isEnabled = true
+                btnEMVEnc_Dukpt.isEnabled = true
+                btnEMVDec_Dukpt.isEnabled = true
+                btnPinBlockDukpt.isEnabled = true
+                btnPinBlockDukptCustom.isEnabled = true
             }
         }.start()
 
@@ -781,17 +804,20 @@ class PinpadActivity : AppCompatActivity() {
     private fun onPinBlockDukptButtonClicked() {
         // This is Absolutely Online PIN. Thus,PINBlock is a must, DUKPT is a must.
         val pinpadBundle = Bundle().apply {
-            putString(PinParams.CARD_NO.value, PAN) // The field is a Must for generating PINBlock
-            putString(PinParams.TITLE.value, PAD_TITLE) // "" by default
-            putString(PinParams.MESSAGE.value, PAD_MESSAGE) // "" by default
-            putBoolean(PinParams.ONLINE_PIN.value, true) // Dukpt PIN Pad for Online PIN
-            putBoolean(PinParams.SOUND.value, false) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
-            putBoolean(PinParams.BYPASS.value, false) // Support 0 PIN or not. false by default.
-            putString(PinParams.SUPPORT_PIN_LEN.value, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
-            putBoolean(PinParams.FULL_SCREEN.value, true) // true by default. Won't have Cancel button when half screen
-            putLong(PinParams.TIMEOUT_MS.value, TIMEOUT_MS) // Time out since opening the Pad. 0 by default, must set!
-            putBoolean(PinParams.RANDOM_KEYBOARD.value, false) // true by default.
-            putInt(PinParams.PIN_KEY_NO.value, Dukpt.PIN.index) // Must set, will call onError otherwise
+            putString(PinParams.CARD_NO.tag, PAN) // The field is a Must for generating PINBlock
+            putString(PinParams.TITLE.tag, PAD_TITLE) // "" by default
+            putString(PinParams.MESSAGE.tag, PAD_MESSAGE) // "" by default
+            putString(PinParams.INFO_LOCATION.tag, CENTER) // CENTER by default. Can change to LEFT or RIGHT
+            putBoolean(PinParams.ONLINE_PIN.tag, true) // Dukpt PIN Pad for Online PIN
+            putBoolean(PinParams.SOUND.tag, false) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
+            putBoolean(PinParams.BYPASS.tag, false) // Support 0 PIN or not. false by default.
+            putString(PinParams.SUPPORT_PIN_LEN.tag, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
+            putBoolean(PinParams.FULL_SCREEN.tag, true) // true by default. Won't have Cancel button when half screen
+            putLong(PinParams.TIMEOUT_MS.tag, TIMEOUT_MS) // Time out since opening the Pad. 0 by default, must set!
+            putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
+            putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.tag, false) // false by default. The keypad moving up & down for security reason
+            putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.tag, true) // false by default.
+            putInt(PinParams.PIN_KEY_NO.tag, Dukpt.PIN.index) // Must set, will call onError otherwise
         }
         runCatching {
             mPinpadManager.GetDukptPinBlock(pinpadBundle, mPinInputListener)
@@ -814,38 +840,143 @@ class PinpadActivity : AppCompatActivity() {
         val textColor = intArrayOf(Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE)
 
         val pinpadBundle = Bundle().apply {
-            putString(PinParams.CARD_NO.value, PAN) // The field is a Must for generating PINBlock
-            putString(PinParams.TITLE.value, PAD_TITLE) // "" by default
-            putString(PinParams.MESSAGE.value, PAD_MESSAGE) // "" by default
-            putBoolean(PinParams.ONLINE_PIN.value, true) // Custom Dukpt PinPad for Online PIN
-            putBoolean(PinParams.SOUND.value, true) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
-            putBoolean(PinParams.BYPASS.value, false) // Support 0 PIN or not. false by default.
-            putString(PinParams.SUPPORT_PIN_LEN.value, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
-            putBoolean(PinParams.FULL_SCREEN.value, true) // true by default. Won't have Cancel button when half screen
-            putLong(PinParams.TIMEOUT_MS.value, TIMEOUT_MS) // Time out since opening the Pad. 0 by default, must set!
-            putBoolean(PinParams.RANDOM_KEYBOARD.value, false) // true by default.
-            putInt(PinParams.PIN_KEY_NO.value, Dukpt.PIN.index) // The keySlot of the PIN_KEY to use for encryption. Must Set since onlinePin must be encrypted!
+            putString(PinParams.CARD_NO.tag, PAN) // The field is a Must for generating PINBlock
+            putString(PinParams.TITLE.tag, PAD_TITLE) // "" by default
+            putString(PinParams.MESSAGE.tag, PAD_MESSAGE) // "" by default
+            putString(PinParams.INFO_LOCATION.tag, CENTER) // CENTER by default. Can change to LEFT or RIGHT
+            putBoolean(PinParams.ONLINE_PIN.tag, true) // Custom Dukpt PinPad for Online PIN
+            putBoolean(PinParams.SOUND.tag, true) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
+            putBoolean(PinParams.BYPASS.tag, false) // Support 0 PIN or not. false by default.
+            putString(PinParams.SUPPORT_PIN_LEN.tag, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
+            putBoolean(PinParams.FULL_SCREEN.tag, true) // true by default. Won't have Cancel button when half screen
+            putLong(PinParams.TIMEOUT_MS.tag, TIMEOUT_MS) // Time out since opening the Pad. 0 by default, must set!
+            putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
+            putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.tag, false)
+            putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.tag, false) // false by default. Only by this, Custom UI can take place
+            putInt(PinParams.PIN_KEY_NO.tag, Dukpt.PIN.index) // The keySlot of the PIN_KEY to use for encryption. Must Set since onlinePin must be encrypted!
 
-            putIntArray("backgroundColor", backgroundColor)
-            putIntArray("textColor", textColor)
-            putBoolean("inputBySP", false)
-            putString("infoLocation", "RIGHT")
-            putBoolean("randomKeyboard", false)
-            putBoolean("randomKeyboardLocation", false)
-            putBoolean("customization", true)
-            putString("strJson", strJson)
-            putParcelable("cancelBitmap", cancelBitmap)
-            putParcelable("delBitmap", delBitmap)
-            putParcelable("okBitmap", okBitemap)
-            putParcelable("backspaceBitmap", backspaceBitmap)
-            putParcelable("viewBitmap", imageViewBitmap)
-            putParcelable("bodyBitmap", bodyBitmap)
+            putBoolean(PinParams.CUSTOMIZATION.tag, true)
+            putString(PinParams.STR_JSON.tag, strJson)
+            putIntArray(PinParams.BACKGROUND_COLOR.tag, backgroundColor)
+            putIntArray(PinParams.TEXT_COLOR.tag, textColor)
+            putParcelable(PinParams.CANCEL_BITMAP.tag, cancelBitmap)
+            putParcelable(PinParams.DELETE_BITMAP.tag, delBitmap)
+            putParcelable(PinParams.OK_BITMAP.tag, okBitemap)
+            putParcelable(PinParams.BACKSPACE_BITMAP.tag, backspaceBitmap)
+            putParcelable(PinParams.VIEW_BITMAP.tag, imageViewBitmap)
+            putParcelable(PinParams.BODY_BITMAP.tag, bodyBitmap)
         }
-
         runCatching {
             mPinpadManager.GetDukptPinBlock(pinpadBundle, mPinInputListener)
         }.onFailure {
             tvResult.text = it.message
+            it.printStackTrace()
+        }
+    }
+
+    private fun onGenerateRsaButtonClicked() {
+        pbWaiting.visibility = View.VISIBLE
+        tvIntro.visibility = View.INVISIBLE
+        tvResult.text = "Generating RSA Keypair @ RSA_Index_9..."
+        btnGenerateRsa.isEnabled = false
+        btnReadRsaPublicKey.isEnabled = false
+        btnRsaEnc.isEnabled = false
+        btnRsaDec.isEnabled = false
+        Thread {
+            runCatching {
+                val ret = mPinpadManager.generateRSAKey(INDEX_NINE, 2048, "010001")
+                if (ret != 0x00) throw Exception("Generated RSA Keypair failed")
+            }.onSuccess {
+                runOnUiThread {
+                    tvResult.text = buildString {
+                        append("Generated RSA Keypair at slot_9 [0, 9] successfully!\n")
+                        append("KeySize: 2048; Exponent: 010001")
+                    }
+                }
+            }.onFailure {
+                runOnUiThread { tvResult.text = it.message }
+                it.printStackTrace()
+            }
+            runOnUiThread {
+                pbWaiting.visibility = View.INVISIBLE
+                tvIntro.visibility = View.VISIBLE
+                btnGenerateRsa.isEnabled = true
+                btnReadRsaPublicKey.isEnabled = true
+                btnRsaEnc.isEnabled = true
+                btnRsaDec.isEnabled = true
+            }
+        }.start()
+    }
+
+    private fun onReadRsaPublicKeyButtonClicked() {
+        runCatching {
+            val rsaPublicKey = mPinpadManager.readRSAPublicKey(INDEX_NINE) ?:
+            throw Exception("Read RSA Keypair failed")
+            return@runCatching rsaPublicKey
+        }.onSuccess { rsaPublicKey ->
+            tvResult.text = buildString {
+                append("Exponent:\n")
+                append("${rsaPublicKey.publicExponent}\n\n")
+                append("Modulus:\n")
+                append("${rsaPublicKey.modulus}")
+            }
+        }.onFailure {
+            if (it.message?.contains("23") == true) {
+                tvResult.text = "No RSA key in slot_9"
+            } else {
+                tvResult.text = it.message
+            }
+            it.printStackTrace()
+        }
+    }
+
+    private fun onRsaEncButtonClicked() { // Public Key used for Encryption & Signature verification
+        val rawData = "Patrick Xu - 18807737955".toByteArray()
+        runCatching {
+            mPinpadManager.calculateWithRSAPublicKey(INDEX_NINE, rawData) ?: // No need to care about the padding
+            throw Exception("RSA Encryption failed")
+        }.onSuccess { encryptedData ->
+            tvResult.text = buildString {
+                append("Raw Data: \n")
+                append("${String(rawData, UTF_8)}\n\n") // Do this since it's MEANINGFUL for to display as Characters
+                append("Encrypted Data:\n")
+                append("${encryptedData.toHexString()}\n\n") // Do this since it's NOT meaningful for to display as Characters
+                append("(using Public Key, can also do Signature verification)")
+                encryptedDataCache = encryptedData
+            }
+        }.onFailure {
+            if (it.message?.contains("23") == true) {
+                tvResult.text = "No RSA key in slot_9"
+            } else {
+                tvResult.text = it.message
+            }
+            it.printStackTrace()
+        }
+    }
+
+    private fun onRsaDecButtonClicked() { // Private Key used for Decryption & Signing
+        val encryptedData = encryptedDataCache // Make sure the global variable is not changed in this method
+        if (encryptedData == null) {
+            Toast.makeText(this, "Please Encrypt first!", Toast.LENGTH_SHORT).show()
+            return
+        }
+        runCatching {
+            mPinpadManager.calculateWithRSAPrivateKey(INDEX_NINE, encryptedData) ?: // No need to care about the padding
+            throw Exception("RSA Decryption failed")
+        }.onSuccess { rawData ->
+            tvResult.text = buildString {
+                append("Encrypted Data: \n")
+                append("${encryptedData.toHexString()}\n\n") // Do this since it's NOT meaningful for to display as Characters
+                append("Decrypted Data: \n")
+                append("${String(rawData, UTF_8)}\n\n") // Do this since it's MEANINGFUL for to display as Characters
+                append("(using Private Key, can also do Signing)")
+            }
+        }.onFailure {
+            if (it.message?.contains("23") == true) {
+                tvResult.text = "No RSA key in slot_9"
+            } else {
+                tvResult.text = it.message
+            }
             it.printStackTrace()
         }
     }
@@ -958,6 +1089,33 @@ class PinpadActivity : AppCompatActivity() {
         }
     }
 
+    private val mOfflinePinInputListener = object : OfflinePinInputListener {
+        override fun onInput(pinLen: Int, key: Int) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onConfirm(resultCode: Int) {
+            TODO("Not yet implemented")
+        }
+
+
+        override fun onRetry(pinEntryType: Int, availableTimes: Int) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onCancel(errorCode: Int) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onTimeOut(errorCode: Int) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onError(errorCode: Int) {
+            TODO("Not yet implemented")
+        }
+    }
+
     // <---------------------Helper methods---------------------> //
 
     private fun getJson(fileName: String, context: Context): String {
@@ -982,20 +1140,7 @@ class PinpadActivity : AppCompatActivity() {
         return null
     }
 
-    /*
-        private Bitmap getImageFromAssetsFile(Context context, String fileName) {
-        Bitmap image = null;
-        AssetManager am = context.getResources().getAssets();
-        try {
-            InputStream is = am.open(fileName);
-            image = BitmapFactory.decodeStream(is);
-            is.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return image;
-    }
-     */
+
 
 }
 
@@ -1006,17 +1151,43 @@ enum class Dukpt(val index: Int) {
     MAC(4)
 }
 
-enum class PinParams(val value: String) {
+enum class PinParams(val tag: String) {
     CARD_NO("cardNo"),
     TITLE("title"),
     MESSAGE("message"),
+    INFO_LOCATION("infoLocation"),
     SOUND("sound"),
     BYPASS("bypass"),
     SUPPORT_PIN_LEN("supportPinLen"),
     FULL_SCREEN("FullScreen"),
-    ONLINE_PIN("onlinePin"),
+    ONLINE_PIN("onlinePin"), // If online, then set to true. If offline, then set to false.
     TIMEOUT_MS("timeOutMS"),
-    PIN_KEY_NO("PINKeyNo"),
     RANDOM_KEYBOARD("randomKeyboard"),
-    INPUT_TYPE("inputType"),
+    RANDOM_KEYBOARD_LOCATION("randomKeyboardLocation"),
+    PIN_KEY_NO("PINKeyNo"),
+    INPUT_BY_SECURITY_PIN_PAD("inputBySP"), // IF true, means APP won't receive any KeyEvent at all, and Custom UI won't take effect.
+
+    // Offline PIN
+    INPUT_TYPE("inputType"), // 3: Plain; 4: Enciphered
+    CARD_SLOT("CardSlot"), // fixed to 0
+    MODULUS("Module"),
+    MODULUS_LEN("ModuleLen"),
+    EXPONENT("Exponent"),
+    EXPONENT_LEN("ExponentLen"),
+
+
+
+
+
+    // Custom Keypad
+    CUSTOMIZATION("customization"),
+    STR_JSON("strJson"),
+    BACKGROUND_COLOR("backgroundColor"),
+    TEXT_COLOR("textColor"),
+    CANCEL_BITMAP("cancelBitmap"),
+    DELETE_BITMAP("delBitmap"),
+    OK_BITMAP("okBitmap"),
+    BACKSPACE_BITMAP("backspaceBitmap"),
+    VIEW_BITMAP("viewBitmap"),
+    BODY_BITMAP("bodyBitmap")
 }

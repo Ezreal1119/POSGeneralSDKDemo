@@ -31,6 +31,9 @@ import com.urovo.sdk.utils.BytesUtil
 private const val TAG = "Patrick_ScannerActivity"
 private const val LEFT_SCAN_KEYCODE = 521
 private const val RIGHT_SCAN_KEYCODE = 520
+private val PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+private const val PERMISSION_REQ_SCAN = 1001
+
 class CameraScanActivity : AppCompatActivity() {
 
     private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
@@ -38,10 +41,8 @@ class CameraScanActivity : AppCompatActivity() {
     private val btnBackScan by lazy { findViewById<Button>(R.id.btnBackScan) }
 
     private val mCameraManager by lazy { InnerScannerImpl.getInstance(this) }
-    private val mScanManager = ScanManager()
+    private val mScanManager by lazy { ScanManager() }
 
-    private val PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
-    private val PERMISSION_REQ = 1001
 
     private val cameraParams = Bundle().apply {
         putString(Constant.Scankey.title, "Patrick's Title")
@@ -84,9 +85,23 @@ class CameraScanActivity : AppCompatActivity() {
         registerReceiver(receiver, filter)
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSION_REQ_SCAN) {
+            if (PermissionUtil.checkPermissions(this, PERMISSIONS)) {
+                Toast.makeText(this, "Camera permission granted. Please tap again to scan.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Camera permission denied.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun onFrontScanButtonClicked() {
-        if (!PermissionUtil.checkPermissions(this, PERMISSIONS)) {
-            PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ)
+        if (!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_SCAN)) {
             return
         }
         try {
@@ -122,8 +137,7 @@ class CameraScanActivity : AppCompatActivity() {
 
 
     private fun onBackScanButtonClicked() {
-        if (!PermissionUtil.checkPermissions(this, PERMISSIONS)) {
-            PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ)
+        if (!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_SCAN)) {
             return
         }
         try {

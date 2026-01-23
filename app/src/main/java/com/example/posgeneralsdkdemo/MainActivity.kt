@@ -2,16 +2,19 @@ package com.example.posgeneralsdkdemo
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
+import android.util.Log
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlin.getValue
 
 class MainActivity : AppCompatActivity() {
 
     private val btnEMV by lazy { findViewById<Button>(R.id.btnEMV) }
+    private val btnPinpad by lazy { findViewById<Button>(R.id.btnPinpad) }
     private val btnBeeper by lazy { findViewById<Button>(R.id.btnBeeper) }
     private val btnLed by lazy { findViewById<Button>(R.id.btnLed) }
-    private val btnPinpad by lazy { findViewById<Button>(R.id.btnPinpad) }
     private val btnPrinter by lazy { findViewById<Button>(R.id.btnPrinter) }
     private val btnNewSerialPort by lazy { findViewById<Button>(R.id.btnNewSerialPort) }
     private val btnCameraScan by lazy { findViewById<Button>(R.id.btnCameraScan) }
@@ -25,9 +28,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         btnEMV.setOnClickListener { startActivity(Intent(this, EmvActivity::class.java)) }
+        btnPinpad.setOnClickListener { startActivity(Intent(this, PinpadActivity::class.java)) }
         btnBeeper.setOnClickListener { startActivity(Intent(this, BeeperActivity::class.java)) }
         btnLed.setOnClickListener { startActivity(Intent(this, LedActivity::class.java)) }
-        btnPinpad.setOnClickListener { startActivity(Intent(this, PinpadActivity::class.java)) }
         btnPrinter.setOnClickListener { startActivity(Intent(this, PrinterActivity::class.java))}
         btnNewSerialPort.setOnClickListener { startActivity(Intent(this, NewSerialPortActivity::class.java)) }
         btnCameraScan.setOnClickListener { startActivity(Intent(this, CameraScanActivity::class.java)) }

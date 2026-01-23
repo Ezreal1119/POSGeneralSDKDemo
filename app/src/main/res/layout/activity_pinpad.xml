@@ -34,7 +34,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="4"
+        android:layout_weight="3"
         android:background="@drawable/border"
         android:layout_margin="5dp">
 
@@ -59,11 +59,11 @@
                     android:layout_margin="1dp" />
 
                 <Button
-                    android:id="@+id/btnIfKeysExist"
+                    android:id="@+id/btnIsKeysExist"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="IfKeysExist"
+                    android:text="IsKeysExist"
                     android:textSize="17sp"
                     android:layout_margin="1dp"
                     android:padding="0dp"/>
@@ -218,7 +218,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3"
+        android:layout_weight="2"
         android:background="@drawable/border"
         android:layout_margin="5dp">
 
@@ -333,18 +333,64 @@
 
     </ScrollView>
 
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnGenerateRsa"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="GenerateRSA_9"
+            android:textSize="10sp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/btnReadRsaPublicKey"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ReadRSAPK_9"
+            android:textSize="10sp"
+            android:layout_marginStart="3dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/btnRsaEnc"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="RsaEnc/Ver_9"
+            android:textSize="10sp"
+            android:layout_marginStart="3dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/btnRsaDec"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="RsaDec/Sign_9"
+            android:textSize="10sp"
+            android:layout_marginStart="3dp"
+            android:padding="0dp"/>
+    </LinearLayout>
+
     <Button
         android:id="@+id/btnClearAllKeys"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Clear All Keys!(MK/WK + DUKPTs)"
+        android:text="Clear All Keys!(MK/WK + DUKPTs + RSA)"
         android:textSize="18sp"
         android:padding="0dp"/>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_weight="3"
 
         android:background="@drawable/border">
 

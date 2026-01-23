@@ -4,6 +4,8 @@ import android.R.layout.simple_spinner_dropdown_item
 import android.R.layout.simple_spinner_item
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -24,23 +26,26 @@ import kotlin.random.Random
 //  -> READ RECORD APP_DATA()
 //  -> ODA(SDA/DDA) (if CDA, will be done during GAC-1)
 //  -> PR(Processing Restriction: check rules to set TVR, e.g. Card expired or not)
-//  -> TRM(Terminal Risk Management: Analyze Risk to set TVR, e.g. > Floor Limit or Frequent Transaction)
 //  -> CVM(Cardholder Verification Method): No_CVM/Signature; offlinePIN(plain/enciphered); (if onlinePIN, will be done during online transaction)
+//  -> TRM(Terminal Risk Management: Analyze Risk to set TVR, e.g. > Floor Limit or Frequent Transaction)
 //  -> TAA(Make Terminal's Final Decision according to rules(TAC/IAC) & results(TVR))
 //  -> GAC-1(TC/AAC/ARQC)
 //      -> if ARQC(Online Authorization): IS08583(ARQC&Other_PINBlock_MAC) [CDA & onlinePIN will also be done during this Stage]
 //      -> GAC-2(TC/AAC)
 private const val TAG = "Patrick_ICCardActivity"
+
 class ICCardActivity : AppCompatActivity() {
 
     private val mICCardReaderManager = InsertCardHandlerImpl.getInstance()
 
     private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
     private val etApdu by lazy { findViewById<EditText>(R.id.etApdu) }
+    private val btnStartSearch by lazy { findViewById<Button>(R.id.btnStartSearch) }
+    private val btnStopSearch by lazy { findViewById<Button>(R.id.btnStopSearch) }
     private val btnPowerOn by lazy { findViewById<Button>(R.id.btnPowerOn) }
     private val btnPowerOff by lazy { findViewById<Button>(R.id.btnPowerOff) }
-    private val btnCheckCardIn by lazy { findViewById<Button>(R.id.btnCheckCardIn) }
     private val btnSendApdu by lazy { findViewById<Button>(R.id.btnSendApdu) }
+    private val btnCheckCardIn by lazy { findViewById<Button>(R.id.btnCheckCardIn) }
     private val btnSle4442 by lazy { findViewById<Button>(R.id.btnSle4442) }
     private val spCardType by lazy { findViewById<Spinner>(R.id.spCardType) }
     private val spApdu by lazy { findViewById<Spinner>(R.id.spApdu) }
@@ -61,6 +66,8 @@ class ICCardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_iccard)
 
+        btnStartSearch.setOnClickListener { onStartSearchButtonClicked() }
+        btnStopSearch.setOnClickListener { onStopSearchButtonClicked() }
         btnPowerOn.setOnClickListener { onPowerOnButtonClicked() }
         btnPowerOff.setOnClickListener { onPowerOffButtonClicked() }
         btnCheckCardIn.setOnClickListener { onCheckCardInButtonClicked() }
@@ -75,6 +82,8 @@ class ICCardActivity : AppCompatActivity() {
         }
     }
 
+
+
     override fun onStart() {
         super.onStart()
         uiRefreshOnPowerOff()
@@ -86,6 +95,56 @@ class ICCardActivity : AppCompatActivity() {
             mICCardReaderManager.powerDown(CardType.ICCard.slot)
             selectAidDynamic = "-"
             gpoDynamic = "-"
+        }
+    }
+
+
+    private fun onStartSearchButtonClicked() {
+        btnStartSearch.isEnabled = false
+        btnPowerOn.isEnabled = false
+        btnStopSearch.isEnabled = true
+        Toast.makeText(this, "Please insert ICCard", Toast.LENGTH_SHORT).show()
+        startDetectOnce (object : CardDetectListener {
+            override fun onDetected() {
+                btnStopSearch.isEnabled = false
+                Toast.makeText(this@ICCardActivity, "Card detected", Toast.LENGTH_SHORT).show()
+                val atrBuffer = ByteArray(64)
+                val selectedCardType = spCardType.selectedItem as CardType
+                runCatching {
+                    val outputLen = mICCardReaderManager.powerUp(selectedCardType.slot, atrBuffer)
+                    if (outputLen <= 0) throw Exception("Power on failed")
+                    return@runCatching outputLen
+                }.onSuccess { outputLen ->
+                    uiRefreshOnPowerOn()
+                    val data = atrBuffer.copyOf(outputLen)
+                    tvResult.text = buildString {
+                        append("Power on successfully! ATR: \n")
+                        append(BytesUtil.bytes2HexString(data))
+                        append("\n\n")
+                        append("Note: if any ATR(Answer to Reset) returns, then means ICC is powered on successfully.")
+                    }
+                    spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_PSE))
+                }.onFailure {
+                    tvResult.text = it.message
+                    it.printStackTrace()
+                }
+            }
+
+            override fun onTimeout() {
+                Toast.makeText(this@ICCardActivity, "Timeout=20s!", Toast.LENGTH_SHORT).show()
+                uiRefreshOnPowerOff()
+            }
+        })
+    }
+
+    private fun onStopSearchButtonClicked() {
+        runCatching {
+            detectThread.interrupt()
+        }.onSuccess {
+            uiRefreshOnPowerOff()
+        }.onFailure {
+            tvResult.text = it.message
+            it.printStackTrace()
         }
     }
 
@@ -118,13 +177,18 @@ class ICCardActivity : AppCompatActivity() {
 
 
     private fun onPowerOffButtonClicked() {
+        if (!mICCardReaderManager.isCardIn) {
+            Toast.makeText(this, "Card has been removed!", Toast.LENGTH_SHORT).show()
+            uiRefreshOnPowerOff()
+            return
+        }
         val selectedCardType = spCardType.selectedItem as CardType
         runCatching {
             val ret = mICCardReaderManager.powerDown(selectedCardType.slot)
-            if (!ret) throw Exception("Power on failed")
+            if (!ret) throw Exception("Power off failed")
         }.onSuccess {
             uiRefreshOnPowerOff()
-            DebugUtil.logAndToast(this, TAG, "Power on successfully")
+            DebugUtil.logAndToast(this, TAG, "Power off successfully")
             tvResult.text = ""
             selectAidDynamic = "-"
             gpoDynamic = "-"
@@ -135,27 +199,12 @@ class ICCardActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun onCheckCardInButtonClicked() {
-        runCatching {
-            val isCardIn = mICCardReaderManager.isCardIn
-            val isPsam1In = mICCardReaderManager.isPSAMCardExists(CardType.PSAM_1.slot)
-            val isPsam2In = mICCardReaderManager.isPSAMCardExists(CardType.PSAM_2.slot)
-            Triple(isCardIn, isPsam1In, isPsam2In)
-        }.onSuccess { (isCardIn, isPsam1In, isPsam2In) ->
-            tvResult.text = buildString {
-                append("ICCard status: \n$isCardIn\n\n")
-                append("PSAM_1 status: \n$isPsam1In\n\n")
-                append("PSAM_2 status: \n$isPsam2In")
-            }
-        }.onFailure {
-            tvResult.text = it.message
-            it.printStackTrace()
-        }
-    }
-
-
     private fun onSendApduButtonClicked() {
+        if (!mICCardReaderManager.isCardIn) {
+            Toast.makeText(this, "Card has been removed!", Toast.LENGTH_SHORT).show()
+            uiRefreshOnPowerOff()
+            return
+        }
         val apduStr = if (spApdu.selectedItem as ApduCommand == ApduCommand.APDU_IN_BOX) {
             etApdu.text.toString()
         } else if (spApdu.selectedItem as ApduCommand == ApduCommand.SELECT_AID) {
@@ -252,7 +301,54 @@ class ICCardActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun onCheckCardInButtonClicked() {
+        runCatching {
+            val isCardIn = mICCardReaderManager.isCardIn
+            val isPsam1In = mICCardReaderManager.isPSAMCardExists(CardType.PSAM_1.slot)
+            val isPsam2In = mICCardReaderManager.isPSAMCardExists(CardType.PSAM_2.slot)
+            Triple(isCardIn, isPsam1In, isPsam2In)
+        }.onSuccess { (isCardIn, isPsam1In, isPsam2In) ->
+            tvResult.text = buildString {
+                append("ICCard status: \n$isCardIn\n\n")
+                append("PSAM_1 status: \n$isPsam1In\n\n")
+                append("PSAM_2 status: \n$isPsam2In")
+            }
+        }.onFailure {
+            tvResult.text = it.message
+            it.printStackTrace()
+        }
+    }
+
     // <-----------------------------Helper methods-----------------------------> //
+
+    private interface CardDetectListener {
+        fun onDetected()
+        fun onTimeout()
+    }
+
+    private lateinit var detectThread: Thread
+
+    private fun startDetectOnce(listener: CardDetectListener) {
+        detectThread = Thread {
+            Handler(Looper.getMainLooper()).postDelayed({
+                listener.onTimeout()
+                detectThread.interrupt()
+            }, 20000)
+            while (true) {
+                if (mICCardReaderManager.isCardIn) {
+                    runOnUiThread { listener.onDetected() }
+                    return@Thread
+                }
+                runCatching {
+                    Thread.sleep(50)
+                }.onFailure {
+                    return@Thread
+                }
+            }
+        }.apply { start() }
+    }
+
 
     /**
      * Extract the first TLV value for the given tag from a hex string.
@@ -397,12 +493,15 @@ class ICCardActivity : AppCompatActivity() {
         btnPowerOn.isEnabled = false
         btnPowerOff.isEnabled = true
         btnSendApdu.isEnabled = true
+        btnStartSearch.isEnabled = false
     }
 
     private fun uiRefreshOnPowerOff() {
+        btnStartSearch.isEnabled = true
         btnPowerOn.isEnabled = true
         btnPowerOff.isEnabled = false
         btnSendApdu.isEnabled = false
+        btnStopSearch.isEnabled = false
     }
 }
 
@@ -445,6 +544,7 @@ enum class ApduCommand(val apduStr: String) {
 //  -> TAA(Make Terminal's Final Decision according to rules(TAC/IAC) & results(TVR))
 //  -> GAC-1(TC/AAC/ARQC)
 //      -> if ARQC(Online Authorization): IS08583(ARQC&Other_PINBlock_MAC) [CDA & onlinePIN will also be done during this Stage]
+//        -> ARPC(91) = ARC(8A - Approve(3030); Decline(3035); InsufficientBalance(3531)) + AC(89 - SN of ARPC)
 //      -> GAC-2(TC/AAC)
 
 // SDA: Kernel uses IssuerPK(verified using CAPK) to verify the SSAD("93"). Can be done right after GPO
@@ -500,6 +600,9 @@ Understanding APDU_resp(TLV from Card)
             - "9C"(Transaction Type): e.g. "00"(Purchase); "01"(Withdrawal); "09"(CashBack); "20"(Refund)
             - "9F37"(Random Number): e.g. "D31ED8BF" used for DDA/CDA and generating Cryptogram
             - "9F35"(Terminal Type)
+            - "8C"(CDOL1) / "8D"(CDOL2)
+              - "8C"(GAC-1): "9F02"(Amount) / "95"(TVR)
+              - "8A"(ARC): 3030; 3035; 3531
 
   2. READ RECORD: "00B2"(READ RECORD)
     READ RECORD(AID LIST): This only applies to ICC, not PICC
@@ -518,17 +621,31 @@ Understanding APDU_resp(TLV from Card)
             - DDA(Dynamic Data Authentication): CAPK -> Issuer Cert(PK) -> "9F46"(ICC Cert(PK)) -> "9F4B"(SDAD - Signed Dynamic Application Data using Challenge from Terminal)
             - CDA(Combined Data Authenticaiton): Kernel uses IssuerPK(verified using CAPK) to verify ICC_Cert -> Send Challenge(DDOL and verify SDAD("9F4B" & AC) using ICC_PK. Can only be done after GAC-1
           - "9F46"(ICC Certificate): Terminal uses CAPK to verify it, then extract the ICC public key for DDA/CDA ["9F47" / "9F48"]
+          - "8E"(CVM): Threshold_1(4 Bytes) + Threshold_2(4 Bytes) + CVM_RULE_1(2 Bytes) + CVM_RULE_2(2 Bytes) + ...
+            - 4203(Online PIN if terminal supports);
+            - 0403(Enciphered Offline PIN if terminal supports);
+            - 0203(Plain Offline PIN if terminal supports);
+            - 1E03(Signature if terminal supports)
+            - 1F03(No CVM if terminal supports)
+            - e.g., 00000000 00000000 4203 0303
+
+
 
   3. GPO(Get Procession Options - "80A8"): Send Data to Card based on PDOL, and get AIP & AFL from Card
       - GPO: "80A8"(GPO) + "83"(PDOL Template Prefix; format is consistent with "9F38" received) + "00"
       - "80": GPO response template prefix
         - AIP(Application Interchange Profile - 2 Bytes) + AFL(Application File Locator - the rest Bytes)
-
+          - AIP(2 Bytes):
+            - First Byte: SDA_Supported - DDA_Supported - CVM_Supported - TRM_Needed - OnlineTransaction_Supported - CDA_Supported - RFU - RFU
+            - Second Byte: normally RFU 0x00
+              - FC00 means Support all(SDA/DDA/CDA CVM OnlineTransaction TRM_needed)
+              - 7C00 means only not support SDA but the rest
 Response Status Code:
   - "9000"(Suffix): Success
   - "6A82"(Suffix): Not Found
   - "6700"(Suffix): Lc Not Correct
   - "6D00"(Suffix): Instruction not valid
+  - "6985"(Suffix): Condition of use not satisfied
 
 Understand TVR(Terminal Verification Result):
   - It's 5 Bytes. e.g. "04 C0 00 00 00"
@@ -542,3 +659,62 @@ Understand TVR(Terminal Verification Result):
         - Then ask for PIN and form ISO8583 and send to Issuer for verification (Issuer verifies using CVV & PIN)
         - If approved, then will callback, then end of the transaction
  */
+
+/*
+Other notes:
+    - Need to finish READ RECORD first before proceeding to ODA/PR/TRM/CVM/TAA
+    - READ RECORD(GPO) only collects & saves all the TLVs first from Card, even might not be used. Will extract all the TLVs needed in real time during each stage from the Kernel's RAM
+    -
+
+ICC:
+1. SELECT PSE: 6F -> 3150(ICC)
+2. READ RECORD: 70 -> 4F(AID)/50(ASCII)/87(Priority)
+3. SELECT AID: 6F -> 9F38(PDOL)
+4. GPO: 80 -> AIP / AFL
+5. READ RECORD: 70 -> 5A(57)/5F24/5F25/5F30 - 9F07/9F0D/9F0E/9F0F - 90/9F32/92(8F) - 9F46/9F47/9F48(9F49-DDOL) - 93（SSAD) - 8E(APP_CVM) - 8C(CDOL1: 95/9F02)/8D(CDOL2: 8A)
+6. ODA(Check AIP & TERM_CAP(9F33) -> Select Requested CAPK_INDEX(8F) -> Verify the IssuerCert(90) & Extract the IssuerPK): CardAuth
+ - Will result in Change of TVR(95) bit if failed
+7. PR(Check Trans_Type(9C) & Term_Country(9F35) & AUC(9F07) if support): ProcRestric
+ - Mostly check if Trans_Type&Term_Country can pass AUC or not.
+ - Wil result in Change of TVR(95) bit if failed
+8. CVM(Check ICC_CVM(8E) & TERM_CAP(9F33)): CMVStart
+ - Will result in how to proceed CVM(ONLINE_PIN / OFFLINE PIN / SIGNATURE / NO_CVM)
+ - Will invoke the PINPAD if needed: SetPinCVR
+9.  TRM(Check TFL_LIMIT+Amount(9F1B+9F02) & RandomOnline) : EMVRiskManagement
+10. TAA(Finally decide what to do - Based on TVR & TAC & IAC; Check from DENIAL->ONLINE->DEFAULT): TermActAnalyse
+ - e.g.: TermActAnalyse(TAC_DENIAL):0; TermActAnalyse(TAC_ONLINE):-1 ["0" means no hit, hits otherwise]
+ - Please note: TAA might take place beforehand to avoid unnecessary work
+11. GAC-1: GAC -> CID(80/40/00) + ATC(Counter_2_Bytes) + ARQC(8_Bytes_EncryptedFromCDOL1_Using_SK)[if Online]
+12. ISO8583(GetF55): pIccData -> 8A(ARC) + 89（AC)
+13. GAC-2: GAC -> CID(80/40/00) + ATC(Counter_2_Bytes) + TC/AAC(8_Bytes_EncryptedFromCDOL2_Using_SK)
+
+
+Three types of CIDs(Cryptogram Information Data): inside GAC-1_Resp
+ - 80: ARPC (Request for Online)
+ - 40: TC (Approve)
+ - 00: AAC (Decline)
+
+
+Three types of KEY systems in a EMV transaction:
+ - DUKPT(Terminal) for PIN
+ - ICCKeyPair(ICC) for ODA
+ - MK/SK(ICC/Issuer) for ARPC/ARQC: (Issue generate the same SK using the same MK&Trans_Data, then calculate the ARPC based on the Trans_Data to see if it's the same as the original one. Card will do the same to ARPC)
+
+
+Understanding AUC (Application Usage Control): FF00 means no restriction for the usage of the Card. Used in PR
+
+
+Three types of ARC(8A - Authorization Request Code) from ISO8583_Resp:
+ - 3030: Approval
+ - 3035: Decline
+ - 3531: Insufficient Balance
+
+
+DDA whole procedure:
+ - Card tells AID(4F) & CAPK_INDEX(8F). Kernel looks for CAPK at that slot and extract the CAPK
+ - Kernel verifies the Issuer Certificate(RSA to check Signature), then extract the IssuerPK from the Cert.
+ - Kernel verifies the ICC Certificate(HASH_after == HASH-crt ?), then extract the ICCPK from the Cert.
+ - Kernel sends APDU(CardAuth) as per DDOL, and verifies the Resp using the ICCPK. (DDOL normally Random Number) (How to verify? To decrypt the Resp using ICCPK, then check if it's the same as the Random Number sent from Terminal to the Card)
+ -> If succeeded: DDA_Auth():0
+ */
+

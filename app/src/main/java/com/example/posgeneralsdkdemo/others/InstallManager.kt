@@ -31,7 +31,7 @@ import com.example.posgeneralsdkdemo.utils.PermissionUtil
 
 // <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 
-private const val TAG = "Patrick_AppInstallUninstallActivity"
+
 private const val UMS_DOWNLOAD_URL = "https://ota-oss.urovo.com/https_ota_prod/Android/SQ29MB/DS/PKG-XX/english/10.25.0722.03/19190/patch.zip"
 private const val APPMARKET_UMS_DOWNLOAD_URL = "https://ota-oss.urovo.com/https_ota_prod/Android/SQ29MB/DS/PKG-XX/english/10.25.0722.03/19197/patch.zip"
 private const val UMS_NAME_ZIP = "ums_patrick.zip"

@@ -13,7 +13,8 @@ import androidx.core.net.toUri
 
 object PermissionUtil {
 
-    fun requestPermissions(activity: Activity, permissions: Array<String>, req: Int) {
+    fun requestPermissions(activity: Activity, permissions: Array<String>, req: Int): Boolean {
+        // Return true if PERMISSIONS have been granted already
         val ungranted = mutableListOf<String>().apply {
             for (permission in permissions) {
                 if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -23,7 +24,9 @@ object PermissionUtil {
         }
         if (ungranted.isNotEmpty()) {
             ActivityCompat.requestPermissions(activity, ungranted.toTypedArray(), req)
+            return false
         }
+        return true
     }
 
     fun checkPermissions(context: Context, permissions: Array<String>): Boolean {

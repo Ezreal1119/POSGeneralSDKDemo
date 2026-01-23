@@ -36,6 +36,13 @@
                 android:textSize="20sp"/>
 
             <Button
+                android:id="@+id/btnPinpad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="PinPad"
+                android:textSize="20sp"/>
+
+            <Button
                 android:id="@+id/btnBeeper"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -47,13 +54,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="LED"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnPinpad"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="PinPad"
                 android:textSize="20sp"/>
 
             <Button

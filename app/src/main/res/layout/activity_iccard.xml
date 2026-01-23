@@ -60,29 +60,60 @@
             android:padding="5dp"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/btnPowerOn"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Power On"
-                android:textSize="20sp"
-                android:padding="0dp"/>
+                android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btnPowerOff"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Power Off"
-                android:textSize="20sp"
-                android:padding="0dp"/>
+                <Button
+                    android:id="@+id/btnStartSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Start Search"
+                    android:textSize="20sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
 
-            <Button
-                android:id="@+id/btnCheckCardIn"
+                <Button
+                    android:id="@+id/btnStopSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Stop Search"
+                    android:textSize="20sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="0dp"
-                android:text="Check Card In(ICC/PSAM_1_2)"
-                android:textSize="20sp" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnPowerOn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Power On"
+                    android:textSize="20sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnPowerOff"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Power Off"
+                    android:textSize="20sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -120,6 +151,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Please enter APDU"/>
+
+                <Button
+                    android:id="@+id/btnCheckCardIn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="0dp"
+                    android:text="Check Card In(ICC/PSAM_1_2)"
+                    android:textSize="20sp" />
+
 
                 <LinearLayout
                     android:layout_width="match_parent"

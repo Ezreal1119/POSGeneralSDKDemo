@@ -10,18 +10,18 @@ import android.widget.Button
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.slider.Slider
 import com.urovo.sdk.beeper.BeeperImpl
 
 class BeeperActivity : AppCompatActivity() {
 
     private val mBeeperManager = BeeperImpl.getInstance()
 
+    private val sliderBeeperCount by lazy { findViewById<Slider>(R.id.sliderBeeperCount) }
+    private val spDuration by lazy { findViewById<Spinner>(R.id.spDuration) }
     private val btnStartBeeper by lazy { findViewById<Button>(R.id.btnStartBeeper) }
     private val btnStopBeeper by lazy { findViewById<Button>(R.id.btnStopBeeper) }
-    private val spCount by lazy { findViewById<Spinner>(R.id.spCount) }
-    private val spDuration by lazy { findViewById<Spinner>(R.id.spDuration) }
 
-    private val countArray = arrayOf(1, 2, 3, 4, 5)
     private val durationArray = arrayOf(100, 200, 500, 1000, 2000)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,9 +30,6 @@ class BeeperActivity : AppCompatActivity() {
 
         btnStartBeeper.setOnClickListener { onStartBeeperButtonClicked() }
         btnStopBeeper.setOnClickListener { onStopBeeperButtonClicked() }
-        spCount.adapter = ArrayAdapter(this, simple_spinner_item, countArray).apply {
-            setDropDownViewResource(simple_spinner_dropdown_item)
-        }
         spDuration.adapter = ArrayAdapter(this, simple_spinner_item, durationArray).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
@@ -41,7 +38,7 @@ class BeeperActivity : AppCompatActivity() {
 
     private fun onStartBeeperButtonClicked() {
         try {
-            val count = spCount.selectedItem as Int
+            val count = sliderBeeperCount.value.toInt()
             val duration = spDuration.selectedItem as Int
             mBeeperManager.startBeep(count, duration)
             btnStartBeeper.isEnabled = false

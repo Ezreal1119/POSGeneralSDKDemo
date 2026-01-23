@@ -27,7 +27,15 @@ import kotlin.getValue
 private const val PERMISSION_ACCESS_WIFI_STATE = Manifest.permission.ACCESS_WIFI_STATE
 private const val PERMISSION_CHANGE_WIFI_STATE = Manifest.permission.CHANGE_WIFI_STATE
 private const val PERMISSION_ACCESS_FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION
+private const val PERMISSION_ACCESS_COARSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION
+private val ARRAY_OF_PERMISSIONS = arrayOf(
+    PERMISSION_ACCESS_WIFI_STATE,
+    PERMISSION_CHANGE_WIFI_STATE,
+    PERMISSION_ACCESS_FINE_LOCATION,
+    PERMISSION_ACCESS_COARSE_LOCATION
+)
 private const val REQ_PERMISSION_WIFI = 1001
+
 class WifiActivity : AppCompatActivity() {
 
     private val etSSID by lazy { findViewById<EditText>(R.id.etSSID) }
@@ -45,6 +53,8 @@ class WifiActivity : AppCompatActivity() {
     private val btnRemoveFromWhitelist by lazy { findViewById<Button>(R.id.btnRemoveFromWhitelist) }
 
     private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
+
+
 
     private lateinit var wifiManager: WifiManager
     private lateinit var connectivityManager: ConnectivityManager
@@ -260,37 +270,36 @@ class WifiActivity : AppCompatActivity() {
     // <--------------------UI helper methods--------------------> //
 
     private fun uiRefreshOnWifiStatus() {
-        if (!PermissionUtil.checkPermissions(this, arrayOf(PERMISSION_ACCESS_WIFI_STATE, PERMISSION_CHANGE_WIFI_STATE))) {
-            PermissionUtil.requestPermissions(this, arrayOf(PERMISSION_ACCESS_WIFI_STATE, PERMISSION_CHANGE_WIFI_STATE), REQ_PERMISSION_WIFI)
+        if (!PermissionUtil.requestPermissions(this, ARRAY_OF_PERMISSIONS, REQ_PERMISSION_WIFI)) {
+            return
+        }
+        if (wifiManager.isWifiEnabled) {
+            btnTurnOnWifi.isEnabled = false
+            btnTurnOffWifi.isEnabled = true
         } else {
-            if (wifiManager.isWifiEnabled) {
-                btnTurnOnWifi.isEnabled = false
-                btnTurnOffWifi.isEnabled = true
-            } else {
-                btnTurnOnWifi.isEnabled = true
-                btnTurnOffWifi.isEnabled = false
-            }
+            btnTurnOnWifi.isEnabled = true
+            btnTurnOffWifi.isEnabled = false
         }
     }
 
     private fun uiRefreshOnEvent() {
-        if (!PermissionUtil.checkPermissions(this, arrayOf(PERMISSION_ACCESS_WIFI_STATE, PERMISSION_CHANGE_WIFI_STATE, PERMISSION_ACCESS_FINE_LOCATION))) {
-            PermissionUtil.requestPermissions(this, arrayOf(PERMISSION_ACCESS_WIFI_STATE, PERMISSION_CHANGE_WIFI_STATE, PERMISSION_ACCESS_FINE_LOCATION), REQ_PERMISSION_WIFI)
-        } else {
-            tvResult.text = buildString {
-                if ("unknown" in wifiManager.connectionInfo.ssid) {
-                    append("Not connection to WiFi!\n\n")
-                } else {
-                    append("SSID: ${wifiManager.connectionInfo.ssid}\n\n")
-                }
-                append("WiFi MAC: ${DeviceManager().getSettingProperty("persist.sys.device.wifimac")}\n\n")
-                if (DeviceManager().wifiWhiteList.isEmpty()) {
-                    append("No WiFi Whitelist set")
-                } else {
-                    append("Whitelist: ${DeviceManager().wifiWhiteList}")
-                }
+        if (!PermissionUtil.requestPermissions(this, ARRAY_OF_PERMISSIONS, REQ_PERMISSION_WIFI)) {
+            return
+        }
+        tvResult.text = buildString {
+            if ("unknown" in wifiManager.connectionInfo.ssid) {
+                append("Not connection to WiFi!\n\n")
+            } else {
+                append("SSID: ${wifiManager.connectionInfo.ssid}\n\n")
+            }
+            append("WiFi MAC: ${DeviceManager().getSettingProperty("persist.sys.device.wifimac")}\n\n")
+            if (DeviceManager().wifiWhiteList.isEmpty()) {
+                append("No WiFi Whitelist set")
+            } else {
+                append("Whitelist: ${DeviceManager().wifiWhiteList}")
             }
         }
+
     }
 
 }
