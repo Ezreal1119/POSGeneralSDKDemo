@@ -48,11 +48,11 @@
                     android:padding="0dp"/>
 
                 <Button
-                    android:id="@+id/btnDisenableHome"
+                    android:id="@+id/btnDisableHome"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Disenable Home"
+                    android:text="Disable Home"
                     android:textSize="15sp"
                     android:layout_marginStart="3dp"
                     android:padding="0dp"/>
@@ -76,11 +76,11 @@
                     android:padding="0dp"/>
 
                 <Button
-                    android:id="@+id/btnDisenableRecent"
+                    android:id="@+id/btnDisableRecent"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Disenable Recent"
+                    android:text="Disable Recent"
                     android:textSize="15sp"
                     android:layout_marginStart="3dp"
                     android:padding="0dp"/>
@@ -104,11 +104,11 @@
                     android:padding="0dp"/>
 
                 <Button
-                    android:id="@+id/btnDisenableStatusBar"
+                    android:id="@+id/btnDisableStatusBar"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Disenable StatusBar"
+                    android:text="Disable StatusBar"
                     android:textSize="15sp"
                     android:layout_marginStart="3dp"
                     android:padding="0dp"/>
@@ -175,6 +175,34 @@
                     android:layout_weight="1"
                     android:text="Cancel AutoStart"
                     android:textSize="15sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="3dp">
+
+                <Button
+                    android:id="@+id/btnSetDefaultLauncher"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set Default Launcher"
+                    android:textSize="13sp"
+                    android:layout_marginStart="3dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnCancelDefaultLauncher"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Cancel Default Launcher"
+                    android:textSize="13sp"
                     android:layout_marginStart="3dp"
                     android:padding="0dp"/>
 

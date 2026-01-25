@@ -998,6 +998,7 @@ class PinpadActivity : AppCompatActivity() {
                         append("Clear all Keys successfully:\n")
                         append(" - MK/SK(TEK/MK, TD_KEY, PIN_KEY, MAC_KEY) from KeySlot=[1, 255]\n")
                         append(" - DUKPT(MSR, EMV, PIN, MAC)\n\n")
+                        append(" - RSA Keypair from [0, 9]\n\n")
                         append("onSuccess: ret=$ret\n")
                         append("rspData: len=${rspLen[0]}\n")
                         append(BytesUtil.bytes2HexString(rspData.copyOf(rspLen[0].toInt())))

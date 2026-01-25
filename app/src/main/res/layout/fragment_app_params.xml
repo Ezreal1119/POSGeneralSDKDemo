@@ -18,174 +18,205 @@
         android:layout_margin="5dp"
         android:background="@drawable/border"/>
 
-    <ScrollView
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_margin="5dp"
+        android:background="@drawable/border">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="|------ICC Aid Parameters------|"
+            android:gravity="center"
+            android:textSize="25sp"
+            android:textStyle="bold|italic"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:layout_margin="5dp"
+            android:background="@drawable/border">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="5dp"
-                android:background="@drawable/border">
+                android:layout_weight="1"
+                android:padding="10dp"
+                android:gravity="center"
+                android:text="TAC DENIAL:"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="10dp"
-                    android:gravity="center"
-                    android:text="Floor Limit:"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
-
-                <Spinner
-                    android:id="@+id/spFloorLimit"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="#CCCCCC"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="5dp"
-                android:background="@drawable/border">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="10dp"
-                    android:gravity="center"
-                    android:text="TAC DENIAL:"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
-
-                <Spinner
-                    android:id="@+id/spTacDenial"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="#CCCCCC"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="5dp"
-                android:background="@drawable/border">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="10dp"
-                    android:gravity="center"
-                    android:text="TAC ONLINE:"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
-
-                <Spinner
-                    android:id="@+id/spTacOnline"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="#CCCCCC"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_margin="5dp"
-                android:background="@drawable/border">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:padding="10dp"
-                    android:gravity="center"
-                    android:text="TAC DEFAULT:"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
-
-                <Spinner
-                    android:id="@+id/spTacDefault"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="#CCCCCC"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <Button
-                    android:id="@+id/btnAddUnionPay"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="UnionPay"
-                    android:textSize="17sp"
-                    android:layout_margin="1dp"
-                    android:padding="0dp"/>
-
-                <Button
-                    android:id="@+id/btnAddVisa"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Visa"
-                    android:textSize="17sp"
-                    android:layout_margin="1dp"
-                    android:padding="0dp"/>
-
-                <Button
-                    android:id="@+id/btnAddMasterCard"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="MasterCard"
-                    android:textSize="17sp"
-                    android:layout_margin="1dp"
-                    android:padding="0dp"/>
-
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/btnClearAllAid"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Clear All AID"
-                android:layout_margin="5dp"
-                android:textSize="20sp"/>
+            <Spinner
+                android:id="@+id/spTacDenial"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#CCCCCC"/>
 
         </LinearLayout>
 
-    </ScrollView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_margin="5dp"
+            android:background="@drawable/border">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="10dp"
+                android:gravity="center"
+                android:text="TAC ONLINE:"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <Spinner
+                android:id="@+id/spTacOnline"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#CCCCCC"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_margin="5dp"
+            android:background="@drawable/border">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="10dp"
+                android:gravity="center"
+                android:text="TAC DEFAULT:"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <Spinner
+                android:id="@+id/spTacDefault"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#CCCCCC"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btnAddUnionPayIcc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="UnionPay"
+                android:textSize="17sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnAddVisaIcc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Visa"
+                android:textSize="17sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnAddMasterCardIcc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="MasterCard"
+                android:textSize="17sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+        </LinearLayout>
 
 
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/border"
+        android:layout_margin="2dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="|------PICC Aid Parameters------|"
+            android:gravity="center"
+            android:textSize="25sp"
+            android:textStyle="bold|italic"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/btnAddUnionPayPicc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="UnionPay"
+                android:textSize="17sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnAddVisaPicc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Visa"
+                android:textSize="17sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnAddMasterCardPicc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="MasterCard"
+                android:textSize="17sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnClearAllAid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Clear All AID"
+        android:layout_margin="5dp"
+        android:textSize="20sp"/>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:background="@drawable/border"
         android:layout_margin="5dp"
         android:padding="10dp">

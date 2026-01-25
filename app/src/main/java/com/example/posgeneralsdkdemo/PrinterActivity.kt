@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.btprinter.SppBluetoothPrinterActivity
+import com.example.posgeneralsdkdemo.printers.WifiPrinterActivity
 
 import com.example.posgeneralsdkdemo.utils.ImageUtil
 import com.google.android.material.slider.Slider
@@ -75,6 +76,7 @@ class PrinterActivity : AppCompatActivity() {
     private val btnPrintBitmapCanvas by lazy { findViewById<Button>(R.id.btnPrintBitmapCanvas)}
     private val btnLineFeed by lazy { findViewById<Button>(R.id.btnLineFeed) }
     private val btnSppBluetoothPrinter by lazy { findViewById<Button>(R.id.btnSppBluetoothPrinter)}
+    private val btnWifiPrinter by lazy { findViewById<Button>(R.id.btnWifiPrinter) }
 
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -134,7 +136,9 @@ class PrinterActivity : AppCompatActivity() {
         btnSppBluetoothPrinter.setOnClickListener {
             startActivity(Intent(this, SppBluetoothPrinterActivity::class.java))
         }
-
+        btnWifiPrinter.setOnClickListener {
+            startActivity(Intent(this, WifiPrinterActivity::class.java))
+        }
     }
 
     override fun onStart() {
@@ -425,7 +429,7 @@ class PrinterActivity : AppCompatActivity() {
 
     private var mqttClient: Mqtt3AsyncClient? = null
 
-    private fun mqttSubscribeAndConnect(host: String, port: Int = 1883, topic: String = "patrick/print") {
+    private fun mqttSubscribeAndConnect(host: String, port: Int = 1883, topic: String = "patrick/print/qrcode") {
         val client = MqttClient.builder()
             .useMqttVersion3() // Need to specify the version, otherwise V5 mighe be used
             .identifier("patrick_${UUID.randomUUID()}")
@@ -456,7 +460,7 @@ class PrinterActivity : AppCompatActivity() {
                 Toast.makeText(this, "Connected to MQTT successfully", Toast.LENGTH_SHORT).show()
                 tvMqttInfo.text = buildString {
                     append("Mqtt: $host:$port - topic: $topic\n\n")
-                    append("\"mosquitto_pub -h $host -p $port -t patrick/print -m '<message>'\"")
+                    append("\"mosquitto_pub -h $host -p $port -t patrick/print/qrcode -m '<message>'\"")
                 }
             }
 

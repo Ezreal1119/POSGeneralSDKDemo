@@ -175,13 +175,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Line Feed"
-                android:textSize="20sp"/>
+                android:textSize="20sp" />
 
             <Button
                 android:id="@+id/btnSppBluetoothPrinter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="SPP Bluetooth Printer"
+                android:textSize="20sp"/>
+
+            <Button
+                android:id="@+id/btnWifiPrinter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="WiFi Printer"
                 android:textSize="20sp"/>
 
 

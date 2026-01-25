@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:textSize="25dp"
-        android:text="SPP Printer - Patrick"
+        android:text="WiFi Printer - Patrick"
         android:gravity="center"
         android:textStyle="bold"
         android:layout_margin="7dp"
@@ -32,26 +32,24 @@
             android:layout_weight="1"
             android:padding="16dp"
             android:gravity="center"
-            android:text="BT MAC:"
+            android:text="IP address:"
             android:textSize="16sp"
             android:textStyle="bold"/>
 
         <EditText
-            android:id="@+id/etBluetoothMac"
+            android:id="@+id/etPrinterIp"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:textSize="15sp"
-            android:maxLength="17"
-            android:inputType="textNoSuggestions"
-            />
+            android:inputType="textNoSuggestions"/>
 
         <Button
-            android:id="@+id/btnSelfMac"
+            android:id="@+id/btnResetIp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Simulate"
+            android:text="Reset IP"
             android:textSize="15sp" />
 
     </LinearLayout>
@@ -83,26 +81,10 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/btnScanBluetooth"
+        android:id="@+id/btnWifiSettings"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Scanning"
-        android:textSize="20sp"
-        android:padding="0dp"/>
-
-    <Button
-        android:id="@+id/btnConnectBluetooth"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Connect"
-        android:textSize="20sp"
-        android:padding="0dp"/>
-
-    <Button
-        android:id="@+id/btnDisconnectBluetooth"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Disconnect"
+        android:text="WiFi Settings"
         android:textSize="20sp"
         android:padding="0dp"/>
 

@@ -2,11 +2,16 @@ package com.example.posgeneralsdkdemo.fragments.emv
 
 import android.R.layout.simple_spinner_dropdown_item
 import android.R.layout.simple_spinner_item
+import android.app.AlertDialog
+import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.InputType
 import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
@@ -22,10 +27,16 @@ import com.example.posgeneralsdkdemo.EmvActivity
 import com.example.posgeneralsdkdemo.PinParams
 import com.example.posgeneralsdkdemo.PinpadActivity
 import com.example.posgeneralsdkdemo.R
+import com.example.posgeneralsdkdemo.enums.Amount
 import com.example.posgeneralsdkdemo.enums.CardReadMode
 import com.example.posgeneralsdkdemo.enums.EmvBundle
+import com.example.posgeneralsdkdemo.enums.EmvOptions
+import com.example.posgeneralsdkdemo.enums.FallbackSwitch
 import com.example.posgeneralsdkdemo.enums.IssuerResp
-import com.example.posgeneralsdkdemo.enums.TransactionTag
+import com.example.posgeneralsdkdemo.tools.SoundTool
+import com.example.posgeneralsdkdemo.tools.SoundTool.Companion.SOUND_TYPE_ERROR
+import com.example.posgeneralsdkdemo.tools.SoundTool.Companion.SOUND_TYPE_SUCCESS
+import com.example.posgeneralsdkdemo.utils.EmvUtil
 import com.example.posgeneralsdkdemo.utils.EmvUtil.addCapkMasterCard
 import com.example.posgeneralsdkdemo.utils.EmvUtil.addCapkUpi
 import com.example.posgeneralsdkdemo.utils.EmvUtil.addCapkVisa
@@ -39,7 +50,6 @@ import com.example.posgeneralsdkdemo.utils.EmvUtil.parseAppCvmRule3Bytes
 import com.example.posgeneralsdkdemo.utils.EmvUtil.parseCid2String
 import com.example.posgeneralsdkdemo.utils.EmvUtil.parseCountryCode2String
 import com.example.posgeneralsdkdemo.utils.EmvUtil.parseCurrencyCode2String
-import com.example.posgeneralsdkdemo.utils.EmvUtil.parseMerchantCategoryCode2String
 import com.example.posgeneralsdkdemo.utils.EmvUtil.parseTVRHits
 import com.example.posgeneralsdkdemo.utils.EmvUtil.parseTerminalType2String
 import com.example.posgeneralsdkdemo.utils.EmvUtil.parseTransactionType2String
@@ -56,6 +66,7 @@ import com.urovo.sdk.pinpad.listener.PinInputListener
 import com.urovo.sdk.pinpad.utils.Constant
 import com.urovo.sdk.utils.BytesUtil
 import java.util.Hashtable
+import java.util.Locale
 
 private const val TAG = "EmvActivity_HomeFragment"
 const val PREFS_NAME = "emv_prefs"
@@ -65,9 +76,12 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     private val tvPinDukptReady get() = requireView().findViewById<TextView>(R.id.tvPinDukptReady)
     private val tvPinKeyReady get() = requireView().findViewById<TextView>(R.id.tvPinKeyReady)
     private val tvResult get() = requireView().findViewById<TextView>(R.id.tvResult)
-    private val tvAidStatus get() = requireView().findViewById<TextView>(R.id.tvAidStatus)
-    private val etAmount get() = requireView().findViewById<EditText>(R.id.etAmount)
+    private val tvAidIccStatus get() = requireView().findViewById<TextView>(R.id.tvAidIccStatus)
+    private val tvAidPiccStatus get() = requireView().findViewById<TextView>(R.id.tvAidPiccStatus)
+    private val spAmount get() = requireView().findViewById<Spinner>(R.id.spAmount)
     private val spIssuerResp get() = requireView().findViewById<Spinner>(R.id.spIssuerResp)
+    private val spEmvOptions get() = requireView().findViewById<Spinner>(R.id.spEmvOptions)
+    private val spFallbackSwitch get() = requireView().findViewById<Spinner>(R.id.spFallbackSwitch)
     private val btnStartEmv get() = requireView().findViewById<Button>(R.id.btnStartEmv)
     private val btnStopEmv get() = requireView().findViewById<Button>(R.id.btnStopEmv)
     private val btnEnableLogOut get() = requireView().findViewById<Button>(R.id.btnEnableLogOut)
@@ -83,21 +97,40 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
     private val result = StringBuilder()
     private var enterAmountAfterReadRecordFlag: Boolean = false
+    private var amountEx: Float = 0F
     private lateinit var cardReadMode: CardReadMode
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var mySoundTool: SoundTool
     private val sharedVm: SharedVm by activityViewModels()
+    private val arrayOfAmount = arrayOf(
+        Amount.UNDER_THRESHOLD,
+        Amount.MIDDLE_BETWEEN_THRESHOLD_AND_FLOOR,
+        Amount.ABOVE_FLOOR,
+        Amount.ENTER_AFTER_READ_RECORD)
     private val arrayOfIssuerResp = arrayOf(IssuerResp.APPROVAL, IssuerResp.DECLINE)
+    private val arrayOfEmvOptions = arrayOf(EmvOptions.START, EmvOptions.START_WITH_FORCE_ONLINE)
+    private val arrayOfFallbackSwitch = arrayOf(FallbackSwitch.DISABLED, FallbackSwitch.ENABLED)
     private val cvmAddition = StringBuilder()
     private var tvrBeforeTrm = ""
-    private var isUnionPayLoaded = false
-    private var isVisaLoaded = false
-    private var isMasterCardLoaded = false
+    private var isUnionPayIccLoaded = false
+    private var isUnionPayPiccLoaded = false
+    private var isVisaIccLoaded = false
+    private var isVisaPiccLoaded = false
+    private var isMasterCardIccLoaded = false
+    private var isMasterCardPiccLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         sharedPreferences = requireContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        mySoundTool = SoundTool.getMySound(requireContext())
 
-        btnStartEmv.setOnClickListener { onStartEmvButtonClicked(ContantPara.CheckCardMode.SWIPE_OR_INSERT_OR_TAP) }
+        btnStartEmv.setOnClickListener {
+            if (spAmount.selectedItem == Amount.ENTER_AFTER_READ_RECORD) { // Only ICC supports enter Read Record
+                onStartEmvButtonClicked(ContantPara.CheckCardMode.INSERT)
+            } else {
+                onStartEmvButtonClicked(ContantPara.CheckCardMode.SWIPE_OR_INSERT_OR_TAP)
+            }
+        }
         btnStopEmv.setOnClickListener { onStopEmvButtonClicked() }
         btnEnableLogOut.setOnClickListener { onEnableLogOutButtonClicked() }
         btnDisableLogOut.setOnClickListener { onDisableLogOutButtonClicked() }
@@ -115,7 +148,16 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             startActivity(Intent(requireContext(), PinpadActivity::class.java))
         }
 
+        spAmount.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfAmount).apply {
+            setDropDownViewResource(simple_spinner_dropdown_item)
+        }
         spIssuerResp.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfIssuerResp).apply {
+            setDropDownViewResource(simple_spinner_dropdown_item)
+        }
+        spEmvOptions.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfEmvOptions).apply {
+            setDropDownViewResource(simple_spinner_dropdown_item)
+        }
+        spFallbackSwitch.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfFallbackSwitch).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
 
@@ -124,43 +166,81 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         }
         sharedVm.appParamsLoadedRefresh.observe(viewLifecycleOwner) { value ->
             if (value != null) {
-                Log.e(TAG, "onViewCreated: ${tvAidStatus.text}", )
-                if (tvAidStatus.text == "No AID loaded yet") {
-                    tvAidStatus.text = "AID loaded: $value; "
-                    tvAidStatus.setTextColor(Color.GREEN)
-                } else {
-                    when (value) {
-                        UNION_PAY -> {
-                            if (!isUnionPayLoaded) {
-                                tvAidStatus.append("$value; ")
+                if (value in arrayOf(UNION_PAY_ICC, VISA_ICC, MASTER_CARD_ICC)) {
+                    if ("No" in tvAidIccStatus.text.toString()) {
+                        tvAidIccStatus.text = "AID_ICC loaded: $value; "
+                        tvAidIccStatus.setTextColor(Color.GREEN)
+                    } else {
+                        when (value) {
+                            UNION_PAY_ICC -> {
+                                if (!isUnionPayIccLoaded) {
+                                    tvAidIccStatus.append("$value; ")
+                                }
                             }
-                        }
-                        VISA -> {
-                            if (!isVisaLoaded) {
-                                tvAidStatus.append("$value; ")
+
+                            VISA_ICC -> {
+                                if (!isVisaIccLoaded) {
+                                    tvAidIccStatus.append("$value; ")
+                                }
                             }
-                        }
-                        MASTER_CARD -> {
-                            if (!isMasterCardLoaded) {
-                                tvAidStatus.append("$value; ")
+
+                            MASTER_CARD_ICC -> {
+                                if (!isMasterCardIccLoaded) {
+                                    tvAidIccStatus.append("$value; ")
+                                }
                             }
                         }
                     }
-                }
-                when (value) {
-                    UNION_PAY -> isUnionPayLoaded = true
-                    VISA -> isVisaLoaded = true
-                    MASTER_CARD -> isMasterCardLoaded = true
+                    when (value) {
+                        UNION_PAY_ICC -> isUnionPayIccLoaded = true
+                        VISA_ICC -> isVisaIccLoaded = true
+                        MASTER_CARD_ICC -> isMasterCardIccLoaded = true
+                    }
+                } else {
+                    if ("No" in tvAidPiccStatus.text.toString()) {
+                        tvAidPiccStatus.text = "AID_PICC loaded: $value; "
+                        tvAidPiccStatus.setTextColor(Color.GREEN)
+                    } else {
+                        when (value) {
+                            UNION_PAY_PICC -> {
+                                if (!isUnionPayPiccLoaded) {
+                                    tvAidPiccStatus.append("$value; ")
+                                }
+                            }
+                            VISA_PICC -> {
+                                if (!isVisaPiccLoaded) {
+                                    tvAidPiccStatus.append("$value; ")
+                                }
+                            }
+                            MASTER_CARD_PICC -> {
+                                if (!isMasterCardPiccLoaded) {
+                                    tvAidPiccStatus.append("$value; ")
+                                }
+                            }
+                        }
+                    }
+                    when (value) {
+                        UNION_PAY_PICC -> isUnionPayPiccLoaded = true
+                        VISA_PICC -> isVisaPiccLoaded = true
+                        MASTER_CARD_PICC -> isMasterCardPiccLoaded = true
+                    }
                 }
             }
         }
         sharedVm.appParamsClearRefresh.observe(viewLifecycleOwner) { v ->
             if (v != null) {
-                isUnionPayLoaded = false
-                isVisaLoaded = false
-                isMasterCardLoaded = false
-                tvAidStatus.apply {
-                    text = "No AID loaded yet"
+                isUnionPayIccLoaded = false
+                isUnionPayPiccLoaded = false
+                isVisaIccLoaded = false
+                isVisaPiccLoaded = false
+                isMasterCardIccLoaded = false
+                isMasterCardPiccLoaded = false
+                tvAidIccStatus.apply {
+                    text = "No AID_ICC loaded yet!"
+                    setTextColor(Color.RED)
+                }
+                tvAidPiccStatus.apply {
+                    text = "No AID_PICC loaded yet!"
                     setTextColor(Color.RED)
                 }
             }
@@ -178,15 +258,14 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             Toast.makeText(requireContext(), "Updated Terminal Params & Loaded CAPKs successfully", Toast.LENGTH_SHORT).show()
             tvResult.text = buildString {
                 append("<=======Terminal Params updated=======>\n\n")
-                append("IFD_SN_ASCII: 12345678\n")
-                append("TID_ASCII: 87654321\n")
                 append("Terminal_Type:${sharedPreferences.getString(KEY_TERMINAL_TYPE, DEFAULT_TERMINAL_TYPE)}\n")
-                append("Merchant_Category: 7011(Hotel)\n")
-                append("Transaction_Currency_Exp: 02\n")
-                append("Currency(fixed): 0978(EURO)\n")
-                append("Country: ${sharedPreferences.getString(KEY_TERMINAL_COUNTRY_CODE, DEFAULT_COUNTRY_CODE)}\n")
+                append("Country: ${sharedPreferences.getString(KEY_TERMINAL_COUNTRY_CODE, DEFAULT_TERMINAL_COUNTRY_CODE)}\n")
+                append("Transaction_Currency_Exp(Fixed): 02\n")
                 append("Terminal_Capabilities: ${sharedPreferences.getString(KEY_TERMINAL_CAPABILITIES, DEFAULT_TERMINAL_CAPABILITIES)}\n")
-                append("Add_Terminal_Capabilities: 6000F0A001\n\n")
+                append("Add_Terminal_Capabilities(Fixed): 6000F0A001\n")
+                append("ThresholdRandomSwitch: ${thresholdRandomSwitchMap[sharedPreferences.getString(KEY_THRESHOLD_RANDOM_SWITCH, DEFAULT_THRESHOLD_RANDOM_SWITCH) ?: DEFAULT_THRESHOLD_RANDOM_SWITCH]}\n")
+                append("Target Percentage(Fixed): 50\n")
+                append("Max Target Percentage(Fixed): 99\n\n")
                 append("<==========CAPKs loaded==========>\n\n")
                 append("UPI_CAPK_INDEX:\n")
                 append("[04, 08, 09, 0A, 0B]\n\n")
@@ -202,14 +281,20 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         }
 
         mEmvKernelManager.updateAID(ContantPara.Operation.CLEAR, null)
-        isUnionPayLoaded = false
-        isVisaLoaded = false
-        isMasterCardLoaded = false
-        tvAidStatus.apply {
-            text = "No AID loaded yet"
+        isUnionPayIccLoaded = false
+        isUnionPayPiccLoaded = false
+        isVisaIccLoaded = false
+        isVisaPiccLoaded = false
+        isMasterCardIccLoaded = false
+        isMasterCardPiccLoaded = false
+        tvAidIccStatus.apply {
+            text = "No AID_ICC loaded yet!"
             setTextColor(Color.RED)
         }
-
+        tvAidPiccStatus.apply {
+            text = "No AID_PICC loaded yet!"
+            setTextColor(Color.RED)
+        }
         mEmvKernelManager.LogOutEnable(0)
         btnEnableLogOut.isEnabled = true
         btnDisableLogOut.isEnabled = false
@@ -218,10 +303,12 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
     override fun onStart() {
         super.onStart()
-        if (mPinpadManager.DukptGetKsn(3, ByteArray(10)) != 0x00) {
-            tvPinDukptReady.setBackgroundColor(Color.RED)
-        } else {
+        val ksnBuffer = ByteArray(10)
+        if (mPinpadManager.DukptGetKsn(3, ksnBuffer) == 0x00 &&
+            !BytesUtil.bytes2HexString(ksnBuffer).all { it == '0' }) {
             tvPinDukptReady.setBackgroundColor(Color.GREEN)
+        } else {
+            tvPinDukptReady.setBackgroundColor(Color.RED)
         }
         if (mPinpadManager.isKeyExist(Constant.KeyType.PIN_KEY, 99)) {
             tvPinKeyReady.setBackgroundColor(Color.GREEN)
@@ -237,51 +324,30 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     }
 
     private fun onStartEmvButtonClicked(cardMode: ContantPara.CheckCardMode) {
-        val transParams = Hashtable<String, Any>().apply {
-
-            put(TransactionTag.TRANSACTION_TYPE.tag, "00") // Purchase goods
-            put(TransactionTag.AMOUNT.tag, etAmount.text.toString()) // 1.00 by default
-            put(TransactionTag.CURRENCY_CODE.tag, "978") // EURO
-            put(TransactionTag.CHECK_CARD_TIMEOUT.tag, "30") // 30 seconds
-//            put(TransactionTag.CHECK_CARD_MODE.tag, cardMode) ?????
-//            put(TransactionTag.CASHBACK_AMOUNT.tag, "") // 0 cashback
-//            put(
-//                TransactionTag.EMV_OPTION.tag,
-//                ContantPara.EmvOption.START
-//            ) // or START_WITH_FORCE_ONLINE
-//            put(TransactionTag.FALLBACK_SWITCH.tag, "0") // FALLBACK is disabled
-//            put(TransactionTag.ENTER_AMOUNT_AFTER_READ_RECORD.tag, enterAmountAfterReadRecordFlag)
-//            put(TransactionTag.SUPPORT_DRL.tag, true) // Support Visa's Dynamic Reading Limit
-//            put(
-//                TransactionTag.ENABLE_BEEPER.tag,
-//                true
-//            ) // Enable the beeper when reading Card successfully
-//            put(
-//                TransactionTag.ENABLE_TAP_SWIPE_COLLISION.tag,
-//                false
-//            ) // Use the first payment method detected when encounter a collision within a short period of time.
-//            put(
-//                TransactionTag.PRIORITIZED_CANDIDATE_APP.tag,
-//                "A0000000031010"
-//            ) // Prioritize Visa Credit
-//            put(
-//                TransactionTag.DISABLE_CHECK_MSR_FORMAT.tag,
-//                true
-//            ) // Disable checking the validity of the format of the Magnetic Strip Card's Track Data's Format
+        enterAmountAfterReadRecordFlag = spAmount.selectedItem as Amount == Amount.ENTER_AFTER_READ_RECORD
+        val transParams = EmvUtil.generateTransactionParameters(
+            enterAmountAfterReadRecordFlag,
+            (spAmount.selectedItem as Amount).amount,
+            cardMode,
+            (spEmvOptions.selectedItem as EmvOptions).value,
+            (spFallbackSwitch.selectedItem as FallbackSwitch).value
+            )
+        if (spAmount.selectedItem == Amount.ENTER_AFTER_READ_RECORD) {
+            Toast.makeText(requireContext(), "Please Insert Card", Toast.LENGTH_SHORT).show()
+        } else if (spFallbackSwitch.selectedItem == FallbackSwitch.DISABLED) {
+            Toast.makeText(requireContext(), "Please Insert/Tap/Swipe Card", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(requireContext(), "Please Insert/Tap Card", Toast.LENGTH_SHORT).show()
         }
-        enterAmountAfterReadRecordFlag =
-            etAmount.text.toString().toDoubleOrNull() == null || etAmount.text.toString().toDoubleOrNull() == 0.00
+        btnStartEmv.isEnabled = false
+        btnStopEmv.isEnabled = true
+        tvResult.text = ""
+        result.clear()
+        cvmAddition.clear()
+        tvrBeforeTrm = ""
         Thread {
             runCatching {
-                requireActivity().runOnUiThread {
-                    Toast.makeText(requireContext(), "Please Insert/Tap/Swipe Card", Toast.LENGTH_SHORT).show()
-                    btnStartEmv.isEnabled = false
-                    btnStopEmv.isEnabled = true
-                    tvResult.text = ""
-                }
-                result.clear()
-                cvmAddition.clear()
-                tvrBeforeTrm = ""
+
                 mEmvKernelManager.startKernel(transParams)
             }.onFailure {
                 it.printStackTrace()
@@ -415,17 +481,6 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     // <-------------------EMV methods-------------------> //
 
 //    private fun addAidUpiIcc() { // UnionPay International
-//        // 1. Contact (ICC)
-////        mEmvKernelManager.apply {
-////            iccAid.put("aid", "A000000333010102") // UnionPay Debit ICC
-////            updateAID(ContantPara.Operation.ADD, iccAid)
-////            iccAid.put("aid", "A000000333010103") // UnionPay Debit ICC
-////            updateAID(ContantPara.Operation.ADD, iccAid)
-////            iccAid.put("aid", "A000000333010106") // UnionPay Debit ICC
-////            updateAID(ContantPara.Operation.ADD, iccAid)
-////            iccAid.put("aid", "A000000333010108") // UnionPay Debit ICC
-////            updateAID(ContantPara.Operation.ADD, iccAid)
-////        }
 //
 //        // 2. Contactless (PICC)
 //        val piccAid = Hashtable<String, String>().apply {
@@ -453,9 +508,14 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
     private fun processOfflinePinOnce(pinEntryType: Int, emvBundle: Bundle) { // Reason of having this methods, so it can be executed recursively
         Log.e(TAG, "processOfflinePinOnce: pinEntryType=$pinEntryType, avaiablePinTryTimes:${emvBundle.getInt(PIN_TRY_TIMES)}")
+        val actualAmount = if (enterAmountAfterReadRecordFlag) {
+            String.format(Locale.US, "%.2f", amountEx)
+        } else {
+            (spAmount.selectedItem as Amount).amount
+        }
         val message = when (emvBundle.getInt(PIN_TRY_TIMES)) {
-            2 -> "Please enter PIN, $${etAmount.text}\nTwo last tries! Enter carefully!"
-            1 -> "Please enter PIN, $${etAmount.text}\nLast try! Card might be locked if fails!"
+            2 -> "Please enter PIN, $$actualAmount\nTwo last tries! Enter carefully!"
+            1 -> "Please enter PIN, $$actualAmount\nLast try! Card might be locked if fails!"
             else -> ""
         }
         val pinpadBundle = Bundle().apply {
@@ -527,15 +587,70 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         }
     }
 
-    // <---------------------Listeners---------------------> //
+    private fun showAmountInputDialog(
+        context: Context,
+        onConfirm: (String) -> Unit,
+        onCancel: (() -> Unit)? = null
+    ) {
+        val et = EditText(context).apply {
+            hint = "Enter the Amount"
+            inputType = InputType.TYPE_CLASS_NUMBER or
+                    InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
 
+        var dialog: AlertDialog? = null
+        val amountEnterTimeoutHandler = Handler(Looper.getMainLooper())
+        val amountEnterTimeoutRunnable = Runnable {
+            dialog?.dismiss()
+            onCancel?.invoke()
+            Toast.makeText(requireContext(), "Enter Amount TIMEOUT", Toast.LENGTH_SHORT).show()
+        }
+
+        dialog = AlertDialog.Builder(context)
+            .setTitle("Enter Amount")
+            .setView(et)
+            .setCancelable(false)
+            .setNegativeButton("Cancel") { _, _ ->
+                Toast.makeText(requireContext(), "Transaction Cancelled", Toast.LENGTH_SHORT).show()
+                amountEnterTimeoutHandler.removeCallbacks(amountEnterTimeoutRunnable)
+                onCancel?.invoke()
+            }
+            .setPositiveButton("OK") { _, _ ->
+                amountEnterTimeoutHandler.removeCallbacks(amountEnterTimeoutRunnable)
+                val amount = et.text?.toString()?.trim().orEmpty()
+                val v = amount.toDoubleOrNull()
+                if (v == null || v <= 0) {
+                    Toast.makeText(context, "Invalid amount", Toast.LENGTH_SHORT).show()
+                    onCancel?.invoke()
+                    return@setPositiveButton
+                }
+                val fixedAmount = String.format(Locale.US, "%.2f", v)
+                onConfirm(fixedAmount)
+            }.show()
+        amountEnterTimeoutHandler.postDelayed(amountEnterTimeoutRunnable, 30000)
+    }
+
+    // <---------------------Listeners---------------------> //
 
     private val mEmvListener = object: EmvListener {
         override fun onRequestSetAmount() {
             // Call when ENTER_AMOUNT_AFTER_READ_RECORD=true and not entered any amount before kernel starts
-            Log.e(TAG, "onRequestSetAmount: amount=1.00")
+            Log.e(TAG, "onRequestSetAmount: ")
             if (enterAmountAfterReadRecordFlag) {
-                mEmvKernelManager.setAmountEx("1.00", null)
+                requireActivity().runOnUiThread {
+                    showAmountInputDialog(
+                        context = requireContext(),
+                        onConfirm = { amount ->
+                            amountEx = amount.toFloat()
+                            mEmvKernelManager.setAmountEx(amount, null)
+                        },
+                        onCancel = {
+                            mEmvKernelManager.abortKernel()
+                            btnStartEmv.isEnabled = true
+                            btnStopEmv.isEnabled = false
+                        }
+                    )
+                }
             }
         }
 
@@ -543,20 +658,38 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             checkCardResult: ContantPara.CheckCardResult,
             hashtable: Hashtable<String?, String?>
         ) {
-            Log.e(TAG, "onReturnCheckCardResult: checkCardResult=$checkCardResult")
-            Log.e(TAG, "onReturnCheckCardResult: hashtable$hashtable")
+            Log.e(TAG, "onReturnCheckCardResult: cardResult=$checkCardResult")
             when (checkCardResult) {
                 ContantPara.CheckCardResult.MSR -> {
-                    Log.e(TAG, "onReturnCheckCardResult: StripInfo=${hashtable.get("StripInfo")}")
-                    Log.e(TAG, "onReturnCheckCardResult: CardNo=${hashtable.get("CardNo")}")
+                    // MSR is not part of EMV, this will end the Kernel and APP will handle the uplink to Issuer.
                     cardReadMode = CardReadMode.SWIPE
-                    result.apply {
-                        append("<===========Card Detected===========>\n\n")
-                        append("Card Type: Magnetic Stripe Card\n\n")
+                    val stripeInfo = EmvUtil.parseStripeInfo(hashtable.get("StripInfo")!!)
+                    val track1Info = EmvUtil.parseTrack1(stripeInfo.track1 ?: "")
+                    val track2Info = EmvUtil.parseTrack2(stripeInfo.track2 ?: "")
+                    requireActivity().runOnUiThread {
+                        tvResult.text = buildString {
+                            append("<=========Magnetic Stripe Card=========>\n\n")
+                            append("CardNo: ${hashtable.get("CardNo")}\n\n")
+                            append("TRACK_1: ${stripeInfo.track1}\n")
+                            append(" - PAN: ${track1Info?.pan}\n")
+                            append(" - Name: ${track1Info?.name}\n")
+                            append(" - ExpiryDate: ${track1Info?.expiryYYMM}\n")
+                            append(" - ServiceCode: ${track1Info?.serviceCode}\n")
+                            append(" - Discretionary: ${track1Info?.discretionary}\n\n")
+                            append("TRACK_2: ${stripeInfo.track2}\n")
+                            append(" - PAN: ${track2Info?.pan}\n")
+                            append(" - ExpiryDate: ${track2Info?.expiryYYMM}\n")
+                            append(" - ServiceCode: ${track2Info?.serviceCode}\n")
+                            append(" - Discretionary: ${track2Info?.discretionary}\n\n")
+                            append("TRACK_3: ${stripeInfo.track3}\n")
+                            append("(Please refer to Issuer for more Info)\n\n")
+                            append("<==========Transaction Ends==========>")
+                            btnStartEmv.isEnabled = true
+                            btnStopEmv.isEnabled = false
+                        }
                     }
-                    requireActivity().runOnUiThread { Toast.makeText(requireContext(), "Magnetic Stripe Card detected", Toast.LENGTH_SHORT).show() }
                 }
-                ContantPara.CheckCardResult.INSERTED_CARD -> {
+                ContantPara.CheckCardResult.INSERTED_CARD -> { // ICC(Contact)
                     cardReadMode = CardReadMode.CONTACT
                     result.apply {
                         append("<===========Card Detected===========>\n\n")
@@ -564,7 +697,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     }
                     requireActivity().runOnUiThread { Toast.makeText(requireContext(), "ICC Card detected", Toast.LENGTH_SHORT).show() }
                 }
-                ContantPara.CheckCardResult.TAP_CARD_DETECTED -> {
+                ContantPara.CheckCardResult.TAP_CARD_DETECTED -> { // PICC(Contactless)
                     cardReadMode = CardReadMode.CONTACTLESS
                     result.apply {
                         append("<===========Card Detected===========>\n\n")
@@ -573,81 +706,140 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     requireActivity().runOnUiThread { Toast.makeText(requireContext(), "PICC Card detected", Toast.LENGTH_SHORT).show() }
                 }
                 ContantPara.CheckCardResult.NEED_FALLBACK -> {
+                    // Can be triggered if anything went wrong with ICCard when FALLBACK_SWITCH=1. e.g. (a). Present Any Rectangle thing (b). no related-AID loaded for the ICCard
+                    // Because startKernel() is called again(SWIPE_OR_TAP). Kernel will look for PICC or MSC.
+                    // MSC won't be block by FALLBACK_SWITCH in this case
                     Log.e(TAG, "onReturnCheckCardResult: NEED_FALLBACK")
-                    requireActivity().runOnUiThread { Toast.makeText(requireContext(), "NEED_FALLBACK: Please Swipe or Tap!", Toast.LENGTH_SHORT).show() }
-                    while (!mEmvKernelManager.CheckCardIsOut(10000)) { Thread.sleep(50) }
-                    Log.e(TAG, "onReturnCheckCardResult: Card is out")
+                    do {
+                        requireActivity().runOnUiThread {
+                            Toast.makeText(requireContext(), "NEED_FALLBACK. Please remove the ICCard", Toast.LENGTH_SHORT).show()
+                        }
+                    } while (!mEmvKernelManager.CheckCardIsOut(5000))
                     requireActivity().runOnUiThread {
-                        onStartEmvButtonClicked(ContantPara.CheckCardMode.SWIPE_OR_TAP)
+                        val transParams = EmvUtil.generateTransactionParameters(
+                            enterAmountAfterReadRecordFlag,
+                            (spAmount.selectedItem as Amount).amount,
+                            ContantPara.CheckCardMode.SWIPE_OR_TAP,
+                            (spEmvOptions.selectedItem as EmvOptions).value,
+                            (spFallbackSwitch.selectedItem as FallbackSwitch).value
+                        )
+                        Thread {
+                            requireActivity().runOnUiThread {
+                                Toast.makeText(requireContext(), "Please Tap/Swipe Card", Toast.LENGTH_SHORT).show()
+                            }
+                            mEmvKernelManager.startKernel(transParams)
+                        }.start()
+                    }
+                }
+                ContantPara.CheckCardResult.USE_ICC_CARD -> {
+                    // Can be triggered if present Mag Card when TRANS_FALLBACK_SWITCH=1.
+                    // Because startKernel() is called again(SWIPE_OR_TAP). Kernel will look for PICC or MSC.
+                    // This will terminal the kernel (without calling abortKernel())
+                    Log.e(TAG, "onReturnCheckCardResult: USE_ICC_CARD")
+                    requireActivity().runOnUiThread {
+//                        btnStartEmv.isEnabled = true
+//                        btnStopEmv.isEnabled = false
+//                        tvResult.text = buildString {
+//                            append("<======Transaction Ends: USE_ICC_CARD======>\n\n")
+//                            append("This can be triggered if TRANS_FALLBACK_SWITCH=1 and present Mag Card")
+//                        }
+                        requireActivity().runOnUiThread {
+                            val transParams = EmvUtil.generateTransactionParameters(
+                                enterAmountAfterReadRecordFlag,
+                                (spAmount.selectedItem as Amount).amount,
+                                ContantPara.CheckCardMode.INSERT,
+                                (spEmvOptions.selectedItem as EmvOptions).value,
+                                (spFallbackSwitch.selectedItem as FallbackSwitch).value)
+                            Thread {
+                                requireActivity().runOnUiThread {
+                                    Toast.makeText(requireContext(), "Please insert Card (FALLBACK on)", Toast.LENGTH_SHORT).show()
+                                }
+                                mEmvKernelManager.startKernel(transParams)
+                            }.start()
+                        }
                     }
                 }
                 ContantPara.CheckCardResult.BAD_SWIPE -> {
+                    // Can be triggered by a very bad SWIPE
+                    // This will end the Kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: BAD_SWIPE")
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), "BAD_SWIPE", Toast.LENGTH_SHORT).show()
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
                         tvResult.text = buildString {
-                            append("<======Transaction Ends: BAD_SWIPE======>")
+                            append("<======Transaction Ends: BAD_SWIPE======>\n\n")
+                            append("This can be triggered by a very bad SWIPE")
                         }
                     }
                 }
                 ContantPara.CheckCardResult.NOT_ICC -> {
+                    // Can be triggered by present Any Rectangle thing(TRANS_FALLBACK_SWITCH=0)
+                    // This will end the Kernel immediately after removing the card (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: NOT_ICC")
+                    do { // 10s is the period to toast
+                        requireActivity().runOnUiThread {
+                            Toast.makeText(requireContext(), "NOT_ICC. Please remove the ICCard", Toast.LENGTH_SHORT).show()
+                        }
+                    } while (!mEmvKernelManager.CheckCardIsOut(5000))
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), "NOT_ICC", Toast.LENGTH_SHORT).show()
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
                         tvResult.text = buildString {
-                            append("<======Transaction Ends: NOT_ICC======>")
+                            append("<======Transaction Ends: NOT_ICC======>\n\n")
+                            append("This can be triggered by present anything that triggers the Reader's sensor.\n")
+                            append("e.g. SLE card; Name Card, and etc.\n\n")
+                            append("Please note:\n")
+                            append("This will only be triggered if TRANS_FALLBACK_SWITCH=0\n")
+                            append("if TRANS_FALLBACK_SWITCH=1, NEED_FALLBACK will be called")
                         }
                     }
                 }
                 ContantPara.CheckCardResult.TIMEOUT -> {
+                    // Can be triggered by not presenting any card. The TIMEOUT can be set via transParameters
+                    // This will end the Kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: TIMEOUT")
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), "TIMEOUT after 30s", Toast.LENGTH_SHORT).show()
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
                         tvResult.text = buildString {
-                            append("<======Transaction Ends: TIMEOUT======>")
+                            append("<======Transaction Ends: TIMEOUT======>\n\n")
+                            append("This can be triggered if didn't present any Card within the countdown")
                         }
                     }
                 }
                 ContantPara.CheckCardResult.CANCEL -> {
+                    // Can be triggered by pressing btnStopEmv
+                    // This will end the Kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: CANCEL")
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), "CANCEL", Toast.LENGTH_SHORT).show()
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
                         tvResult.text = buildString {
-                            append("<======Transaction Ends: CANCEL======>")
+                            append("<======Transaction Ends: CANCEL======>\n\n")
+                            append("This can be triggered if abortKernel() is called")
                         }
                     }
                 }
                 ContantPara.CheckCardResult.DEVICE_BUSY -> {
+                    // This will end the Kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: DEVICE_BUSY")
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), "DEVICE_BUSY", Toast.LENGTH_SHORT).show()
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
                         tvResult.text = buildString {
-                            append("<======Transaction Ends: DEVICE_BUSY======>")
+                            append("<======Transaction Ends: DEVICE_BUSY======>\n\n")
+                            append("This can be triggered if Reading modules are in used")
                         }
                     }
                 }
-                ContantPara.CheckCardResult.USE_ICC_CARD -> {
-                    Log.e(TAG, "onReturnCheckCardResult: USE_ICC_CARD")
-                    requireActivity().runOnUiThread { Toast.makeText(requireContext(), "USE_ICC_CARD", Toast.LENGTH_SHORT).show() }
-                }
                 ContantPara.CheckCardResult.MULT_CARD -> {
+                    // Can be triggered by tapping more than one PICCs
+                    // This won't terminate the kernel. Thus, no need to re-call startKernel()
                     Log.e(TAG, "onReturnCheckCardResult: MULT_CARD")
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), "MULT_CARD", Toast.LENGTH_SHORT).show()
-                        btnStartEmv.isEnabled = true
-                        btnStopEmv.isEnabled = false
-                        tvResult.text = buildString {
-                            append("<======Transaction Ends: MULT_CARD======>")
+                        Toast.makeText(requireContext(), "MULT_CARD! Please try again!", Toast.LENGTH_SHORT).show()
+                        result.apply {
+                            append("<========MULT_CARD Detected========>\n\n")
                         }
                     }
                 }
@@ -666,12 +858,16 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
         override fun onRequestPinEntry(pinEntrySource: ContantPara.PinEntrySource?) {
             // CVM - OnlinePIN: will callback this method
-
             cvmAddition.append("CVM_OnlinePIN: ")
+            val actualAmount = if (enterAmountAfterReadRecordFlag) {
+                String.format(Locale.US, "%.2f", amountEx)
+            } else {
+                (spAmount.selectedItem as Amount).amount
+            }
             val pinpadBundle = Bundle().apply {
                 putString(PinParams.CARD_NO.tag, getCardNo(mEmvKernelManager.getValByTag(0x5A), mEmvKernelManager.getValByTag(0x57))) // The field is a Must for generating PINBlock
                 putString(PinParams.TITLE.tag, "Online PinPad - Emv Demo") // "" by default
-                putString(PinParams.MESSAGE.tag, "Please enter PIN, $${etAmount.text}") // "" by default
+                putString(PinParams.MESSAGE.tag, "Please enter PIN, $$actualAmount") // "" by default
                 putString(PinParams.SUPPORT_PIN_LEN.tag, "0,4,6") // Will use the one set by last time by default. Thus, must set before using.
                 putLong(PinParams.TIMEOUT_MS.tag, 30000) // Time out since opening the Pad. 0 by default, must set!
                 putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
@@ -718,20 +914,23 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             Log.e(TAG, "onRequestConfirmCardno: $ret", )
             result.apply {
                 append("<==========Terminal Params==========>\n\n")
-
-                append("IFD SN ASCII: ${hexToAscii(mEmvKernelManager.getValByTag(0x9F1E))}\n")
-                append("TID ASCII: ${hexToAscii(mEmvKernelManager.getValByTag(0x9F1C))}\n")
+//                append("IFD SN ASCII: ${hexToAscii(mEmvKernelManager.getValByTag(0x9F1E))}\n")
+//                append("TID ASCII: ${hexToAscii(mEmvKernelManager.getValByTag(0x9F1C))}\n")
+//                append("Merchant Category Code: ${mEmvKernelManager.getValByTag(0x9F15)} - ${parseMerchantCategoryCode2String(mEmvKernelManager.getValByTag(0x9F15))}\n")
                 append("Terminal Type: ${mEmvKernelManager.getValByTag(0x9F35)} - ${parseTerminalType2String(mEmvKernelManager.getValByTag(0x9F35))}\n")
-                append("Merchant Category Code: ${mEmvKernelManager.getValByTag(0x9F15)} - ${parseMerchantCategoryCode2String(mEmvKernelManager.getValByTag(0x9F15))}\n")
-                append("Currency Exponent: ${mEmvKernelManager.getValByTag(0x5F36)}\n")
                 append("Country Code: ${mEmvKernelManager.getValByTag(0x9F1A)} - ${parseCountryCode2String(mEmvKernelManager.getValByTag(0x9F1A))}\n")
+                append("Currency Exponent: ${mEmvKernelManager.getValByTag(0x5F36)}\n")
                 append("Terminal Capabilities: ${mEmvKernelManager.getValByTag(0x9F33)}\n")
-                append("Add_Terminal_Capabilities: ${mEmvKernelManager.getValByTag(0x9F40)}\n\n")
+                append("Add_Terminal_Capabilities: ${mEmvKernelManager.getValByTag(0x9F40)}\n")
+                append("ThresholdRandomSwitch: ${thresholdRandomSwitchMap[sharedPreferences.getString(KEY_THRESHOLD_RANDOM_SWITCH, DEFAULT_THRESHOLD_RANDOM_SWITCH) ?: DEFAULT_THRESHOLD_RANDOM_SWITCH]}\n")
+                append("Target Percentage(Fixed): 50\n")
+                append("Max Target Percentage(Fixed): 99\n\n")
 
-                append("Floor Limit(App): ${mEmvKernelManager.getValByTag(0x9F1B)}\n")
+                append("Threshold(App): ${formatAmount12(mEmvKernelManager.getValByTag(0xDF15), 2)}\n")
+                append("Floor Limit(App): ${formatAmount12(mEmvKernelManager.getValByTag(0x9F1B), 2)}\n")
                 append("TAC_DENIAL(App): ${mEmvKernelManager.getValByTag(0xDF13)}\n")
                 append("TAC_ONLINE(App): ${mEmvKernelManager.getValByTag(0xDF12)}\n")
-                append("TAC_DEFAULT(OFFLINE):App): ${mEmvKernelManager.getValByTag(0xDF11)}\n")
+                append("TAC_DEFAULT(APP)(Offline): ${mEmvKernelManager.getValByTag(0xDF11)}\n\n")
 
             }
             result.apply {
@@ -962,12 +1161,26 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             msgID: ContantPara.NfcTipMessageID?,
             msg: String?
         ) {
-            Log.e(TAG, "onNFCrequestTipsConfirm: ")
-            TODO("Not yet implemented")
+            Log.e(TAG, "onNFCrequestTipsConfirm: msgID=${msgID}, msg=$msg")
+            result.apply {
+                append("<===========NFC Tip Msg===========>\n\n ")
+                append(" - $msg\n\n")
+            }
+
+            when (msgID) {
+                ContantPara.NfcTipMessageID.CARD_READ_OK -> {
+                    SoundTool.getMySound(requireContext()).playSound(SOUND_TYPE_SUCCESS)
+                }
+                ContantPara.NfcTipMessageID.END_APPLICATION -> {
+                    SoundTool.getMySound(requireContext()).playSound(SOUND_TYPE_ERROR)
+                }
+                else -> null
+            }
+
         }
 
         override fun onReturnNfcCardData(hashtable: Hashtable<String?, String?>?) {
-            Log.e(TAG, "onReturnNfcCardData: ")
+            Log.e(TAG, "onReturnNfcCardData: hashTable=$hashtable")
             TODO("Not yet implemented")
         }
 
@@ -977,13 +1190,68 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         }
 
         override fun onNFCrequestImportPin(type: Int, lastTimeFlag: Int, amt: String?) {
-            Log.e(TAG, "onNFCrequestImportPin: ")
-            TODO("Not yet implemented")
+            // CVM OnlinePIN for NFC(PICC)
+            cvmAddition.append("CVM_OnlinePIN: ")
+            val actualAmount = if (enterAmountAfterReadRecordFlag) {
+                String.format(Locale.US, "%.2f", amountEx)
+            } else {
+                (spAmount.selectedItem as Amount).amount
+            }
+            val pinpadBundle = Bundle().apply {
+                putString(PinParams.CARD_NO.tag, getCardNo(mEmvKernelManager.getValByTag(0x5A), mEmvKernelManager.getValByTag(0x57))) // The field is a Must for generating PINBlock
+                putString(PinParams.TITLE.tag, "Online PinPad - Emv Demo") // "" by default
+                putString(PinParams.MESSAGE.tag, "Please enter PIN, $$actualAmount") // "" by default
+                putString(PinParams.SUPPORT_PIN_LEN.tag, "0,4,6") // Will use the one set by last time by default. Thus, must set before using.
+                putLong(PinParams.TIMEOUT_MS.tag, 30000) // Time out since opening the Pad. 0 by default, must set!
+                putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
+//                putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.value, false) // false by default. The keypad moving up & down for security reason
+//                putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.value, false) // false by default. Set true to display the Amount.
+//                putBoolean(PinParams.ONLINE_PIN.value, false) // Dukpt PIN Pad for Online PIN
+//                putString(PinParams.INFO_LOCATION.value, "CENTER") // CENTER by default. Can change to LEFT or RIGHT
+//                putBoolean(PinParams.SOUND.value, false) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
+//                putBoolean(PinParams.FULL_SCREEN.value, true) // true by default. Won't have Cancel button when half screen
+//                putBoolean(PinParams.BYPASS.value, false) // Support 0 PIN or not. false by default.
+
+            }
+            if (mPinpadManager.DukptGetKsn(Dukpt.PIN.index, ByteArray(10)) == 0x00) {
+                Log.e(TAG, "onRequestPinEntry: DUKPT Pinpad was called")
+                cvmAddition.append("DUKPT Pinpad was called\n\n")
+                pinpadBundle.putInt(PinParams.PIN_KEY_NO.tag, Dukpt.PIN.index) // Must set, will call onError otherwise
+                mPinpadManager.GetDukptPinBlock(pinpadBundle, mPinInputListener)
+            } else {
+                Log.e(TAG, "onRequestPinEntry: MK/SK Pinpad was called")
+                cvmAddition.append("MK/SK Pinpad was called\n\n")
+                pinpadBundle.putInt(PinParams.PIN_KEY_NO.tag, 99) // The keySlot of the PIN_KEY to use for encryption. Must Set since onlinePin must be encrypted!
+                mPinpadManager.getPinBlockEx(pinpadBundle, mPinInputListener)
+            }
         }
 
         override fun onNFCTransResult(result: ContantPara.NfcTransResult?) {
-            Log.e(TAG, "onNFCTransResult: ")
-            TODO("Not yet implemented")
+            Log.e(TAG, "onNFCTransResult: result=${result}")
+            when (result) {
+                ContantPara.NfcTransResult.ONLINE_APPROVAL,
+                ContantPara.NfcTransResult.OFFLINE_APPROVAL -> {
+                    mySoundTool.playSound(SOUND_TYPE_SUCCESS)
+                }
+                ContantPara.NfcTransResult.TERMINATE,
+                ContantPara.NfcTransResult.CARD_REMOVED -> {
+                    mySoundTool.playSound(SOUND_TYPE_ERROR)
+                }
+                ContantPara.NfcTransResult.RETRY -> {
+                    mEmvKernelManager.abortKernel()
+                    onStartEmvButtonClicked(ContantPara.CheckCardMode.SWIPE_OR_INSERT_OR_TAP)
+                    return
+                }
+                else -> null
+            }
+
+            this@HomeFragment.result.insert(0, "<============$result============>\n\n")
+            requireActivity().runOnUiThread {
+                btnStartEmv.isEnabled = true
+                btnStopEmv.isEnabled = false
+                tvResult.text = this@HomeFragment.result
+                Toast.makeText(requireContext(), result.toString(), Toast.LENGTH_SHORT).show()
+            }
         }
 
         override fun onNFCErrorInfor(
@@ -991,7 +1259,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             strErrInfo: String?
         ) {
             Log.e(TAG, "onNFCErrorInfor: ")
-            TODO("Not yet implemented")
+
         }
 
         override fun onNFCrequestFinalSelect(aid: ByteArray?) {
@@ -1064,15 +1332,18 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     private fun uiRefreshOnTermParamsUpdated() {
         tvResult.text = buildString {
             append("<=======Terminal Params updated=======>\n\n")
-            append("IFD_SN_ASCII: 12345678\n")
-            append("TID_ASCII: 87654321\n")
+//            append("IFD_SN_ASCII: 12345678\n")
+//            append("TID_ASCII: 87654321\n")
+//            append("Merchant_Category: 7011(Hotel)\n")
+//            append("Currency(Fixed): 0978(EURO)\n")
             append("Terminal_Type:${sharedPreferences.getString(KEY_TERMINAL_TYPE, DEFAULT_TERMINAL_TYPE)}\n")
-            append("Merchant_Category: 7011(Hotel)\n")
-            append("Transaction_Currency_Exp: 02\n")
-            append("Currency(fixed): 0978(EURO)\n")
-            append("Country: ${sharedPreferences.getString(KEY_TERMINAL_COUNTRY_CODE, DEFAULT_COUNTRY_CODE)}\n")
+            append("Country: ${sharedPreferences.getString(KEY_TERMINAL_COUNTRY_CODE, DEFAULT_TERMINAL_COUNTRY_CODE)}\n")
+            append("Transaction_Currency_Exp(Fixed): 02\n")
             append("Terminal_Capabilities: ${sharedPreferences.getString(KEY_TERMINAL_CAPABILITIES, DEFAULT_TERMINAL_CAPABILITIES)}\n")
-            append("Add_Terminal_Capabilities: 6000F0A001")
+            append("Add_Terminal_Capabilities: 6000F0A001(Fixed)\n")
+            append("ThresholdRandomSwitch: ${thresholdRandomSwitchMap[sharedPreferences.getString(KEY_THRESHOLD_RANDOM_SWITCH, DEFAULT_THRESHOLD_RANDOM_SWITCH) ?: DEFAULT_THRESHOLD_RANDOM_SWITCH]}\n")
+            append("Target Percentage(Fixed): 50\n")
+            append("Max Target Percentage(Fixed): 99")
         }
     }
 
@@ -1089,6 +1360,9 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         }
     }
 }
+
+
+
 
 
 

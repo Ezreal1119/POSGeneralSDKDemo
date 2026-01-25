@@ -22,7 +22,7 @@ import com.urovo.i9000s.api.emv.ContantPara
 import com.urovo.i9000s.api.emv.EmvNfcKernelApi
 
 private const val ALL_F_10_BYTES = "FFFFFFFFFF"
-    private const val ALL_0_10_BYTES = "0000000000"
+private const val ALL_0_10_BYTES = "0000000000"
 private const val CLASSIC_TAC_A = "DC4004F800"
 private const val CLASSIC_TAC_B = "BC78BCA800"
 
@@ -31,25 +31,29 @@ const val KEY_CONTACT_TAC_DENIAL = "contact_tac_denial"
 const val KEY_CONTACT_TAC_ONLINE = "contact_tac_online"
 const val KEY_CONTACT_TAC_DEFAULT = "contact_tac_default"
 
-const val DEFAULT_FLOOR_LIMIT = "000000000000"
 const val DEFAULT_CONTACT_TAC_DENIAL = ALL_0_10_BYTES
 const val DEFAULT_CONTACT_TAC_ONLINE = CLASSIC_TAC_A
 const val DEFAULT_CONTACT_TAC_DEFAULT = CLASSIC_TAC_B
 
-const val UNION_PAY = "UnionPay"
-const val VISA = "Visa"
-const val MASTER_CARD = "MasterCard"
+const val UNION_PAY_ICC = "UnionPay_ICC"
+const val UNION_PAY_PICC = "UnionPay_PICC"
+const val VISA_ICC = "Visa_ICC"
+const val VISA_PICC = "Visa_PICC"
+const val MASTER_CARD_ICC = "MasterCard_ICC"
+const val MASTER_CARD_PICC = "MasterCard_PICC"
 
 class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
 
     private val tvInfo get() = requireView().findViewById<TextView>(R.id.tvInfo)
 
-    private val btnAddUnionPay get() = requireView().findViewById<Button>(R.id.btnAddUnionPay)
-    private val btnAddVisa get() = requireView().findViewById<Button>(R.id.btnAddVisa)
-    private val btnAddMasterCard get() = requireView().findViewById<Button>(R.id.btnAddMasterCard)
+    private val btnAddUnionPayIcc get() = requireView().findViewById<Button>(R.id.btnAddUnionPayIcc)
+    private val btnAddVisaIcc get() = requireView().findViewById<Button>(R.id.btnAddVisaIcc)
+    private val btnAddMasterCardIcc get() = requireView().findViewById<Button>(R.id.btnAddMasterCardIcc)
+    private val btnAddUnionPayPicc get() = requireView().findViewById<Button>(R.id.btnAddUnionPayPicc)
+    private val btnAddVisaPicc get() = requireView().findViewById<Button>(R.id.btnAddVisaPicc)
+    private val btnAddMasterCardPicc get() = requireView().findViewById<Button>(R.id.btnAddMasterCardPicc)
     private val btnClearAllAid get() = requireView().findViewById<Button>(R.id.btnClearAllAid)
 
-    private val spFloorLimit get() = requireView().findViewById<Spinner>(R.id.spFloorLimit)
     private val spTacDenial get() = requireView().findViewById<Spinner>(R.id.spTacDenial)
     private val spTacOnline get() = requireView().findViewById<Spinner>(R.id.spTacOnline)
     private val spTacDefault get() = requireView().findViewById<Spinner>(R.id.spTacDefault)
@@ -61,21 +65,19 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
 
     private val sharedVm: SharedVm by activityViewModels()
 
-    private val arrayOfFloorLimit = arrayOf("000000000000", "000000000100", "000000010000", "000001000000", "000100000000", "010000000000")
     private val arrayOfTac = arrayOf(ALL_0_10_BYTES, ALL_F_10_BYTES, CLASSIC_TAC_A, CLASSIC_TAC_B)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         sharedPreferences = requireContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
-        btnAddUnionPay.setOnClickListener { onAddUnionPayButtonClicked() }
-        btnAddVisa.setOnClickListener { onAddVisaButtonClicked() }
-        btnAddMasterCard.setOnClickListener { onAddMasterCardButtonClicked() }
+        btnAddUnionPayIcc.setOnClickListener { onAddUnionPayIccButtonClicked() }
+        btnAddVisaIcc.setOnClickListener { onAddVisaIccButtonClicked() }
+        btnAddMasterCardIcc.setOnClickListener { onAddMasterCardIccButtonClicked() }
+        btnAddUnionPayPicc.setOnClickListener { onAddUnionPayPiccButtonClicked() }
+        btnAddVisaPicc.setOnClickListener { onAddVisaPiccButtonClicked() }
+        btnAddMasterCardPicc.setOnClickListener { onAddMasterCardPiccButtonClicked() }
         btnClearAllAid.setOnClickListener { onClearAllAidButtonClicked() }
 
-        spFloorLimit.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfFloorLimit).apply {
-            setDropDownViewResource(simple_spinner_dropdown_item)
-        }
-        spFloorLimit.setSelection(arrayOfFloorLimit.indexOf(sharedPreferences.getString(KEY_FLOOR_LIMIT, DEFAULT_FLOOR_LIMIT)))
 
         spTacDenial.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfTac).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
@@ -91,18 +93,16 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
         spTacDefault.setSelection(arrayOfTac.indexOf(sharedPreferences.getString(KEY_CONTACT_TAC_DEFAULT, DEFAULT_CONTACT_TAC_DEFAULT)))
-
     }
 
-    private fun onAddUnionPayButtonClicked() {
+    private fun onAddUnionPayIccButtonClicked() {
         sharedPreferences.edit {
-            putString(KEY_FLOOR_LIMIT, spFloorLimit.selectedItem as String)
             putString(KEY_CONTACT_TAC_DENIAL, spTacDenial.selectedItem as String)
             putString(KEY_CONTACT_TAC_ONLINE, spTacOnline.selectedItem as String)
             putString(KEY_CONTACT_TAC_DEFAULT, spTacDefault.selectedItem as String)
         }
         runCatching {
-            EmvUtil.addAidUpiIcc(mEmvKernelManager, spFloorLimit.selectedItem as String, spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
+            EmvUtil.addAidUpiIcc(mEmvKernelManager, "000000010000", "00020000", spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
         }.onSuccess {
             Toast.makeText(requireContext(), "Add UnionPay Params successfully", Toast.LENGTH_SHORT).show()
             tvInfo.text = buildString {
@@ -110,40 +110,41 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
                 append(" - Card Type: IcCard\n")
                 append(" - AID: A000000333010101 - UnionPay\n")
                 append(" - App Version: 0030\n")
-                append(" - Floor Limit: ${formatAmount12(spFloorLimit.selectedItem as String, 2)}\n")
+                append(" - Threshold(Fixed): 100.00\n")
+                append(" - Floor Limit(Fixed): 200.00\n")
                 append(" - Contact TAC DENIAL: ${spTacDenial.selectedItem as String}\n")
                 append(" - Contact TAC ONLINE: ${spTacOnline.selectedItem as String}\n")
                 append(" - Contact TAC DEFAULT: ${spTacDefault.selectedItem as String}\n")
-                append(" - Defaul DDOL: 9F3704")
+                append(" - Defaul DDOL: 9F3704(Fixed)")
             }
-            sharedVm.triggerAppParamsLoadedRefresh(UNION_PAY)
+            sharedVm.triggerAppParamsLoadedRefresh(UNION_PAY_ICC)
         }.onFailure {
             tvInfo.text = it.message
             it.printStackTrace()
         }
     }
 
-    private fun onAddVisaButtonClicked() {
+    private fun onAddVisaIccButtonClicked() {
         sharedPreferences.edit {
-            putString(KEY_FLOOR_LIMIT, spFloorLimit.selectedItem as String)
             putString(KEY_CONTACT_TAC_DENIAL, spTacDenial.selectedItem as String)
             putString(KEY_CONTACT_TAC_ONLINE, spTacOnline.selectedItem as String)
             putString(KEY_CONTACT_TAC_DEFAULT, spTacDefault.selectedItem as String)
         }
         runCatching {
-            EmvUtil.addAidVisaIcc(mEmvKernelManager, spFloorLimit.selectedItem as String, spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
+            EmvUtil.addAidVisaIcc(mEmvKernelManager, "000000010000", "00020000", spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
             tvInfo.text = buildString {
                 append("<======APP Params added/updated======>\n\n")
                 append(" - Card Type: IcCard\n")
                 append(" - AID: A0000000031010 - Visa\n")
                 append(" - App Version: 0002\n")
-                append(" - Floor Limit: ${formatAmount12(spFloorLimit.selectedItem as String, 2)}\n")
+                append(" - Threshold(Fixed): 100.00\n")
+                append(" - Floor Limit(Fixed): 200.00\n")
                 append(" - Contact TAC DENIAL: ${spTacDenial.selectedItem as String}\n")
                 append(" - Contact TAC ONLINE: ${spTacOnline.selectedItem as String}\n")
                 append(" - Contact TAC DEFAULT: ${spTacDefault.selectedItem as String}\n")
-                append(" - Defaul DDOL: 9F3704")
+                append(" - Defaul DDOL: 9F3704(Fixed)")
             }
-            sharedVm.triggerAppParamsLoadedRefresh(VISA)
+            sharedVm.triggerAppParamsLoadedRefresh(VISA_ICC)
         }.onSuccess {
             Toast.makeText(requireContext(), "Add Visa Params successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
@@ -152,15 +153,14 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
         }
     }
 
-    private fun onAddMasterCardButtonClicked() {
+    private fun onAddMasterCardIccButtonClicked() {
         sharedPreferences.edit {
-            putString(KEY_FLOOR_LIMIT, spFloorLimit.selectedItem as String)
             putString(KEY_CONTACT_TAC_DENIAL, spTacDenial.selectedItem as String)
             putString(KEY_CONTACT_TAC_ONLINE, spTacOnline.selectedItem as String)
             putString(KEY_CONTACT_TAC_DEFAULT, spTacDefault.selectedItem as String)
         }
         runCatching {
-            EmvUtil.addAidMasterCardIcc(mEmvKernelManager, spFloorLimit.selectedItem as String, spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
+            EmvUtil.addAidMasterCardIcc(mEmvKernelManager, "000000010000", "00020000", spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
         }.onSuccess {
             Toast.makeText(requireContext(), "Add MasterCard Params successfully", Toast.LENGTH_SHORT).show()
             tvInfo.text = buildString {
@@ -168,17 +168,37 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
                 append(" - Card Type: IcCard\n")
                 append(" - AID: A0000000041010 - MasterCard\n")
                 append(" - App Version: 0002\n")
-                append(" - Floor Limit: ${formatAmount12(spFloorLimit.selectedItem as String, 2)}\n")
+                append(" - Threshold(Fixed): 100.00\n")
+                append(" - Floor Limit(Fixed): 200.00\n")
                 append(" - Contact TAC DENIAL: ${spTacDenial.selectedItem as String}\n")
                 append(" - Contact TAC ONLINE: ${spTacOnline.selectedItem as String}\n")
                 append(" - Contact TAC DEFAULT: ${spTacDefault.selectedItem as String}\n")
-                append(" - Defaul DDOL: 9F3704")
+                append(" - Defaul DDOL: 9F3704(Fixed)")
             }
-            sharedVm.triggerAppParamsLoadedRefresh(MASTER_CARD)
+            sharedVm.triggerAppParamsLoadedRefresh(MASTER_CARD_ICC)
         }.onFailure {
             tvInfo.text = it.message
             it.printStackTrace()
         }
+    }
+
+    private fun onAddUnionPayPiccButtonClicked() {
+        runCatching {
+            EmvUtil.addAidUpiPicc(mEmvKernelManager)
+            sharedVm.triggerAppParamsLoadedRefresh(UNION_PAY_PICC)
+        }.onFailure {
+            tvInfo.text = it.message
+            it.printStackTrace()
+        }
+    }
+
+    private fun onAddVisaPiccButtonClicked() {
+        sharedVm.triggerAppParamsLoadedRefresh(VISA_PICC)
+    }
+
+    private fun onAddMasterCardPiccButtonClicked() {
+        sharedVm.triggerAppParamsLoadedRefresh(MASTER_CARD_PICC)
+
     }
 
     private fun onClearAllAidButtonClicked() {

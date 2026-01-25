@@ -1,5 +1,6 @@
 package com.example.posgeneralsdkdemo.others
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.device.DeviceManager
@@ -10,6 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.R
 import androidx.core.content.edit
+import com.example.posgeneralsdkdemo.utils.PermissionUtil
 
 
 private const val PREF_KIOSK = "pref_kiosk"
@@ -22,16 +24,18 @@ const val PACKAGE_COMPONENT_MAIN = "com.example.posgeneralsdkdemo/com.example.po
 class KioskRelatedActivity : AppCompatActivity() {
 
     private val btnEnableHome by lazy { findViewById<Button>(R.id.btnEnableHome) }
-    private val btnDisenableHome by lazy { findViewById<Button>(R.id.btnDisenableHome) }
+    private val btnDisableHome by lazy { findViewById<Button>(R.id.btnDisableHome) }
     private val btnEnableRecent by lazy { findViewById<Button>(R.id.btnEnableRecent) }
-    private val btnDisenableRecent by lazy { findViewById<Button>(R.id.btnDisenableRecent) }
+    private val btnDisableRecent by lazy { findViewById<Button>(R.id.btnDisableRecent) }
     private val btnEnableStatusBar by lazy { findViewById<Button>(R.id.btnEnableStatusBar) }
-    private val btnDisenableStatusBar by lazy { findViewById<Button>(R.id.btnDisenableStatusBar) }
+    private val btnDisableStatusBar by lazy { findViewById<Button>(R.id.btnDisableStatusBar) }
     private val btnSetKiosk by lazy { findViewById<Button>(R.id.btnSetKiosk) }
     private val btnCancelKiosk by lazy { findViewById<Button>(R.id.btnCancelKiosk) }
     private val btnSetKioskPwd123456 by lazy { findViewById<Button>(R.id.btnSetKioskPwd123456) }
     private val btnSetAutoStart by lazy { findViewById<Button>(R.id.btnSetAutoStart) }
     private val btnCancelAutoStart by lazy { findViewById<Button>(R.id.btnCancelAutoStart) }
+    private val btnSetDefaultLauncher by lazy { findViewById<Button>(R.id.btnSetDefaultLauncher) }
+    private val btnCancelDefaultLauncher by lazy { findViewById<Button>(R.id.btnCancelDefaultLauncher) }
     private val btnSetForceLockScreen by lazy { findViewById<Button>(R.id.btnSetForceLockScreen) }
 
     private fun pref() = getSharedPreferences(PREF_KIOSK, MODE_PRIVATE)
@@ -41,41 +45,47 @@ class KioskRelatedActivity : AppCompatActivity() {
         setContentView(R.layout.activity_kiosk_related)
 
         btnEnableHome.setOnClickListener { onEnableHomeButtonClicked() }
-        btnDisenableHome.setOnClickListener { onDisenableHomeButtonClicked() }
+        btnDisableHome.setOnClickListener { onDisableHomeButtonClicked() }
         btnEnableRecent.setOnClickListener { onEnableRecentButtonClicked() }
-        btnDisenableRecent.setOnClickListener { onDisnableRecentButtonClicked() }
+        btnDisableRecent.setOnClickListener { onDisableRecentButtonClicked() }
         btnEnableStatusBar.setOnClickListener { onEnableStatusBarButtonClicked() }
-        btnDisenableStatusBar.setOnClickListener { onDisenableStatusBarButtonClicked() }
+        btnDisableStatusBar.setOnClickListener { onDisableStatusBarButtonClicked() }
         btnSetKiosk.setOnClickListener { onSetKioskButtonClicked() }
         btnCancelKiosk.setOnClickListener { onCancelKioskButtonClicked() }
         btnSetKioskPwd123456.setOnClickListener { onSetKioskPwd123456ButtonClicked() }
         btnSetAutoStart.setOnClickListener { onSetAutoStartButtonClicked() }
         btnCancelAutoStart.setOnClickListener { onCancelAutoStartButtonClicked() }
+        btnSetDefaultLauncher.setOnClickListener { onSetDefaultLauncherButtonClicked() }
+        btnCancelDefaultLauncher.setOnClickListener { onCancelDefaultLauncherButtonClicked() }
         btnSetForceLockScreen.setOnClickListener { onSetForceLockScreenButtonClicked() }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+        }
     }
 
     override fun onStart() {
         super.onStart()
         if (pref().getBoolean(KEY_HOME_ENABLED, true)) {
             btnEnableHome.isEnabled = false
-            btnDisenableHome.isEnabled = true
+            btnDisableHome.isEnabled = true
         } else {
             btnEnableHome.isEnabled = true
-            btnDisenableHome.isEnabled = false
+            btnDisableHome.isEnabled = false
         }
         if (pref().getBoolean(KEY_RECENT_ENABLED, true)) {
             btnEnableRecent.isEnabled = false
-            btnDisenableRecent.isEnabled = true
+            btnDisableRecent.isEnabled = true
         } else {
             btnEnableRecent.isEnabled = true
-            btnDisenableRecent.isEnabled = false
+            btnDisableRecent.isEnabled = false
         }
         if (pref().getBoolean(STATUS_BAR_ENABLED, true)) {
             btnEnableStatusBar.isEnabled = false
-            btnDisenableStatusBar.isEnabled = true
+            btnDisableStatusBar.isEnabled = true
         } else {
             btnEnableStatusBar.isEnabled = true
-            btnDisenableStatusBar.isEnabled = false
+            btnDisableStatusBar.isEnabled = false
         }
     }
 
@@ -92,20 +102,20 @@ class KioskRelatedActivity : AppCompatActivity() {
         }.onSuccess {
             pref().edit { putBoolean(KEY_HOME_ENABLED, true) }
             btnEnableHome.isEnabled = false
-            btnDisenableHome.isEnabled = true
+            btnDisableHome.isEnabled = true
         }.onFailure {
             it.printStackTrace()
         }
     }
 
 
-    private fun onDisenableHomeButtonClicked() {
+    private fun onDisableHomeButtonClicked() {
         runCatching {
             DeviceManager().enableHomeKey(false)
         }.onSuccess {
             pref().edit { putBoolean(KEY_HOME_ENABLED, false) }
             btnEnableHome.isEnabled = true
-            btnDisenableHome.isEnabled = false
+            btnDisableHome.isEnabled = false
         }.onFailure {
             it.printStackTrace()
         }
@@ -122,14 +132,14 @@ class KioskRelatedActivity : AppCompatActivity() {
         }.onSuccess {
             pref().edit { putBoolean(KEY_RECENT_ENABLED, true) }
             btnEnableRecent.isEnabled = false
-            btnDisenableRecent.isEnabled = true
+            btnDisableRecent.isEnabled = true
         }.onFailure {
             it.printStackTrace()
         }
     }
 
 
-    private fun onDisnableRecentButtonClicked() {
+    private fun onDisableRecentButtonClicked() {
         runCatching {
             if (isOnScreenButtons()) {
                 DeviceManager().rightKeyEnabled = false
@@ -139,7 +149,7 @@ class KioskRelatedActivity : AppCompatActivity() {
         }.onSuccess {
             pref().edit { putBoolean(KEY_RECENT_ENABLED, false) }
             btnEnableRecent.isEnabled = true
-            btnDisenableRecent.isEnabled = false
+            btnDisableRecent.isEnabled = false
         }.onFailure {
             it.printStackTrace()
         }
@@ -152,20 +162,20 @@ class KioskRelatedActivity : AppCompatActivity() {
         }.onSuccess {
             pref().edit { putBoolean(STATUS_BAR_ENABLED, true) }
             btnEnableStatusBar.isEnabled = false
-            btnDisenableStatusBar.isEnabled = true
+            btnDisableStatusBar.isEnabled = true
         }.onFailure {
             it.printStackTrace()
         }
     }
 
 
-    private fun onDisenableStatusBarButtonClicked() {
+    private fun onDisableStatusBarButtonClicked() {
         runCatching {
             DeviceManager().enableStatusBar(false)
         }.onSuccess {
             pref().edit { putBoolean(STATUS_BAR_ENABLED, false) }
             btnEnableStatusBar.isEnabled = true
-            btnDisenableStatusBar.isEnabled = false
+            btnDisableStatusBar.isEnabled = false
         }.onFailure {
             it.printStackTrace()
         }
@@ -219,6 +229,28 @@ class KioskRelatedActivity : AppCompatActivity() {
             DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN), 0)
         }.onSuccess {
             Toast.makeText(this, "Cancel AutoStart successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onSetDefaultLauncherButtonClicked() {
+        runCatching {
+            DeviceManager().setDefaultLauncher(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN))
+        }.onSuccess {
+            Toast.makeText(this, "Set Default Launcher successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onCancelDefaultLauncherButtonClicked() {
+        runCatching {
+            DeviceManager().removeDefaultLauncher(packageName)
+        }.onSuccess {
+            Toast.makeText(this, "Cancel Default Launcher successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
             Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
             it.printStackTrace()

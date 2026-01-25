@@ -1,5 +1,6 @@
 package com.example.posgeneralsdkdemo.others
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.device.DeviceManager
 import android.net.ConnectivityManager
@@ -13,6 +14,7 @@ import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.R
+import com.example.posgeneralsdkdemo.utils.DeviceInfoUtil
 import com.urovo.sdk.utils.SystemProperties.getSystemProperty
 import java.nio.charset.StandardCharsets
 import java.security.KeyPairGenerator
@@ -76,6 +78,7 @@ class DeviceInfoActivity : AppCompatActivity() {
                     append("WiFi status: Not connection to WiFi!\n")
                 } else {
                     append("SSID: ${wifiManager.connectionInfo.ssid}\n")
+                    append("WiFi IP: ${DeviceInfoUtil.getWifiIpv4(this@DeviceInfoActivity)}\n")
                 }
                 append("WiFi MAC: ${DeviceManager().getSettingProperty("persist.sys.device.wifimac")}\n")
                 append("WiFi Whitelist: ${DeviceManager().wifiWhiteList}\n")
@@ -304,4 +307,5 @@ class DeviceInfoActivity : AppCompatActivity() {
             false
         }
     }
+
 }

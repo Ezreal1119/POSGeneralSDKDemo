@@ -12,7 +12,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // This method is called when the BroadcastReceiver is receiving an Intent broadcast.
         if (Intent.ACTION_BOOT_COMPLETED == intent.action) {
-            Log.e(TAG, "onReceive: elapsedRealtime=${SystemClock.elapsedRealtime()}")
+            Log.e(TAG, "BootReceiver - onReceive: elapsedRealtime=${SystemClock.elapsedRealtime()}")
         }
     }
 }

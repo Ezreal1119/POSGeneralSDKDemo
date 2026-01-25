@@ -2,6 +2,8 @@ package com.example.posgeneralsdkdemo.btprinter
 
 import android.Manifest
 import android.R.layout.simple_list_item_1
+import android.R.layout.simple_spinner_dropdown_item
+import android.R.layout.simple_spinner_item
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -16,6 +18,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ListView
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -47,7 +50,7 @@ private val PERMISSIONS = arrayOf(
 )
 private const val PERMISSION_REQ_BT = 1001
 
-private const val CONTENT =
+const val CONTENT_2_INCH =
             "       WALMART SUPERCENTER     \n" +
             " 1234 MAIN STREET, ANYTOWN, USA\n" +
             "       TEL: (555) 123-4567     \n" +
@@ -69,6 +72,50 @@ private const val CONTENT =
             "-------------------------------\n" +
             "    THANK YOU FOR SHOPPING     \n" +
             "       PLEASE VISIT AGAIN      "
+const val CONTENT_3_INCH =
+    "              WALMART SUPERCENTER              \n" +
+            "        1234 MAIN STREET, ANYTOWN, USA         \n" +
+            "              TEL: (555) 123-4567              \n" +
+            "------------------------------------------------\n" +
+            "QTY   ITEM                     PRICE      TOTAL\n" +
+            "------------------------------------------------\n" +
+            " 1    MILK 1 GAL                $3.49      $3.49\n" +
+            " 2    BREAD LOAF                $1.99      $3.98\n" +
+            " 1    EGGS DOZEN                $2.79      $2.79\n" +
+            " 3    APPLES                    $0.99      $2.97\n" +
+            "------------------------------------------------\n" +
+            "SUBTOTAL                                  $13.23\n" +
+            "TAX (8.25%)                                $1.09\n" +
+            "------------------------------------------------\n" +
+            "TOTAL                                     $14.32\n" +
+            "------------------------------------------------\n" +
+            "CASH                                      $20.00\n" +
+            "CHANGE                                     $5.68\n" +
+            "------------------------------------------------\n" +
+            "               THANK YOU FOR SHOPPING            \n" +
+            "                  PLEASE VISIT AGAIN             "
+const val CONTENT_4_INCH =
+    "                        WALMART SUPERCENTER                        \n" +
+            "                  1234 MAIN STREET, ANYTOWN, USA                   \n" +
+            "                        TEL: (555) 123-4567                        \n" +
+            "----------------------------------------------------------------\n" +
+            "QTY     ITEM                                   PRICE        TOTAL\n" +
+            "----------------------------------------------------------------\n" +
+            " 1      MILK 1 GAL                              $3.49        $3.49\n" +
+            " 2      BREAD LOAF                              $1.99        $3.98\n" +
+            " 1      EGGS DOZEN                              $2.79        $2.79\n" +
+            " 3      APPLES                                  $0.99        $2.97\n" +
+            "----------------------------------------------------------------\n" +
+            "SUBTOTAL                                                     $13.23\n" +
+            "TAX (8.25%)                                                   $1.09\n" +
+            "----------------------------------------------------------------\n" +
+            "TOTAL                                                        $14.32\n" +
+            "----------------------------------------------------------------\n" +
+            "CASH                                                         $20.00\n" +
+            "CHANGE                                                        $5.68\n" +
+            "----------------------------------------------------------------\n" +
+            "                     THANK YOU FOR SHOPPING                      \n" +
+            "                        PLEASE VISIT AGAIN                        "
 
 class SppBluetoothPrinterActivity : AppCompatActivity() {
 
@@ -79,12 +126,15 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
     private val btnConnectBluetooth by lazy { findViewById<Button>(R.id.btnConnectBluetooth) }
     private val btnDisconnectBluetooth by lazy { findViewById<Button>(R.id.btnDisconnectBluetooth) }
     private val btnPrintText by lazy { findViewById<Button>(R.id.btnPrintText) }
+    private val spPrintSize by lazy { findViewById<Spinner>(R.id.spPrintSize) }
 
     private var socket: BluetoothSocket? = null
     private val foundDevices = mutableListOf<BluetoothDevice>() // Use to
     private var scanAdapter: ArrayAdapter<String>? = null // The adapter for the List View
     // The mechanism of scanning is that the foundDevices is mapped to scanAdapter index-to-index
     private var scanDialog: AlertDialog? = null
+
+    private val arrayOfSize = arrayOf("2 inch", "3 inch", "4 inch")
 
     private val btScanReceiver = object : BroadcastReceiver() {
         @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -132,6 +182,10 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
 
         etBluetoothMac.doOnTextChanged { text, _, _, _ ->
             btnConnectBluetooth.isEnabled = isValidMacAddress(etBluetoothMac.text.toString())
+        }
+
+        spPrintSize.adapter = ArrayAdapter(this, simple_spinner_item, arrayOfSize).apply {
+            setDropDownViewResource(simple_spinner_dropdown_item)
         }
     }
 
@@ -190,7 +244,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
             val adapter = BluetoothAdapter.getDefaultAdapter() ?: throw Exception("No BluetoothAdapter") // Make sure Device supports BT
             if (!adapter.isEnabled) { // Make sure BT is turned on first
                 enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) // Use Intent(Settings.ACTION_BLUETOOTH_SETTINGS) to jump to BT settings instead
-                return
+                return@runCatching
             }
             foundDevices.clear()
             val displayList = mutableListOf<String>() // For display devices that have been saved in the adapter before on the BT List
@@ -235,7 +289,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
                 val adapter = BluetoothAdapter.getDefaultAdapter() ?: throw Exception("No BluetoothAdapter") // Make sure Device supports BT
                 if (!adapter.isEnabled) { // Make sure BT is turned on first
                     enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) // Use Intent(Settings.ACTION_BLUETOOTH_SETTINGS) to jump to BT settings instead
-                    return@Thread
+                    return@runCatching
                 }
                 if (adapter.isDiscovering) adapter.cancelDiscovery() // Make sure BT adapter is not searching for new BT device
                 val device = adapter.getRemoteDevice(mac) // Get the device of specific BT MAC
@@ -289,7 +343,12 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
             runCatching {
                 val s = socket ?: throw Exception("Not connected yet")
                 val os = s.outputStream
-                val contentInBytes = CONTENT.toByteArray(Charsets.UTF_8) // If wants to support Chinese Characters, use "content.toByteArray(Charset.forName("GBK"))"
+                val contentInBytes: ByteArray = when (spPrintSize.selectedItem as String) { // If wants to support Chinese Characters, use "content.toByteArray(Charset.forName("GBK"))"
+                    arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charsets.UTF_8)
+                    arrayOfSize[1] -> CONTENT_3_INCH.toByteArray(Charsets.UTF_8)
+                    arrayOfSize[2] -> CONTENT_4_INCH.toByteArray(Charsets.UTF_8)
+                    else -> ByteArray(0)
+                }
                 // Using ESC/POS
                 os.write(byteArrayOf(0x1B, 0x40)) // Initialize
                 os.write(byteArrayOf(0x1B, 0x61, 0x01)) // Align Center
@@ -301,7 +360,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
                 os.write("Signature: Patrick Xu\n".toByteArray(Charsets.UTF_8))
                 os.write(byteArrayOf(0x1B, 0x61, 0x02)) // Align Right
                 os.write("Date: $time".toByteArray(Charsets.UTF_8))
-                os.write(byteArrayOf(0x0A, 0x0A)) // feed line
+                os.write(byteArrayOf(0x0A, 0x0A, 0x0A)) // feed line
                 os.flush() // Start printing
             }.onSuccess {
                 runOnUiThread {
