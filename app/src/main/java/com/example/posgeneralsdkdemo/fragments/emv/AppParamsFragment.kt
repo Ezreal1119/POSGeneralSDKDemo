@@ -104,9 +104,9 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
         runCatching {
             EmvUtil.addAidUpiIcc(mEmvKernelManager, "000000010000", "00020000", spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
         }.onSuccess {
-            Toast.makeText(requireContext(), "Add UnionPay Params successfully", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Add UnionPay ICC Params successfully", Toast.LENGTH_SHORT).show()
             tvInfo.text = buildString {
-                append("<======APP Params added/updated======>\n\n")
+                append("<======APP_ICC Params added/updated======>\n\n")
                 append(" - Card Type: IcCard\n")
                 append(" - AID: A000000333010101 - UnionPay\n")
                 append(" - App Version: 0030\n")
@@ -132,8 +132,10 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
         }
         runCatching {
             EmvUtil.addAidVisaIcc(mEmvKernelManager, "000000010000", "00020000", spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
+        }.onSuccess {
+            Toast.makeText(requireContext(), "Add Visa ICC Params successfully", Toast.LENGTH_SHORT).show()
             tvInfo.text = buildString {
-                append("<======APP Params added/updated======>\n\n")
+                append("<======APP_ICC Params added/updated======>\n\n")
                 append(" - Card Type: IcCard\n")
                 append(" - AID: A0000000031010 - Visa\n")
                 append(" - App Version: 0002\n")
@@ -145,8 +147,6 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
                 append(" - Defaul DDOL: 9F3704(Fixed)")
             }
             sharedVm.triggerAppParamsLoadedRefresh(VISA_ICC)
-        }.onSuccess {
-            Toast.makeText(requireContext(), "Add Visa Params successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
             tvInfo.text = it.message
             it.printStackTrace()
@@ -162,9 +162,9 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
         runCatching {
             EmvUtil.addAidMasterCardIcc(mEmvKernelManager, "000000010000", "00020000", spTacDenial.selectedItem as String, spTacOnline.selectedItem as String, spTacDefault.selectedItem as String)
         }.onSuccess {
-            Toast.makeText(requireContext(), "Add MasterCard Params successfully", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Add MasterCard ICC Params successfully", Toast.LENGTH_SHORT).show()
             tvInfo.text = buildString {
-                append("<======APP Params added/updated======>\n\n")
+                append("<======APP_ICC Params added/updated======>\n\n")
                 append(" - Card Type: IcCard\n")
                 append(" - AID: A0000000041010 - MasterCard\n")
                 append(" - App Version: 0002\n")
@@ -185,6 +185,18 @@ class AppParamsFragment : Fragment(R.layout.fragment_app_params) {
     private fun onAddUnionPayPiccButtonClicked() {
         runCatching {
             EmvUtil.addAidUpiPicc(mEmvKernelManager)
+        }.onSuccess {
+            Toast.makeText(requireContext(), "Add UnionPay PICC Params successfully", Toast.LENGTH_SHORT).show()
+            tvInfo.text = buildString {
+                append("<======APP_PICC Params added/updated======>\n\n")
+                append(" - Card Type: UpiCard\n")
+                append(" - AID: A000000333010101 - UnionPay\n")
+                append(" - Floor Limit(Fixed): 0.00\n")
+                append(" - CVM Required Limit(Fixed): 300.00\n")
+                append(" - Transaction Limit(Fixed): 50000.00\n")
+                append(" - TTQ(Fixed): 36004000\n")
+                append(" - Limit Switch(Fixed): FE00\n")
+            }
             sharedVm.triggerAppParamsLoadedRefresh(UNION_PAY_PICC)
         }.onFailure {
             tvInfo.text = it.message

@@ -5,7 +5,6 @@ import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -173,9 +172,9 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
         inflateRow(llRow3, row3Spec)
 
         tvTerminalType.setOnClickListener {
-            showCountryWheelDialog(
+            showWheelDialog(
                 context = requireContext(),
-                countries = terminalTypeCodeMap.map { (code, name) -> "$name - $code" },
+                list = terminalTypeCodeMap.map { (code, name) -> "$name - $code" },
                 current = tvTerminalType.text?.toString()
             ) { selected ->
                 tvTerminalType.text = selected
@@ -184,9 +183,9 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
         }
 
         tvTerminalCountry.setOnClickListener {
-            showCountryWheelDialog(
+            showWheelDialog(
                 context = requireContext(),
-                countries = countryCodeMap.map { (code, name) -> "$name - $code" },
+                list = countryCodeMap.map { (code, name) -> "$name - $code" },
                 current = tvTerminalCountry.text?.toString()
             ) { selected ->
                 tvTerminalCountry.text = selected
@@ -195,9 +194,9 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
         }
 
         tvThresholdRandomSwitch.setOnClickListener {
-            showCountryWheelDialog(
+            showWheelDialog(
                 context = requireContext(),
-                countries = thresholdRandomSwitchMap.map { (code, name) -> "$name - $code" },
+                list = thresholdRandomSwitchMap.map { (code, name) -> "$name - $code" },
                 current = tvThresholdRandomSwitch.text?.toString()
             ) { selected ->
                 tvThresholdRandomSwitch.text = selected
@@ -260,19 +259,19 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
         }
     }
 
-    private fun showCountryWheelDialog(
+    private fun showWheelDialog(
         context: Context,
-        countries: List<String>,
+        list: List<String>,
         current: String? = null,
         onSelected: (String) -> Unit
     ) {
         val picker = NumberPicker(context).apply {
             minValue = 0
-            maxValue = countries.size - 1
-            displayedValues = countries.toTypedArray()
-            wrapSelectorWheel = true
+            maxValue = list.size - 1
+            displayedValues = list.toTypedArray()
+            wrapSelectorWheel = false
 
-            val idx = current?.let { countries.indexOf(it) } ?: -1
+            val idx = current?.let { list.indexOf(it) } ?: -1
             if (idx >= 0) value = idx
         }
 
@@ -281,7 +280,7 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
             .setView(picker)
             .setNegativeButton("Cancel", null)
             .setPositiveButton("OK") { _, _ ->
-                onSelected(countries[picker.value])
+                onSelected(list[picker.value])
             }
             .show()
     }

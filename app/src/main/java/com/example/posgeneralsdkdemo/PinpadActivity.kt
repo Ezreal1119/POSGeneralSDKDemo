@@ -5,6 +5,7 @@ import android.device.SEManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,17 +14,26 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.enums.Dukpt
+import com.example.posgeneralsdkdemo.enums.PinParams
+import com.example.posgeneralsdkdemo.enums.Tr31Params
 import com.example.posgeneralsdkdemo.utils.DataUtil
 import com.example.posgeneralsdkdemo.utils.DebugUtil
+import com.example.posgeneralsdkdemo.utils.PermissionUtil
 import com.example.posgeneralsdkdemo.utils.PinpadUtil
 import com.example.posgeneralsdkdemo.utils.PinpadUtil.toHexString
+import com.example.posgeneralsdkdemo.utils.Tr34Type
+import com.urovo.i9000s.api.emv.ContantPara
 import com.urovo.sdk.pinpad.PinPadProviderImpl
 import com.urovo.sdk.pinpad.listener.OfflinePinInputListener
 import com.urovo.sdk.pinpad.listener.PinInputListener
 import com.urovo.sdk.pinpad.utils.Constant
 import com.urovo.sdk.utils.BytesUtil
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.text.Charsets.UTF_8
 
 /**
@@ -61,6 +71,10 @@ private const val MAC_ANSI_919 = "DD0106290E3A4B08"
 private const val TRACK2_DATA = "621996044447640027D0506101152641"
 private const val TRACK2_DATA_DES_ECB = "1F2570DB45E40261D323ADA0FB83DB870787547AACCFEBB7257C76AF088733DF"
 private const val TRACK2_DATA_DES_CBC = "1F2570DB45E4026190C86844CB06EAA0A5F0C6845C0E0873DA31C229AE3D5FE4"
+private const val KBPK = "B28DD617072DDCFD61BD3741D7F30B02"
+private const val KBPK_KCV = "3584A2"
+// Header(24Bytes) + EncryptedKey(16Bytes) + MAC(8Bytes) = 48 Bytes
+private const val TR31_KEY_BLOCK = "B0096P0TB0AE000001B5202B8A1015E560564CF9C9AE36504AB876E93E09F5BDFC7825D84CC99C4E7AA97767C87AC2CA"
 
 private const val RANDOM_NUMBER = "18956198561290728915719572156891565189658916589165259681256193565794"
 private const val RANDOM_NUMBER_HASH = "4D84872A9699102D036F3CC8930F9332C7A8FE5DDD3A94F201FBFDA46BFE289"
@@ -92,6 +106,12 @@ class PinpadActivity : AppCompatActivity() {
     private val btnCalcHash by lazy { findViewById<Button>(R.id.btnCalcHash) }
     private val btnPinBlockWKOnline by lazy { findViewById<Button>(R.id.btnPinBlockWKOnline) }
     private val btnPinBlockWKOffline by lazy { findViewById<Button>(R.id.btnPinBlockWKOffline) }
+    private val etTr34Data by lazy { findViewById<EditText>(R.id.etTr34Data) }
+    private val btnWriteTr34Data by lazy { findViewById<Button>(R.id.btnWriteTr34Data) }
+    private val btnReadTr34Data by lazy { findViewById<Button>(R.id.btnReadTr34Data) }
+    private val btnDownloadTr31Wk by lazy { findViewById<Button>(R.id.btnDownloadTr31Wk) }
+    private val btnDownloadTr31DukptTDes by lazy { findViewById<Button>(R.id.btnDownloadTr31DukptTDes) }
+
     private val btnDownloadDukpt by lazy { findViewById<Button>(R.id.btnDownloadDukpt) }
     private val btnDukptGetKSN by lazy { findViewById<Button>(R.id.btnDukptGetKSN) }
     private val btnDeleteDukpt by lazy { findViewById<Button>(R.id.btnDeleteDukpt) }
@@ -112,6 +132,7 @@ class PinpadActivity : AppCompatActivity() {
     private val mPinpadManager = PinPadProviderImpl.getInstance()
     private var encryptedDataCache: ByteArray? = null
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_pinpad)
@@ -128,6 +149,11 @@ class PinpadActivity : AppCompatActivity() {
         btnCalcHash.setOnClickListener { onCalcHashButtonClicked() }
         btnPinBlockWKOnline.setOnClickListener { onPinBlockWKOnlineButtonClicked() }
         btnPinBlockWKOffline.setOnClickListener { onPinBlockWKOfflineButtonClicked() }
+        btnWriteTr34Data.setOnClickListener { onWriteTr34DataButtonClicked() }
+        btnReadTr34Data.setOnClickListener { onReadTr34DataButtonClicked() }
+        btnDownloadTr31Wk.setOnClickListener { onDownloadTr31WkButtonClicked() }
+        btnDownloadTr31DukptTDes.setOnClickListener { onDownloadTr31DukptTDesButtonClicked() }
+
         btnDownloadDukpt.setOnClickListener { onDownloadDukptButtonClicked() }
         btnDukptGetKSN.setOnClickListener { onDukptGetKSNButtonClicked() }
         btnDeleteDukpt.setOnClickListener { onDeleteDukptButtonClicked() }
@@ -583,8 +609,119 @@ class PinpadActivity : AppCompatActivity() {
 
 
     private fun onPinBlockWKOfflineButtonClicked() {
+        // Test this in EMV module, because it needs to interact with the Card for the result.
         Toast.makeText(this, "Test this in EMV Module", Toast.LENGTH_SHORT).show()
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun onWriteTr34DataButtonClicked() { // TR34 in this case means the [Encrypted_SessionKey + Encrypted_TR31] -> Raw Data
+        runCatching {
+            val dataToWrite = etTr34Data.text.toString() + "\n" + LocalDateTime.now().format(
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            val ret = PinpadUtil.writeTr34Cert(Tr34Type.TYPE_PED_CRT.type, 3, dataToWrite.toByteArray())
+            if (ret != 0x00) throw Exception("Wrote TR34 Message failed")
+            return@runCatching dataToWrite
+        }.onSuccess { dataToWrite ->
+            tvResult.text = buildString {
+                append("Wrote TR34 Message to PED_CRT_3 successfully\n\n")
+                append("Message: $dataToWrite\n\n")
+                append("Please note:\n")
+                append("TR34 Message should be TR31 encrypted by Session Key, and the Session Key itself encrypted by the PED_PK extracted from PED_CERT")
+            }
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onReadTr34DataButtonClicked() { // TR34 in this case means the [Encrypted_SessionKey + Encrypted_TR31] -> Raw Data
+        val data = ByteArray(2048)
+        val dataLen = IntArray(2)
+        runCatching {
+            val ret = PinpadUtil.readTr34Cert(Tr34Type.TYPE_PED_CRT.type, 3, data, dataLen)
+            if (ret != 0x00) throw Exception("Read TR34 Message failed")
+        }.onSuccess {
+            tvResult.text = buildString {
+                append("Read TR34 Message successfully\n\n")
+                append("Message: ${String(data.copyOf(dataLen[0]))}")
+            }
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onDownloadTr31WkButtonClicked() {
+        val kbpkInBytes = BytesUtil.hexString2Bytes(KBPK)
+        val kbpkKcvInBytes = BytesUtil.hexString2Bytes(KBPK_KCV)
+        val tr34MessageCache = ByteArray(2048)
+        val tr34MessageLen = IntArray(2)
+        runCatching {
+            // Extract TR31 Key Block from TR34 Message first (In reality, should be decryption of SessionKey, and decryption of TR31)
+            var retInt = PinpadUtil.readTr34Cert(Tr34Type.TYPE_PED_CRT.type, 3, tr34MessageCache, tr34MessageLen)
+            if (retInt != 0x00) throw Exception("Read TR34 Message Failed")
+            val tr31DownloadBuddle = Bundle().apply {
+                putInt(Tr31Params.KBPK_MK_INDEX.tag, INDEX_NINETY_NINE)
+                putInt(Tr31Params.KEY_WK_LOAD_INDEX.tag, INDEX_NINETY_NINE)
+                // Use this to simulate the extraction of TR31 Key Block from TR34 Message
+                putByteArray(Tr31Params.TR31_KEY_BLOCK_IN_BYTES.tag, String(tr34MessageCache.copyOf(tr34MessageLen[0])).substring(0, 96).toByteArray())
+                putInt(Tr31Params.TR31_KEY_BLOCK_LEN.tag, 96)
+            }
+            // Load KBPK as a MainKey to Slot_99(No need TEK for decryption)
+            var ret = mPinpadManager.loadMainKey(INDEX_NINETY_NINE, kbpkInBytes, kbpkKcvInBytes)
+            if (!ret) throw Exception("Load KBPK(MainKey) failed")
+            // Use KBPK to decrypt the TR31 Key Block then extract the KEY into PIN_KEY@Slot_99
+            ret = mPinpadManager.downloadKeyTR31(Constant.KeyType.MAIN_KEY, Constant.KeyType.PIN_KEY, tr31DownloadBuddle)
+            if (!ret) throw Exception("Download(Extract) KEY from TR31 failed")
+            // Verify if the KEY has been loaded into PIN_KEY@Slot_99 by calculating the KCV and compare it with the given one.
+            val kcvBuffer = ByteArray(8)
+            retInt = mPinpadManager.calculateDes(Constant.DesMode.ENC, Constant.Algorithm.DES_ECB, Constant.KeyType.PIN_KEY, INDEX_NINETY_NINE, ByteArray(8), kcvBuffer)
+            if (retInt != 0x00) throw Exception("Calculated KCV for Key downloaded failed")
+            return@runCatching kcvBuffer
+        }.onSuccess { kcvBuffer ->
+            tvResult.text = buildString {
+                append("TR31 Key Block Downloaded successfully!\n\n")
+                append("TR31: ${String(tr34MessageCache.copyOf(tr34MessageLen[0])).substring(0, 96)}\n")
+                append("Key Usage: ${PinpadUtil.parseTr31KeyUsage(String(tr34MessageCache.copyOf(tr34MessageLen[0])).substring(0, 96))}\n")
+                append("Algorithm: ${PinpadUtil.parseTr31Algorithm(String(tr34MessageCache.copyOf(tr34MessageLen[0])).substring(0, 96))}\n\n")
+                append("KCV: ${BytesUtil.bytes2HexString(kcvBuffer).substring(0, 6)} (Calculated)\n")
+                append("KCV: 1F66CA (Expected)\n\n")
+                append("Please note:\n")
+                append(" - TR34 Message was downloaded into TYPE_PED_CRT_3 beforehand, and TR31 Key Block was extracted from TR34 Message.\n")
+                append(" - KBPK was loaded to MainKey_99 beforehand\n")
+                append(" - Then Key was extracted from TR31 using KBPK(3DES)\n")
+                append(" - Finally, the Key was downloaded to PIN_KEY_99\n")
+                append(" - For verification: use the KEY to encrypt a ByteArray(8) full of 0s, then take the first 6 digits(3 Bytes)\n\n")
+                append("Key Usages: [6, 7]\n")
+                append(" - 2B: DUKPT BDK\n")
+                append(" - 2A: DUKPT IPEK\n")
+                append(" - P0: PIN Encryption Key\n")
+                append(" - M0: MAC Key\n")
+                append(" - D0: Data Encryption Key\n")
+                append(" - K0: Key Encrypting Key (KEK)\n")
+                append(" - B0/B1: Base Derivation Key\n\n")
+                append("Algorithm: [8]\n")
+                append(" - A: AES\n")
+                append(" - T: TDES(16Bytes/32Bytes Key Length)\n")
+                append(" - D: DES(8Bytes Key Length)\n")
+                append(" - H: HMAC\n")
+                append(" - R: RSA")
+            }
+        }.onFailure {
+            tvResult.text = it.message
+            tvResult.append("\n\nThis might due to TR31 not being Valid e.g.:\n - Not Valid TR31 format\n - MAC verification fails")
+            it.printStackTrace()
+        }
+
+    }
+
+
+    private fun onDownloadTr31DukptTDesButtonClicked() {
+        Toast.makeText(this, "Not yet implemented", Toast.LENGTH_SHORT).show()
+    }
+
+
 
     private fun onDownloadDukptButtonClicked() {
         // Download the Dukpt_01(00 is for IPEK) into device (Four types together)
@@ -829,13 +966,13 @@ class PinpadActivity : AppCompatActivity() {
 
 
     private fun onPinBlockDukptCustomButtonClicked() {
-        val cancelBitmap = getImageFromAssetsFile(this@PinpadActivity, "cancel_butt_off.png")
-        val delBitmap = getImageFromAssetsFile(this@PinpadActivity, "delete_butt_off.png")
-        val okBitemap = getImageFromAssetsFile(this@PinpadActivity, "ok_butt_off.png")
-        val backspaceBitmap = getImageFromAssetsFile(this@PinpadActivity, "back_white.png.png")
-        val imageViewBitmap = getImageFromAssetsFile(this@PinpadActivity, "lock_art.png")
-        val bodyBitmap = getImageFromAssetsFile(this@PinpadActivity, "bg_720x1280.png")
-        val strJson = getJson("json_custom4_720x1280.json", this@PinpadActivity)
+        val cancelBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "cancel_butt_off.png")
+        val delBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "delete_butt_off.png")
+        val okBitemap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "ok_butt_off.png")
+        val backspaceBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "back_white.png.png")
+        val imageViewBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "lock_art.png")
+        val bodyBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "bg_720x1280.png")
+        val strJson = PinpadUtil.getJson("json_custom4_720x1280.json", this@PinpadActivity)
         val backgroundColor = intArrayOf(0X00FFFFFF, 0X00FFFFFF, 0X00FFFFFF, 0X00e3452f, 0X00895623, 0X00258945, 0X00364952, 0XFF123456.toInt(), 0XFF876328.toInt(), 0X00FFFFFF, 0XFF877454.toInt(), 0X00FFFFFF, 0xff1234FF.toInt(), 0X001c1c1c)
         val textColor = intArrayOf(Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE)
 
@@ -1090,105 +1227,9 @@ class PinpadActivity : AppCompatActivity() {
         }
     }
 
-    private val mOfflinePinInputListener = object : OfflinePinInputListener {
-        override fun onInput(pinLen: Int, key: Int) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onConfirm(resultCode: Int) {
-            TODO("Not yet implemented")
-        }
-
-
-        override fun onRetry(pinEntryType: Int, availableTimes: Int) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onCancel(errorCode: Int) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onTimeOut(errorCode: Int) {
-            TODO("Not yet implemented")
-        }
-
-        override fun onError(errorCode: Int) {
-            TODO("Not yet implemented")
-        }
-    }
-
     // <---------------------Helper methods---------------------> //
 
-    private fun getJson(fileName: String, context: Context): String {
-        runCatching {
-           return context.assets.open(fileName).bufferedReader().use { it.readText() }
-        }.onFailure {
-            it.printStackTrace()
-        }
-        return ""
-    }
-
-    private fun getImageFromAssetsFile(context: Context, fileName: String): Bitmap? {
-        val am = context.resources.assets
-        runCatching {
-            val inputStream = am.open(fileName)
-            val image = BitmapFactory.decodeStream(inputStream)
-            inputStream.close()
-            return image
-        }.onFailure {
-            it.printStackTrace()
-        }
-        return null
-    }
-
 
 
 }
 
-enum class Dukpt(val index: Int) {
-    MSR(1),
-    EMV(2),
-    PIN(3),
-    MAC(4)
-}
-
-enum class PinParams(val tag: String) {
-    CARD_NO("cardNo"),
-    TITLE("title"),
-    MESSAGE("message"),
-    INFO_LOCATION("infoLocation"),
-    SOUND("sound"),
-    BYPASS("bypass"),
-    SUPPORT_PIN_LEN("supportPinLen"),
-    FULL_SCREEN("FullScreen"),
-    ONLINE_PIN("onlinePin"), // If online, then set to true. If offline, then set to false.
-    TIMEOUT_MS("timeOutMS"),
-    RANDOM_KEYBOARD("randomKeyboard"),
-    RANDOM_KEYBOARD_LOCATION("randomKeyboardLocation"),
-    PIN_KEY_NO("PINKeyNo"),
-    INPUT_BY_SECURITY_PIN_PAD("inputBySP"), // IF true, means APP won't receive any KeyEvent at all, and Custom UI won't take effect.
-
-    // Offline PIN
-    INPUT_TYPE("inputType"), // 3: Plain; 4: Enciphered
-    CARD_SLOT("CardSlot"), // fixed to 0
-    MODULUS("Module"),
-    MODULUS_LEN("ModuleLen"),
-    EXPONENT("Exponent"),
-    EXPONENT_LEN("ExponentLen"),
-
-
-
-
-
-    // Custom Keypad
-    CUSTOMIZATION("customization"),
-    STR_JSON("strJson"),
-    BACKGROUND_COLOR("backgroundColor"),
-    TEXT_COLOR("textColor"),
-    CANCEL_BITMAP("cancelBitmap"),
-    DELETE_BITMAP("delBitmap"),
-    OK_BITMAP("okBitmap"),
-    BACKSPACE_BITMAP("backspaceBitmap"),
-    VIEW_BITMAP("viewBitmap"),
-    BODY_BITMAP("bodyBitmap")
-}

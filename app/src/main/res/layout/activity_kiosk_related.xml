@@ -217,6 +217,91 @@
                 android:layout_marginStart="3dp"
                 android:padding="0dp"/>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:background="@drawable/border"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="Whitelist: "
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:gravity="center" />
+
+                    <EditText
+                        android:id="@+id/etPackageForWhitelist"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:textSize="12sp"
+                        android:text="com.example.posgeneralsdkdemo" />
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnAddAppToWhitelist"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Add APP"
+                        android:textSize="15sp"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnGetAppWhitelist"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Get Whitelist"
+                        android:textSize="15sp"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnRemoveAppFromWhitelist"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Remove APP"
+                        android:layout_margin="1dp"
+                        android:textSize="15sp"
+                        android:padding="0dp"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="For POS: APPs in Whitelist can be installed without signature verification(i.e. More flexible)"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="For PDA(i.e. More Strict): \n - APPs NOT in Whitelist CAN'T be installed without signature\n - APPs NOT in Whitelist will be deleted(not hid) once reboot"
+                    android:textSize="12sp"/>
+
+
+            </LinearLayout>
 
         </LinearLayout>
 

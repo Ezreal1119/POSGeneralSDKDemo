@@ -1,251 +1,293 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="10dp">
+    android:layout_height="match_parent">
 
     <LinearLayout
+        android:id="@+id/main"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="@drawable/border"
-        android:layout_margin="5dp">
+        android:padding="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:background="@drawable/border"
+            android:layout_margin="5dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="Amount:"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:gravity="center"/>
+
+
+                <Spinner
+                    android:id="@+id/spAmount"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:background="#55FF55"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"/>
+
+                <Spinner
+                    android:id="@+id/spIssuerResp"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:background="#DDDDDD"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40sp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="TransParams:"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:gravity="center"/>
+
+                <Spinner
+                    android:id="@+id/spEmvOptions"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:background="#DDDDDD"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"/>
+
+                <Spinner
+                    android:id="@+id/spFallbackSwitch"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:background="#DDDDDD"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnStartEmv"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Start EMV"
+                    android:textSize="15sp"
+                    android:layout_margin="2dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnStopEmv"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Stop EMV"
+                    android:textSize="15sp"
+                    android:layout_margin="2dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnEnableLogOut"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Enable LogOut"
+                    android:textSize="15sp"
+                    android:layout_margin="2dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnDisableLogOut"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Disable LogOut"
+                    android:textSize="15sp"
+                    android:layout_margin="2dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnExportEmvLog"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Export Emv Log"
+                    android:textSize="15sp"
+                    android:layout_margin="2dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnDeleteEmvLog"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Delete Emv Log"
+                    android:textSize="15sp"
+                    android:layout_margin="2dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnClearCapk"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Clear CAPK"
+                    android:textSize="15sp"
+                    android:layout_margin="2dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnReloadCapk"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Reload CAPK"
+                    android:textSize="15sp"
+                    android:layout_margin="2dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvPinDukptReady"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="Dukpt_PIN"
+                    android:gravity="center"
+                    android:layout_margin="5dp"
+                    android:textSize="20sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/tvPinKeyReady"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:text="PIN_KEY_99"
+                    android:gravity="center"
+                    android:textSize="20sp"
+                    android:layout_margin="5dp"
+                    android:textStyle="bold"/>
+
+            </LinearLayout>
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:text="Amount:"
+                android:id="@+id/tvAidIccStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:gravity="center"/>
-
-
-            <Spinner
-                android:id="@+id/spAmount"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:background="#55FF55"
-                android:layout_weight="1"
-                android:layout_margin="2dp"/>
-
-            <Spinner
-                android:id="@+id/spIssuerResp"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:background="#DDDDDD"
-                android:layout_weight="1"
-                android:layout_margin="2dp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="40sp"
-            android:orientation="horizontal">
+                android:textStyle="italic"/>
 
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:text="TransParams:"
+                android:id="@+id/tvAidPiccStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:gravity="center"/>
-
-            <Spinner
-                android:id="@+id/spEmvOptions"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:background="#DDDDDD"
-                android:layout_weight="1"
-                android:layout_margin="2dp"/>
-
-            <Spinner
-                android:id="@+id/spFallbackSwitch"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:background="#DDDDDD"
-                android:layout_weight="1"
-                android:layout_margin="2dp"/>
+                android:textStyle="italic"/>
 
         </LinearLayout>
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnStartEmv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Start EMV"
-                android:textSize="15sp"
-                android:layout_margin="2dp"
-                android:padding="0dp"/>
-
-            <Button
-                android:id="@+id/btnStopEmv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Stop EMV"
-                android:textSize="15sp"
-                android:layout_margin="2dp"
-                android:padding="0dp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnEnableLogOut"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Enable LogOut"
-                android:textSize="15sp"
-                android:layout_margin="2dp"
-                android:padding="0dp"/>
-
-            <Button
-                android:id="@+id/btnDisableLogOut"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Disable LogOut"
-                android:textSize="15sp"
-                android:layout_margin="2dp"
-                android:padding="0dp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnExportEmvLog"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Export Emv Log"
-                android:textSize="15sp"
-                android:layout_margin="2dp"
-                android:padding="0dp"/>
-
-            <Button
-                android:id="@+id/btnDeleteEmvLog"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Delete Emv Log"
-                android:textSize="15sp"
-                android:layout_margin="2dp"
-                android:padding="0dp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnClearCapk"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Clear CAPK"
-                android:textSize="15sp"
-                android:layout_margin="2dp"
-                android:padding="0dp"/>
-
-            <Button
-                android:id="@+id/btnReloadCapk"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Reload CAPK"
-                android:textSize="15sp"
-                android:layout_margin="2dp"
-                android:padding="0dp"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_height="match_parent"
+            android:background="@drawable/border"
+            android:layout_margin="5dp"
+            android:padding="10dp">
 
             <TextView
-                android:id="@+id/tvPinDukptReady"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:text="Dukpt_PIN"
-                android:gravity="center"
-                android:layout_margin="5dp"
-                android:textSize="20sp"
-                android:textStyle="bold"/>
+                android:id="@+id/tvResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"/>
 
-            <TextView
-                android:id="@+id/tvPinKeyReady"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:text="PIN_KEY_99"
-                android:gravity="center"
-                android:textSize="20sp"
-                android:layout_margin="5dp"
-                android:textStyle="bold"/>
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvAidIccStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textStyle="italic"/>
-
-        <TextView
-            android:id="@+id/tvAidPiccStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textStyle="italic"/>
+        </ScrollView>
 
     </LinearLayout>
 
-    <ScrollView
+    <FrameLayout
+        android:id="@+id/blockingOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/border"
-        android:layout_margin="5dp"
-        android:padding="10dp">
+        android:visibility="gone"
+        android:background="#80000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
 
-        <TextView
-            android:id="@+id/tvResult"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="15sp"/>
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center">
 
-    </ScrollView>
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-</LinearLayout>
+            <TextView
+                android:id="@+id/tvOverlayMsg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Processing..."
+                android:textColor="@android:color/white"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</FrameLayout>

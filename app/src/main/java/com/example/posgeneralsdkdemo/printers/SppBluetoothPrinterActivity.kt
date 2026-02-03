@@ -21,7 +21,6 @@ import android.widget.ListView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
@@ -42,13 +41,13 @@ private const val PERMISSION_BLUETOOTH_SCAN = Manifest.permission.BLUETOOTH_SCAN
 private const val PERMISSION_BLUETOOTH_CONNECT = Manifest.permission.BLUETOOTH_CONNECT
 private const val PERMISSION_ACCESS_FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION
 private const val PERMISSION_ACCESS_COARSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION
-private val PERMISSIONS = arrayOf(
+val PERMISSIONS_BT = arrayOf(
     PERMISSION_BLUETOOTH_SCAN,
     PERMISSION_BLUETOOTH_CONNECT,
     PERMISSION_ACCESS_FINE_LOCATION,
     PERMISSION_ACCESS_COARSE_LOCATION
 )
-private const val PERMISSION_REQ_BT = 1001
+const val PERMISSION_REQ_BT = 1001
 
 const val CONTENT_2_INCH =
             "       WALMART SUPERCENTER     \n" +
@@ -160,15 +159,6 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
 
     }
 
-    private val enableBtLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            Toast.makeText(this, "Bluetooth has been Enabled", Toast.LENGTH_SHORT).show()
-            onConnectBluetoothButtonClicked()
-        } else {
-            Toast.makeText(this, "Bluetooth still NOT enabled", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -191,7 +181,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        if(!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_BT)) return
+        if(!PermissionUtil.requestPermissions(this, PERMISSIONS_BT, PERMISSION_REQ_BT)) return
         btnConnectBluetooth.isEnabled = isValidMacAddress(etBluetoothMac.text.toString())
         btnDisconnectBluetooth.isEnabled = false
         btnPrintText.isEnabled = false
@@ -215,37 +205,16 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
         btnPrintText.isEnabled = false
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERMISSION_REQ_BT) {
-            if (PermissionUtil.checkPermissions(this, PERMISSIONS)) {
-                Toast.makeText(this, "Bluetooth permission granted. Please tap again to scan.", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Bluetooth permission denied.", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     private fun onSelfMacButtonClicked() {
-        if(!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_BT)) return
         etBluetoothMac.setText("FF:FF:FF:FF:FF:FF")
         Toast.makeText(this, "Simulate Printer Selected", Toast.LENGTH_SHORT).show()
     }
 
     @SuppressLint("MissingPermission")
     private fun onScanBluetoothButtonClicked() {
-        if(!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_BT)) return
 
         runCatching {
             val adapter = BluetoothAdapter.getDefaultAdapter() ?: throw Exception("No BluetoothAdapter") // Make sure Device supports BT
-            if (!adapter.isEnabled) { // Make sure BT is turned on first
-                enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) // Use Intent(Settings.ACTION_BLUETOOTH_SETTINGS) to jump to BT settings instead
-                return@runCatching
-            }
             foundDevices.clear()
             val displayList = mutableListOf<String>() // For display devices that have been saved in the adapter before on the BT List
             adapter.bondedDevices?.forEach { device ->
@@ -259,7 +228,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
                 setOnItemClickListener { _, _, position, _ ->
                     val device = foundDevices[position]
                     etBluetoothMac.setText(device.address)
-                    Toast.makeText(this@SppBluetoothPrinterActivity, "Device selected: ${device.address                                                                                                                                                                                                                                                                                                                           }", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@SppBluetoothPrinterActivity, "Device selected: ${device.address}", Toast.LENGTH_SHORT).show()
                     BluetoothAdapter.getDefaultAdapter()?.cancelDiscovery() // Terminate discovery if select any device
                     scanDialog?.dismiss() // Cancel the dialog if select any device
                 }
@@ -282,15 +251,10 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun onConnectBluetoothButtonClicked() {
-        if(!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_BT)) return
         val mac = etBluetoothMac.text.toString().trim()
         Thread {
             runCatching {
                 val adapter = BluetoothAdapter.getDefaultAdapter() ?: throw Exception("No BluetoothAdapter") // Make sure Device supports BT
-                if (!adapter.isEnabled) { // Make sure BT is turned on first
-                    enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) // Use Intent(Settings.ACTION_BLUETOOTH_SETTINGS) to jump to BT settings instead
-                    return@runCatching
-                }
                 if (adapter.isDiscovering) adapter.cancelDiscovery() // Make sure BT adapter is not searching for new BT device
                 val device = adapter.getRemoteDevice(mac) // Get the device of specific BT MAC
                 val s = device.createRfcommSocketToServiceRecord(SPP_UUID) // Create a socket used to connect to the SPP Service of BT device
@@ -318,7 +282,6 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
 
 
     private fun onDisconnectBluetoothButtonClicked() {
-        if(!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_BT)) return
         runCatching {
             socket?.close() // Make sure the connect with the BT device is disconnected
             socket = null // Clean up the handle, release the memory
@@ -337,7 +300,6 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun onPrintTextButtonClicked() {
-        if(!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_BT)) return
         Thread {
             val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             runCatching {

@@ -82,11 +82,15 @@ class ICCardActivity : AppCompatActivity() {
         }
     }
 
-
-
     override fun onStart() {
         super.onStart()
         uiRefreshOnPowerOff()
+        tvResult.text = buildString {
+            append("Three Key Systems in ICCard Transaction:\n\n")
+            append(" - ODA: ICCPrivateKey / ICCCert(PK) / IssuerCert(PK) / CA\n")
+            append(" - ARQC(CDOL1)/ARPC(8A/89): ICC Master Key / ICC Session Key [Issuer Master Key]\n")
+            append(" - PIN encryption(Terminal): Dukpt / PIN_KEY")
+        }
     }
 
     override fun onStop() {

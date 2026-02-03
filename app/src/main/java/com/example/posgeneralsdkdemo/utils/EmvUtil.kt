@@ -360,9 +360,9 @@ object EmvUtil {
             put(AppTag.CARD_TYPE.tag, "UpiCard") // Means it's PICC of UPI (Different PICCs have difference requirements for PICCs)
             put(AppTag.APPLICATION_IDENTIFIER.tag, "A000000333010101") // UnionPay Debit ICC
             put(AppTag.TERMINAL_TRANSACTION_QUALIFIERS.tag, "36004000")
-            put(AppTag.TRANSACTION_LIMIT.tag, "000005000000") // Means Amount above this won't be allowed
+            put(AppTag.TRANSACTION_LIMIT.tag, "000005000000") // 50000.00: Means Amount above this won't be allowed
             put(AppTag.FLOOR_LIMIT.tag, "000000000000") // Means Amount above this must need go Online. Normally should be "000000000000" for Any Online POS
-            put(AppTag.CVM_REQUIRED_LIMIT.tag, "000000030000") // Means Amount above this must need CVM(Can't do No CMV)
+            put(AppTag.CVM_REQUIRED_LIMIT.tag, "00000030000") // Means Amount above this must need CVM(Can't do No CMV)
             put(AppTag.LIMIT_SWITCH.tag, "FE00") // Means this PICC supports everything
         }
         mEmvKernelManager.updateAID(ContantPara.Operation.ADD, piccAid)
@@ -698,7 +698,7 @@ object EmvUtil {
         hit(5, tvr[4], 0x20, "B5b6", "Script processing failed before final GENERATE AC")
         hit(5, tvr[4], 0x10, "B5b5", "Script processing failed after final GENERATE AC")
 
-        if (hits.isEmpty()) return "No TVR bits set (all zero). TVR=$hex"
+        if (hits.isEmpty()) return "No TVR bits set (all zero)"
         return hits.toString().trimEnd()
     }
 

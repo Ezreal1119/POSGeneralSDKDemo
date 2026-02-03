@@ -4,9 +4,11 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -47,6 +49,19 @@ object PermissionUtil {
         }
         activity.startActivity(intent)
         return false
+    }
+
+    // <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
+    fun ensureCanWriteSettings(context: Context): Boolean {
+        if (!Settings.System.canWrite(context)) {
+            Toast.makeText(context, "Need permission: Modify system settings", Toast.LENGTH_SHORT).show()
+            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                data = "package:${context.packageName}".toUri()
+            }
+            context.startActivity(intent)
+            return false
+        }
+        return true
     }
 
 }

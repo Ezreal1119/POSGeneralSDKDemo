@@ -64,6 +64,10 @@
                 android:text="btnTest4"
                 android:textSize="20sp"/>
 
+            <ImageView
+                android:id="@+id/ivTest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
 
         </LinearLayout>
 

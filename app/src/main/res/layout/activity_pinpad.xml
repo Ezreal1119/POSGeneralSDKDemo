@@ -208,6 +208,95 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/border"
+                android:layout_margin="3dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="TR34 Data:"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:gravity="center"/>
+
+                    <EditText
+                        android:id="@+id/etTr34Data"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:textSize="10sp"
+                        android:text="B0096P0TB0AE000001B5202B8A1015E560564CF9C9AE36504AB876E93E09F5BDFC7825D84CC99C4E7AA97767C87AC2CA(TR31, should be encrypted using SessionKey) + Encrypted SessionKey = TR34 Message"
+                        android:hint="Enter Data (2048 Bytes)"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnWriteTr34Data"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Write TR34 Data"
+                        android:layout_marginStart="5dp"
+                        android:textSize="10sp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnReadTr34Data"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Read TR34 Data"
+                        android:layout_marginStart="5dp"
+                        android:textSize="10sp"
+                        android:padding="0dp"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnDownloadTr31Wk"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Download TR31 WK"
+                        android:layout_marginStart="5dp"
+                        android:textSize="10sp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnDownloadTr31DukptTDes"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Download TR31 DUKPT TDES"
+                        android:layout_marginStart="5dp"
+                        android:textSize="10sp"
+                        android:padding="0dp"/>
+
+                </LinearLayout>
+
+
+            </LinearLayout>
+
 
         </LinearLayout>
 
@@ -377,6 +466,7 @@
             android:textSize="10sp"
             android:layout_marginStart="3dp"
             android:padding="0dp"/>
+
     </LinearLayout>
 
     <Button

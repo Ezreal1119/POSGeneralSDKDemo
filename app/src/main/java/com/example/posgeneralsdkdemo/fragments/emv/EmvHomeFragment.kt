@@ -17,22 +17,24 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.example.posgeneralsdkdemo.Dukpt
 import com.example.posgeneralsdkdemo.EmvActivity
-import com.example.posgeneralsdkdemo.PinParams
 import com.example.posgeneralsdkdemo.PinpadActivity
 import com.example.posgeneralsdkdemo.R
 import com.example.posgeneralsdkdemo.enums.Amount
 import com.example.posgeneralsdkdemo.enums.CardReadMode
+import com.example.posgeneralsdkdemo.enums.Dukpt
 import com.example.posgeneralsdkdemo.enums.EmvBundle
 import com.example.posgeneralsdkdemo.enums.EmvOptions
 import com.example.posgeneralsdkdemo.enums.FallbackSwitch
 import com.example.posgeneralsdkdemo.enums.IssuerResp
+import com.example.posgeneralsdkdemo.enums.PinParams
 import com.example.posgeneralsdkdemo.tools.SoundTool
 import com.example.posgeneralsdkdemo.tools.SoundTool.Companion.SOUND_TYPE_ERROR
 import com.example.posgeneralsdkdemo.tools.SoundTool.Companion.SOUND_TYPE_SUCCESS
@@ -73,6 +75,8 @@ const val PREFS_NAME = "emv_prefs"
 const val PIN_TRY_TIMES = "pinTryTimes"
 class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
+    private val blockingOverlay get() = requireView().findViewById<FrameLayout>(R.id.blockingOverlay)
+    private val tvOverlayMsg get() = requireView().findViewById<TextView>(R.id.tvOverlayMsg)
     private val tvPinDukptReady get() = requireView().findViewById<TextView>(R.id.tvPinDukptReady)
     private val tvPinKeyReady get() = requireView().findViewById<TextView>(R.id.tvPinKeyReady)
     private val tvResult get() = requireView().findViewById<TextView>(R.id.tvResult)
@@ -97,6 +101,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
     private val result = StringBuilder()
     private var enterAmountAfterReadRecordFlag: Boolean = false
+    var isKernelRunning: Boolean = false
+    private lateinit var backCallback: OnBackPressedCallback
     private var amountEx: Float = 0F
     private lateinit var cardReadMode: CardReadMode
     private lateinit var sharedPreferences: SharedPreferences
@@ -118,11 +124,22 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     private var isVisaPiccLoaded = false
     private var isMasterCardIccLoaded = false
     private var isMasterCardPiccLoaded = false
+    private var pinBlockCache: ByteArray? = null
+    private var ksnCache: ByteArray? = null
+    private var bypassPinPadFlag: Boolean = false
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         sharedPreferences = requireContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         mySoundTool = SoundTool.getMySound(requireContext())
+        backCallback = object : OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {}
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            backCallback
+        )
 
         btnStartEmv.setOnClickListener {
             if (spAmount.selectedItem == Amount.ENTER_AFTER_READ_RECORD) { // Only ICC supports enter Read Record
@@ -299,6 +316,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         btnEnableLogOut.isEnabled = true
         btnDisableLogOut.isEnabled = false
         btnStopEmv.isEnabled = false
+        hideBlockingUi()
+        isKernelRunning = false
     }
 
     override fun onStart() {
@@ -315,7 +334,6 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         } else {
             tvPinKeyReady.setBackgroundColor(Color.RED)
         }
-
     }
 
     override fun onStop() {
@@ -347,13 +365,24 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         tvrBeforeTrm = ""
         Thread {
             runCatching {
-
+                isKernelRunning = true
+                pinBlockCache = null
+                ksnCache = null
+                bypassPinPadFlag = false
                 mEmvKernelManager.startKernel(transParams)
+            }.onSuccess {
+                requireActivity().runOnUiThread {
+                    if (isKernelRunning) {
+                        showBlockingUi()
+                    }
+                }
             }.onFailure {
                 it.printStackTrace()
                 requireActivity().runOnUiThread {
                     btnStartEmv.isEnabled = true
                     btnStopEmv.isEnabled = false
+                    hideBlockingUi()
+                    isKernelRunning = false
                 }
             }
         }.start()
@@ -366,6 +395,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             Toast.makeText(requireContext(), "Terminated", Toast.LENGTH_SHORT).show()
             btnStartEmv.isEnabled = true
             btnStopEmv.isEnabled = false
+            hideBlockingUi()
+            isKernelRunning = false
         }.onFailure {
             tvResult.text = it.message
             it.printStackTrace()
@@ -519,18 +550,21 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             else -> ""
         }
         val pinpadBundle = Bundle().apply {
+            // 1. Best Practice to set
             putString(PinParams.TITLE.tag, "Offline PinPad - Emv Demo") // "" by default
             putString(PinParams.MESSAGE.tag, message) // "" by default
-            putString(PinParams.SUPPORT_PIN_LEN.tag, "0,4,6") // Will use the one set by last time by default. Thus, must set before using.
+            putString(PinParams.SUPPORT_PIN_LEN.tag, "4,6") // Will use the one set by last time by default. Thus, must set before using.
             putLong(PinParams.TIMEOUT_MS.tag, 30000) // Time out since opening the Pad. 0 by default, must set!
             putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
+
+            // 2. Optional
+            putBoolean(PinParams.ONLINE_PIN.tag, false) // False by default. This PIN PAD is for Offline PIN
+            putBoolean(PinParams.BYPASS.tag, true) // False by default. Support 0 PIN or not. Same effect as SUPPORT_PIN_LEN including 0
+            putBoolean(PinParams.FULL_SCREEN.tag, true) // True by default. Won't have Cancel button when half screen
+            putBoolean(PinParams.SOUND.tag, false) // False by default. Sound will be turned on when using the PinPad (lasting effect);
 //            putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.value, false) // false by default. The keypad moving up & down for security reason
 //            putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.value, false) // false by default. Set true to display the Amount.
-//            putBoolean(PinParams.ONLINE_PIN.value, false) //
 //            putString(PinParams.INFO_LOCATION.value, "CENTER") // CENTER by default. Can change to LEFT or RIGHT
-//            putBoolean(PinParams.SOUND.value, false) // "false" by default. Sound will be turned on when using the PinPad (lasting effect);
-//            putBoolean(PinParams.FULL_SCREEN.value, true) // true by default. Won't have Cancel button when half screen
-//            putBoolean(PinParams.BYPASS.value, false) // Support 0 PIN or not. false by default.
         }
         if (pinEntryType == 0) {
             pinpadBundle.putInt(PinParams.INPUT_TYPE.tag, 3) // 3: Plaintext PIN; 4: Enciphered PIN
@@ -612,6 +646,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             .setCancelable(false)
             .setNegativeButton("Cancel") { _, _ ->
                 Toast.makeText(requireContext(), "Transaction Cancelled", Toast.LENGTH_SHORT).show()
+                tvResult.text = "<======Transaction Ends: No Amount Entered======>"
                 amountEnterTimeoutHandler.removeCallbacks(amountEnterTimeoutRunnable)
                 onCancel?.invoke()
             }
@@ -648,6 +683,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                             mEmvKernelManager.abortKernel()
                             btnStartEmv.isEnabled = true
                             btnStopEmv.isEnabled = false
+                            hideBlockingUi()
+                            isKernelRunning = false
                         }
                     )
                 }
@@ -686,6 +723,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                             append("<==========Transaction Ends==========>")
                             btnStartEmv.isEnabled = true
                             btnStopEmv.isEnabled = false
+                            hideBlockingUi()
+                            isKernelRunning = false
                         }
                     }
                 }
@@ -737,12 +776,6 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     // This will terminal the kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: USE_ICC_CARD")
                     requireActivity().runOnUiThread {
-//                        btnStartEmv.isEnabled = true
-//                        btnStopEmv.isEnabled = false
-//                        tvResult.text = buildString {
-//                            append("<======Transaction Ends: USE_ICC_CARD======>\n\n")
-//                            append("This can be triggered if TRANS_FALLBACK_SWITCH=1 and present Mag Card")
-//                        }
                         requireActivity().runOnUiThread {
                             val transParams = EmvUtil.generateTransactionParameters(
                                 enterAmountAfterReadRecordFlag,
@@ -766,6 +799,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     requireActivity().runOnUiThread {
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
+                        hideBlockingUi()
+                        isKernelRunning = false
                         tvResult.text = buildString {
                             append("<======Transaction Ends: BAD_SWIPE======>\n\n")
                             append("This can be triggered by a very bad SWIPE")
@@ -784,6 +819,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     requireActivity().runOnUiThread {
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
+                        hideBlockingUi()
+                        isKernelRunning = false
                         tvResult.text = buildString {
                             append("<======Transaction Ends: NOT_ICC======>\n\n")
                             append("This can be triggered by present anything that triggers the Reader's sensor.\n")
@@ -801,6 +838,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     requireActivity().runOnUiThread {
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
+                        hideBlockingUi()
+                        isKernelRunning = false
                         tvResult.text = buildString {
                             append("<======Transaction Ends: TIMEOUT======>\n\n")
                             append("This can be triggered if didn't present any Card within the countdown")
@@ -814,6 +853,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     requireActivity().runOnUiThread {
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
+                        hideBlockingUi()
+                        isKernelRunning = false
                         tvResult.text = buildString {
                             append("<======Transaction Ends: CANCEL======>\n\n")
                             append("This can be triggered if abortKernel() is called")
@@ -826,6 +867,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     requireActivity().runOnUiThread {
                         btnStartEmv.isEnabled = true
                         btnStopEmv.isEnabled = false
+                        hideBlockingUi()
+                        isKernelRunning = false
                         tvResult.text = buildString {
                             append("<======Transaction Ends: DEVICE_BUSY======>\n\n")
                             append("This can be triggered if Reading modules are in used")
@@ -865,20 +908,22 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                 (spAmount.selectedItem as Amount).amount
             }
             val pinpadBundle = Bundle().apply {
+                // 1. Best practice to set
                 putString(PinParams.CARD_NO.tag, getCardNo(mEmvKernelManager.getValByTag(0x5A), mEmvKernelManager.getValByTag(0x57))) // The field is a Must for generating PINBlock
                 putString(PinParams.TITLE.tag, "Online PinPad - Emv Demo") // "" by default
                 putString(PinParams.MESSAGE.tag, "Please enter PIN, $$actualAmount") // "" by default
-                putString(PinParams.SUPPORT_PIN_LEN.tag, "0,4,6") // Will use the one set by last time by default. Thus, must set before using.
+                putString(PinParams.SUPPORT_PIN_LEN.tag, "4,6") // Will use the one set by last time by default. Thus, must set before using.
                 putLong(PinParams.TIMEOUT_MS.tag, 30000) // Time out since opening the Pad. 0 by default, must set!
                 putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
+
+                // 2. Optional:
+                putBoolean(PinParams.BYPASS.tag, true) // False by default. Support 0 PIN or not. Same effect as SUPPORT_PIN_LEN including 0
+                putBoolean(PinParams.FULL_SCREEN.tag, true) // true by default. Won't have Cancel button when half screen
+                putBoolean(PinParams.ONLINE_PIN.tag, true) // True by default. This is the PIN PAD for Online PIN
+                putBoolean(PinParams.SOUND.tag, false) // False by default. Sound will be turned on when using the PinPad (lasting effect)
 //                putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.value, false) // false by default. The keypad moving up & down for security reason
 //                putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.value, false) // false by default. Set true to display the Amount.
-//                putBoolean(PinParams.ONLINE_PIN.value, false) // Dukpt PIN Pad for Online PIN
 //                putString(PinParams.INFO_LOCATION.value, "CENTER") // CENTER by default. Can change to LEFT or RIGHT
-//                putBoolean(PinParams.SOUND.value, false) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
-//                putBoolean(PinParams.FULL_SCREEN.value, true) // true by default. Won't have Cancel button when half screen
-//                putBoolean(PinParams.BYPASS.value, false) // Support 0 PIN or not. false by default.
-
             }
             if (pinEntrySource == ContantPara.PinEntrySource.KEYPAD) {
                 if (mPinpadManager.DukptGetKsn(Dukpt.PIN.index, ByteArray(10)) == 0x00) {
@@ -934,7 +979,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
             }
             result.apply {
-                append("<========Transaction Params========>\n\n")
+                append("<========Transaction Info========>\n\n")
                 append("Transaction Type: ${mEmvKernelManager.getValByTag(0x9C)} - ${parseTransactionType2String(mEmvKernelManager.getValByTag(0x9C))}\n")
                 append("Transaction Amount: ${formatAmount12(mEmvKernelManager.getValByTag(0x9F02), mEmvKernelManager.getValByTag(0x5F36).toInt())}\n")
                 append("TransactionCurrency Code: ${mEmvKernelManager.getValByTag(0x5F2A)} - ${parseCurrencyCode2String(mEmvKernelManager.getValByTag(0x5F2A))}\n")
@@ -1037,6 +1082,12 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                 append("\nSDAD: ${mEmvKernelManager.getValByTag(0x9F4B)}\n")
                 append("\n\n")
             }
+            result.apply {
+                append("<===========ISO8583===========>\n\n")
+                append("Field 55: $cardTlvData\n\n")
+                if (ksnCache != null) append("KSN(F60/F61/F62/F63): ${BytesUtil.bytes2HexString(ksnCache)}\n")
+                if (pinBlockCache != null) append("PINBlock(F52): ${BytesUtil.bytes2HexString(pinBlockCache)}\n\n")
+            }
             var authorizationResponseCode: String
             var authorizationCode: String
             result.append("<=========Got Issuer_Resp=========>\n\n")
@@ -1067,12 +1118,18 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                         append("<=========GAC-2 Started=========>\n\n")
                         append("GAC-2 CDOL2(8D): ")
                         append("${mEmvKernelManager.getValByTag(0x8D)}\n")
+                        if ("91" in mEmvKernelManager.getValByTag(0x8D)) {
+                            append("(ICC needs ARPC(91) for Issuer Authentication)\n")
+                        }
                         append("GAC-2_Resp CID(9F27): ")
                         append("${mEmvKernelManager.getValByTag(0x9F27)} - ${parseCid2String(mEmvKernelManager.getValByTag(0x9F27))}")
                         append("\nGAC-2_Resp ATC(9F36): ")
                         append(mEmvKernelManager.getValByTag(0x9F36))
                         append("\nGAC-2_Resp AC(9F26) - AAC/TC: \n")
                         append(mEmvKernelManager.getValByTag(0x9F26))
+                        append("\n\n")
+                        append("Please note:\n")
+                        append("If 8A=3030, but AAC from ICC. The app must send an authorization Reversal to Issuer for unfreeze the Money Hold(not clear) as per the regulation of EMV L3.")
                         append("\n\n")
                     }
                 }
@@ -1126,6 +1183,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             requireActivity().runOnUiThread {
                 btnStartEmv.isEnabled = true
                 btnStopEmv.isEnabled = false
+                hideBlockingUi()
+                isKernelRunning = false
                 result.insert(0, "<=======$transactionResult=======>\n\n")
                 tvResult.text = result
                 Toast.makeText(requireContext(), transactionResult.toString(), Toast.LENGTH_SHORT).show()
@@ -1163,15 +1222,44 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         ) {
             Log.e(TAG, "onNFCrequestTipsConfirm: msgID=${msgID}, msg=$msg")
             result.apply {
-                append("<===========NFC Tip Msg===========>\n\n ")
-                append(" - $msg\n\n")
+                append("<========PICC Comm finished========>\n\n ")
+                append("Msg: $msg\n")
+                append("Kernel ID: ${mEmvKernelManager.getValByTag(0x9F2A)}\n")
+                append("(Already got CID/AC from PICC at this point)\n\n")
+                append("<=========Terminal Parameters=========>\n\n")
+                append("Terminal Type: ${mEmvKernelManager.getValByTag(0x9F35)} - ${parseTerminalType2String(mEmvKernelManager.getValByTag(0x9F35))}\n")
+                append("Country Code: ${mEmvKernelManager.getValByTag(0x9F1A)} - ${parseCountryCode2String(mEmvKernelManager.getValByTag(0x9F1A))}\n")
+                append("Currency Exponent: ${mEmvKernelManager.getValByTag(0x5F36)}\n")
+                append("Terminal Transaction Qualifier(App): ${mEmvKernelManager.getValByTag(0x9F66)}\n\n")
+                append("<==========Transaction Info==========>\n\n")
+                append("Transaction Type: ${mEmvKernelManager.getValByTag(0x9C)} - ${parseTransactionType2String(mEmvKernelManager.getValByTag(0x9C))}\n")
+                append("Transaction Amount: ${formatAmount12(mEmvKernelManager.getValByTag(0x9F02), mEmvKernelManager.getValByTag(0x5F36).toInt())}\n")
+                append("TransactionCurrency Code: ${mEmvKernelManager.getValByTag(0x5F2A)} - ${parseCurrencyCode2String(mEmvKernelManager.getValByTag(0x5F2A))}\n")
+                append("Transaction Date: ${mEmvKernelManager.getValByTag(0x9A)}\n\n")
+                append("<============App Info============>\n\n")
+                append("App PAN: ${getCardNo(mEmvKernelManager.getValByTag(0x5A), mEmvKernelManager.getValByTag(0x57))}\n")
+                append("App Track_2: ${mEmvKernelManager.getValByTag(0x57)}\n")
+                append("App ID(AID): ${mEmvKernelManager.getValByTag(0x4F)}\n")
+                append("App Ascii Name: ${hexToAscii(mEmvKernelManager.getValByTag(0x50))}\n")
+                append("App Priority: ${mEmvKernelManager.getValByTag(0x87)}\n")
+                append("App Expiration Date: ${mEmvKernelManager.getValByTag(0x5F24)}\n")
+                append("App Effective Date: ${mEmvKernelManager.getValByTag(0x5F25)}\n")
+                append("AIP(Application Interchange Profile): ${mEmvKernelManager.getValByTag(0x82)}\n")
+                append("${parseAip(mEmvKernelManager.getValByTag(0x82))}\n\n")
+                append("<==========GPO_Resp Info==========>\n\n")
+                append("GPO_Resp CID(9F27): ")
+                append("${mEmvKernelManager.getValByTag(0x9F27)} - ${parseCid2String(mEmvKernelManager.getValByTag(0x9F27))}")
+                append("\nGPO_Resp ATC(9F36): ")
+                append(mEmvKernelManager.getValByTag(0x9F36))
+                append("\nGPO_Resp AC(9F26) - ARQC/TC/AAC:\n")
+                append(mEmvKernelManager.getValByTag(0x9F26))
+                append("\n\n")
             }
-
             when (msgID) {
-                ContantPara.NfcTipMessageID.CARD_READ_OK -> {
+                ContantPara.NfcTipMessageID.CARD_READ_OK -> { // Play this sound if Read Card successfully
                     SoundTool.getMySound(requireContext()).playSound(SOUND_TYPE_SUCCESS)
                 }
-                ContantPara.NfcTipMessageID.END_APPLICATION -> {
+                ContantPara.NfcTipMessageID.END_APPLICATION -> { // Play this sound if Read Card failed
                     SoundTool.getMySound(requireContext()).playSound(SOUND_TYPE_ERROR)
                 }
                 else -> null
@@ -1181,12 +1269,36 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
         override fun onReturnNfcCardData(hashtable: Hashtable<String?, String?>?) {
             Log.e(TAG, "onReturnNfcCardData: hashTable=$hashtable")
-            TODO("Not yet implemented")
+            result.apply {
+                append("<========ODA/CVM/TAA finished========>\n\n")
+                append("Field 55: ${hashtable?.get("EMVDATA")}\n\n")
+                if (ksnCache != null) append("KSN(F60/F61/F62/F63): ${BytesUtil.bytes2HexString(ksnCache)}\n")
+                if (pinBlockCache != null) append("PINBlock(F52): ${BytesUtil.bytes2HexString(pinBlockCache)}\n\n")
+            }
         }
 
         override fun onNFCrequestOnline() {
             Log.e(TAG, "onNFCrequestOnline: ")
-            TODO("Not yet implemented")
+            result.apply {
+                append("<===========ISO8583===========>\n\n")
+                append("Preparing for other fields of ISO8583...\n\n")
+            }
+            var authorizationResponseCode: String
+            var authorizationCode: String
+            result.append("<=========Got Issuer_Resp=========>\n\n")
+            if (spIssuerResp.selectedItem as IssuerResp == IssuerResp.APPROVAL) {
+                authorizationResponseCode = "8A023030" // ARC ["00"(3030): Approved; "05"(3035): Declined; "51"(3531): Insufficient balance]
+                authorizationCode = "8906${Funs.convertStringToHex("000001")}" // Approved Serial Number: "89" is the Prefix
+                result.apply {
+                    append("ISO8583_Resp ARC(8A): 3030 - Approval\n")
+                    append("ISO8583_Resp AC(89): 303030303031\n\n")
+                }
+            } else {
+                authorizationResponseCode = "8A023035" // ARC ["00"(3030): Approved; "05"(3035): Declined; "51"(3531): Insufficient balance]
+                authorizationCode = "" // No AC for Issuer Decline normally
+                result.append("ISO8583_Resp ARC(8A): 3035 - Decline\n\n")
+            }
+            mEmvKernelManager.sendOnlineProcessResult(true, authorizationResponseCode + authorizationCode)
         }
 
         override fun onNFCrequestImportPin(type: Int, lastTimeFlag: Int, amt: String?) {
@@ -1198,20 +1310,22 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                 (spAmount.selectedItem as Amount).amount
             }
             val pinpadBundle = Bundle().apply {
+                // 1. Best practice to have
                 putString(PinParams.CARD_NO.tag, getCardNo(mEmvKernelManager.getValByTag(0x5A), mEmvKernelManager.getValByTag(0x57))) // The field is a Must for generating PINBlock
                 putString(PinParams.TITLE.tag, "Online PinPad - Emv Demo") // "" by default
                 putString(PinParams.MESSAGE.tag, "Please enter PIN, $$actualAmount") // "" by default
-                putString(PinParams.SUPPORT_PIN_LEN.tag, "0,4,6") // Will use the one set by last time by default. Thus, must set before using.
+                putString(PinParams.SUPPORT_PIN_LEN.tag, "4,6") // Will use the one set by last time by default. Thus, must set before using.
                 putLong(PinParams.TIMEOUT_MS.tag, 30000) // Time out since opening the Pad. 0 by default, must set!
                 putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
+
+                // 2. Optional
+                putBoolean(PinParams.ONLINE_PIN.tag, true) // True by default. This is Online PIN for PICC
+                putBoolean(PinParams.BYPASS.tag, true) // False by default. Support 0 PIN or not. Same effect as SUPPORT_PIN_LEN including "0
+                putBoolean(PinParams.SOUND.tag, false) // False by defaultSound will be turned on when using the PinPad (lasting effect);
+                putBoolean(PinParams.FULL_SCREEN.tag, true) // True by default. Won't have Cancel button when half screen
 //                putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.value, false) // false by default. The keypad moving up & down for security reason
 //                putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.value, false) // false by default. Set true to display the Amount.
-//                putBoolean(PinParams.ONLINE_PIN.value, false) // Dukpt PIN Pad for Online PIN
 //                putString(PinParams.INFO_LOCATION.value, "CENTER") // CENTER by default. Can change to LEFT or RIGHT
-//                putBoolean(PinParams.SOUND.value, false) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
-//                putBoolean(PinParams.FULL_SCREEN.value, true) // true by default. Won't have Cancel button when half screen
-//                putBoolean(PinParams.BYPASS.value, false) // Support 0 PIN or not. false by default.
-
             }
             if (mPinpadManager.DukptGetKsn(Dukpt.PIN.index, ByteArray(10)) == 0x00) {
                 Log.e(TAG, "onRequestPinEntry: DUKPT Pinpad was called")
@@ -1236,6 +1350,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                 ContantPara.NfcTransResult.TERMINATE,
                 ContantPara.NfcTransResult.CARD_REMOVED -> {
                     mySoundTool.playSound(SOUND_TYPE_ERROR)
+                    
                 }
                 ContantPara.NfcTransResult.RETRY -> {
                     mEmvKernelManager.abortKernel()
@@ -1245,10 +1360,18 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                 else -> null
             }
 
+            this@HomeFragment.result.apply {
+                append("TVR: ${mEmvKernelManager.getValByTag(0x95)}\n")
+                append("${parseTVRHits(mEmvKernelManager.getValByTag(0x95))}\n\n")
+                append("<==========Transaction Ends==========>")
+            }
+
             this@HomeFragment.result.insert(0, "<============$result============>\n\n")
             requireActivity().runOnUiThread {
                 btnStartEmv.isEnabled = true
                 btnStopEmv.isEnabled = false
+                hideBlockingUi()
+                isKernelRunning = false
                 tvResult.text = this@HomeFragment.result
                 Toast.makeText(requireContext(), result.toString(), Toast.LENGTH_SHORT).show()
             }
@@ -1280,9 +1403,15 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             // pinBlock = f(PIN, PAN, Padding) with encryption using PIN_KEY at keySlot_99
             if (cardReadMode == CardReadMode.CONTACT || cardReadMode == CardReadMode.CONTACTLESS) {
                 if (isNonePin) {
-                    mEmvKernelManager.bypassPinEntry()
+                    if (!bypassPinPadFlag) {
+                        bypassPinPadFlag = true
+                        mEmvKernelManager.ProcOnlinePinAgain() // Give one more chance to enter
+                    } else {
+                        mEmvKernelManager.bypassPinEntry() // PIN entry required, PIN pad present, but PIN was not entered
+                    }
                 } else {
                     Log.e(TAG, "onConfirm: pinBlock=${String(pinBlock)}")
+                    pinBlockCache = pinBlock
                     mEmvKernelManager.sendPinEntry()
                 }
             }
@@ -1295,10 +1424,17 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             // Each time KSN will increment
             if (cardReadMode == CardReadMode.CONTACT || cardReadMode == CardReadMode.CONTACTLESS) {
                 if (pinBlock == null) {
-                    mEmvKernelManager.bypassPinEntry()
+                    if (!bypassPinPadFlag) {
+                        bypassPinPadFlag = true
+                        mEmvKernelManager.ProcOnlinePinAgain() // Give one more chance to enter
+                    } else {
+                        mEmvKernelManager.bypassPinEntry() // PIN entry required, PIN pad present, but PIN was not entered
+                    }
                 } else {
                     Log.e(TAG, "onConfirm_dukpt: pinBlock=${String(pinBlock)}")
                     Log.e(TAG, "onConfirm_dukpt: KSN=${BytesUtil.bytes2HexString(ksn)}")
+                    pinBlockCache = pinBlock
+                    ksnCache = ksn
                     mEmvKernelManager.sendPinEntry()
                 }
             }
@@ -1358,6 +1494,17 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             append("[04, 05, 06, EF, F1, F3, F8, FA, FE]\n\n")
             append("<===========END Loading============>")
         }
+    }
+
+    private fun showBlockingUi(msg: String = "Processing...") {
+        tvOverlayMsg.text = msg
+        blockingOverlay.visibility = View.VISIBLE
+        backCallback.isEnabled = true
+    }
+
+    private fun hideBlockingUi() {
+        blockingOverlay.visibility = View.GONE
+        backCallback.isEnabled = false
     }
 }
 

@@ -1,8 +1,10 @@
 package com.example.posgeneralsdkdemo
 
 import android.Manifest
+import android.bluetooth.BluetoothAdapter
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -14,10 +16,13 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.btprinter.PERMISSIONS_BT
+import com.example.posgeneralsdkdemo.btprinter.PERMISSION_REQ_BT
 import com.example.posgeneralsdkdemo.btprinter.SppBluetoothPrinterActivity
 import com.example.posgeneralsdkdemo.printers.WifiPrinterActivity
 
 import com.example.posgeneralsdkdemo.utils.ImageUtil
+import com.example.posgeneralsdkdemo.utils.PermissionUtil
 import com.google.android.material.slider.Slider
 import com.google.zxing.BarcodeFormat
 import com.hivemq.client.mqtt.MqttClient
@@ -133,12 +138,8 @@ class PrinterActivity : AppCompatActivity() {
         btnPrintImageFromPhoto.setOnClickListener { onPrintImageFromPhotoButtonClicked() }
         btnPrintBitmapCanvas.setOnClickListener { onPrintBitmapCanvasButtonClicked() }
         btnLineFeed.setOnClickListener { onLineFeedButtonClicked() }
-        btnSppBluetoothPrinter.setOnClickListener {
-            startActivity(Intent(this, SppBluetoothPrinterActivity::class.java))
-        }
-        btnWifiPrinter.setOnClickListener {
-            startActivity(Intent(this, WifiPrinterActivity::class.java))
-        }
+        btnSppBluetoothPrinter.setOnClickListener { onSppBluetoothPrinterButtonClicked() }
+        btnWifiPrinter.setOnClickListener { onWifiPrinterButtonClicked() }
     }
 
     override fun onStart() {
@@ -150,6 +151,23 @@ class PrinterActivity : AppCompatActivity() {
         super.onStop()
         mqttDisconnect()
     }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String?>,
+        grantResults: IntArray,
+        deviceId: Int
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults, deviceId)
+        if (requestCode == PERMISSION_REQ_BT) {
+            if (PermissionUtil.checkPermissions(this, PERMISSIONS_BT)) {
+                Toast.makeText(this, "Bluetooth permission granted. Please tap again to scan.", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Bluetooth permission denied.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
 
     private fun onPrintTextButtonClicked() {
         // Based on PrinterManager().drawTextEx() under the hood, with formatting encapsulation.
@@ -424,6 +442,41 @@ class PrinterActivity : AppCompatActivity() {
             mPrinterManager.close()
         }.start()
     }
+
+
+    private fun onSppBluetoothPrinterButtonClicked() {
+        if(!PermissionUtil.requestPermissions(this, PERMISSIONS_BT, PERMISSION_REQ_BT)) {
+            Toast.makeText(this, "Please grant BT Permission first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!(BluetoothAdapter.getDefaultAdapter()?.isEnabled ?: false)) {
+            enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) // Use Intent(Settings.ACTION_BLUETOOTH_SETTINGS) to jump to BT settings instead
+            Toast.makeText(this, "Please turn on BT first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        startActivity(Intent(this, SppBluetoothPrinterActivity::class.java))
+    }
+
+    private val enableBtLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            Toast.makeText(this, "Bluetooth has been Enabled", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Bluetooth still NOT enabled", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    private fun onWifiPrinterButtonClicked() {
+        val wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
+        if (!wifiManager.isWifiEnabled) {
+            Toast.makeText(this, "Please turn on WiFi first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        startActivity(Intent(this, WifiPrinterActivity::class.java))
+    }
+
+
+
 
     // <-----------------------MQTT print-----------------------> //
 

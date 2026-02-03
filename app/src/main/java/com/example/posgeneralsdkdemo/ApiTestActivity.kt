@@ -1,16 +1,31 @@
 package com.example.posgeneralsdkdemo
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
 import android.device.DeviceManager
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.provider.Settings
+import android.telephony.SubscriptionManager
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.others.PACKAGE_COMPONENT_INFO
 import com.example.posgeneralsdkdemo.others.PACKAGE_COMPONENT_MAIN
+import com.example.posgeneralsdkdemo.utils.PermissionUtil
+import java.io.File
+import java.io.FileOutputStream
 import java.net.Socket
 import java.nio.charset.Charset
+import java.security.Permission
 
 private const val TAG = "Patrick"
 class ApiTestActivity : AppCompatActivity() {
@@ -21,27 +36,29 @@ class ApiTestActivity : AppCompatActivity() {
     private val btnTest2 by lazy { findViewById<Button>(R.id.btnTest2) }
     private val btnTest3 by lazy { findViewById<Button>(R.id.btnTest3) }
     private val btnTest4 by lazy { findViewById<Button>(R.id.btnTest4) }
+    private val ivTest by lazy { findViewById<ImageView>(R.id.ivTest) }
 
 
+    @SuppressLint("MissingPermission", "ServiceCast")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_api_test)
         Log.e(TAG, "onCreate: $packageName", )
 
         btnTest1.setOnClickListener {
-            DeviceManager().rightKeyEnabled = true
-            DeviceManager().leftKeyEnabled = true
+            Log.e(TAG, "btnTest1")
+            DeviceManager().setAllowInstallApps("com.example.abd", 0, 1)
         }
         btnTest2.setOnClickListener {
-            DeviceManager().setDefaultLauncher(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN))
-            Log.e(TAG, "onCreate: 1", )
+            Log.e(TAG, "btnTest2")
+            Log.e(TAG, "onCreate: ${DeviceManager().getAllowInstallApps(0)}", )
+            
         }
         btnTest3.setOnClickListener {
-            DeviceManager().removeDefaultLauncher(packageName)
-            Log.e(TAG, "onCreate: 2", )
+            Log.e(TAG, "btnTest3")
+            DeviceManager().setAllowInstallApps("com.example.abd", 0, 2)
         }
         btnTest4.setOnClickListener {
-            printText("10.10.11.177", 9100, "Hello Patrick\nHello Again!")
         }
 
         DeviceManager().setDeviceOwner(ComponentName.unflattenFromString("${packageName}/${MainActivity::class.java.name}"))
@@ -51,6 +68,8 @@ class ApiTestActivity : AppCompatActivity() {
         }.onFailure {
             it.printStackTrace()
         }
+        DeviceManager().setDeviceOwner(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN))
+
     }
 
     fun printText(ip: String, port: Int = 9100, text: String) {
@@ -77,4 +96,7 @@ class ApiTestActivity : AppCompatActivity() {
             }
         }.start()
     }
+
+
+
 }

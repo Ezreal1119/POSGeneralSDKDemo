@@ -26,6 +26,7 @@ import com.example.posgeneralsdkdemo.others.SwitchesActivity
 import com.urovo.sdk.utils.SystemProperties.getSystemProperty
 import java.io.File
 import androidx.core.net.toUri
+import com.example.posgeneralsdkdemo.others.SettingsActivity
 import com.example.posgeneralsdkdemo.others.WifiActivity
 import okhttp3.Call
 import okhttp3.Callback
@@ -53,6 +54,7 @@ class OthersActivity : AppCompatActivity() {
     private val btnWifi by lazy { findViewById<Button>(R.id.btnWifi) }
     private val btnSwitches by lazy { findViewById<Button>(R.id.btnSwitches) }
     private val btnFactoryMenu by lazy { findViewById<Button>(R.id.btnFactoryMenu) }
+    private val btnOtherSettings by lazy { findViewById<Button>(R.id.btnOtherSettings) }
     private val btnLoadGMS by lazy { findViewById<Button>(R.id.btnLoadGMS) }
     private val btnDebuglogger by lazy { findViewById<Button>(R.id.btnDebuglogger) }
     private val btnUploadLog by lazy { findViewById<Button>(R.id.btnUploadLog) }
@@ -98,6 +100,7 @@ class OthersActivity : AppCompatActivity() {
         btnWifi.setOnClickListener { startActivity(Intent(this, WifiActivity::class.java)) }
         btnSwitches.setOnClickListener { startActivity(Intent(this, SwitchesActivity::class.java)) }
         btnFactoryMenu.setOnClickListener { onFactoryMenuButtonClicked() }
+        btnOtherSettings.setOnClickListener { startActivity((Intent(this, SettingsActivity::class.java))) }
         btnLoadGMS.setOnClickListener { onLoadGMSButtonClicked() }
         btnDebuglogger.setOnClickListener { onDebugloggerButtonClicked() }
         btnUploadLog.setOnClickListener { onUploadLogButtonClicked() }

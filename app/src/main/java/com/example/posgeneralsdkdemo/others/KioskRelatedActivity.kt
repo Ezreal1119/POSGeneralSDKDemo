@@ -7,12 +7,15 @@ import android.device.DeviceManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.R
 import androidx.core.content.edit
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
-
+import com.example.posgeneralsdkdemo.utils.PermissionUtil.ensureCanWriteSettings
+import com.example.posgeneralsdkdemo.utils.PinpadUtil
+import com.example.posgeneralsdkdemo.utils.Tr34Type
 
 private const val PREF_KIOSK = "pref_kiosk"
 private const val KEY_HOME_ENABLED = "home_enabled"
@@ -23,6 +26,7 @@ const val PACKAGE_COMPONENT_MAIN = "com.example.posgeneralsdkdemo/com.example.po
 
 class KioskRelatedActivity : AppCompatActivity() {
 
+    private val etPackageForWhitelist by lazy { findViewById<EditText>(R.id.etPackageForWhitelist) }
     private val btnEnableHome by lazy { findViewById<Button>(R.id.btnEnableHome) }
     private val btnDisableHome by lazy { findViewById<Button>(R.id.btnDisableHome) }
     private val btnEnableRecent by lazy { findViewById<Button>(R.id.btnEnableRecent) }
@@ -37,6 +41,9 @@ class KioskRelatedActivity : AppCompatActivity() {
     private val btnSetDefaultLauncher by lazy { findViewById<Button>(R.id.btnSetDefaultLauncher) }
     private val btnCancelDefaultLauncher by lazy { findViewById<Button>(R.id.btnCancelDefaultLauncher) }
     private val btnSetForceLockScreen by lazy { findViewById<Button>(R.id.btnSetForceLockScreen) }
+    private val btnAddAppToWhitelist by lazy { findViewById<Button>(R.id.btnAddAppToWhitelist) }
+    private val btnGetAppWhitelist by lazy { findViewById<Button>(R.id.btnGetAppWhitelist) }
+    private val btnRemoveAppFromWhitelist by lazy { findViewById<Button>(R.id.btnRemoveAppFromWhitelist) }
 
     private fun pref() = getSharedPreferences(PREF_KIOSK, MODE_PRIVATE)
 
@@ -58,11 +65,56 @@ class KioskRelatedActivity : AppCompatActivity() {
         btnSetDefaultLauncher.setOnClickListener { onSetDefaultLauncherButtonClicked() }
         btnCancelDefaultLauncher.setOnClickListener { onCancelDefaultLauncherButtonClicked() }
         btnSetForceLockScreen.setOnClickListener { onSetForceLockScreenButtonClicked() }
+        btnAddAppToWhitelist.setOnClickListener { onAddAppToWhitelistButtonClicked() }
+        btnGetAppWhitelist.setOnClickListener { onGetAppWhitelistButtonClicked() }
+        btnRemoveAppFromWhitelist.setOnClickListener { onRemoveAppFromWhitelistButtonClicked() }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
         }
     }
+
+    private fun onAddAppToWhitelistButtonClicked() {
+        if (!ensureCanWriteSettings(this)) {
+            Toast.makeText(this, "Please grant permission first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        runCatching {
+            DeviceManager().setAllowInstallApps(etPackageForWhitelist.text.toString(), 0, 1)
+        }.onSuccess {
+            Toast.makeText(this, "Add App to Whitelist successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Add App to Whitelist failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onGetAppWhitelistButtonClicked() {
+        runCatching {
+            Toast.makeText(this, DeviceManager().getAllowInstallApps(0).toString(), Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Get App Whitelist failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onRemoveAppFromWhitelistButtonClicked() {
+        if (!ensureCanWriteSettings(this)) {
+            Toast.makeText(this, "Please grant permission first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        runCatching {
+            DeviceManager().setAllowInstallApps(etPackageForWhitelist.text.toString(), 0, 2)
+        }.onSuccess {
+            Toast.makeText(this, "Remove App from Whitelist successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Remove App from Whitelist failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
 
     override fun onStart() {
         super.onStart()
@@ -257,7 +309,6 @@ class KioskRelatedActivity : AppCompatActivity() {
         }
     }
 
-
     private fun onSetForceLockScreenButtonClicked() {
         runCatching {
             DeviceManager().setForceLockScreen(true)
@@ -266,6 +317,8 @@ class KioskRelatedActivity : AppCompatActivity() {
             it.printStackTrace()
         }
     }
+
+
 
 }
 

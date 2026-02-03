@@ -78,6 +78,14 @@
                 android:padding="0dp"/>
 
             <Button
+                android:id="@+id/btnOtherSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <Button
                 android:id="@+id/btnLoadGMS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
