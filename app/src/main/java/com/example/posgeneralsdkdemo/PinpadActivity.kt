@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityPinpadBinding
 import com.example.posgeneralsdkdemo.enums.Dukpt
 import com.example.posgeneralsdkdemo.enums.PinParams
 import com.example.posgeneralsdkdemo.enums.Tr31Params
@@ -93,41 +94,7 @@ private const val SUPPORT_PIN_LENGTH = "4,6,12"
 private const val TIMEOUT_MS = 30 * 1000L
 
 class PinpadActivity : AppCompatActivity() {
-    private val etKeySlot by lazy { findViewById<EditText>(R.id.etKeySlot) }
-    private val btnIsKeysExist by lazy { findViewById<Button>(R.id.btnIsKeysExist) }
-    private val btnDeleteKeys by lazy { findViewById<Button>(R.id.btnDeleteKeys) }
-    private val btnDeleteAllKeys by lazy { findViewById<Button>(R.id.btnDeleteAllKeys) }
-    private val btnLoadTEK by lazy { findViewById<Button>(R.id.btnLoadTEK) }
-    private val btnLoadMK by lazy { findViewById<Button>(R.id.btnLoadMK) }
-    private val btnLoadEMK by lazy { findViewById<Button>(R.id.btnLoadEMK) }
-    private val btnLoadWK by lazy { findViewById<Button>(R.id.btnLoadWK) }
-    private val btnCalcMac by lazy { findViewById<Button>(R.id.btnCalcMac) }
-    private val btnEncDecData by lazy { findViewById<Button>(R.id.btnEncDecData) }
-    private val btnCalcHash by lazy { findViewById<Button>(R.id.btnCalcHash) }
-    private val btnPinBlockWKOnline by lazy { findViewById<Button>(R.id.btnPinBlockWKOnline) }
-    private val btnPinBlockWKOffline by lazy { findViewById<Button>(R.id.btnPinBlockWKOffline) }
-    private val etTr34Data by lazy { findViewById<EditText>(R.id.etTr34Data) }
-    private val btnWriteTr34Data by lazy { findViewById<Button>(R.id.btnWriteTr34Data) }
-    private val btnReadTr34Data by lazy { findViewById<Button>(R.id.btnReadTr34Data) }
-    private val btnDownloadTr31Wk by lazy { findViewById<Button>(R.id.btnDownloadTr31Wk) }
-    private val btnDownloadTr31DukptTDes by lazy { findViewById<Button>(R.id.btnDownloadTr31DukptTDes) }
-
-    private val btnDownloadDukpt by lazy { findViewById<Button>(R.id.btnDownloadDukpt) }
-    private val btnDukptGetKSN by lazy { findViewById<Button>(R.id.btnDukptGetKSN) }
-    private val btnDeleteDukpt by lazy { findViewById<Button>(R.id.btnDeleteDukpt) }
-    private val btnCalcMacDukpt by lazy { findViewById<Button>(R.id.btnCalcMacDukpt) }
-    private val btnEMVEnc_Dukpt by lazy { findViewById<Button>(R.id.btnEMVEnc_Dukpt) }
-    private val btnEMVDec_Dukpt by lazy { findViewById<Button>(R.id.btnEMVDec_Dukpt) }
-    private val btnPinBlockDukpt by lazy { findViewById<Button>(R.id.btnPinBlockDukpt) }
-    private val btnPinBlockDukptCustom by lazy { findViewById<Button>(R.id.btnPinBlockDukptCustom) }
-    private val btnGenerateRsa by lazy { findViewById<Button>(R.id.btnGenerateRsa)}
-    private val btnReadRsaPublicKey by lazy { findViewById<Button>(R.id.btnReadRsaPublicKey)}
-    private val btnRsaEnc by lazy { findViewById<Button>(R.id.btnRsaEnc)}
-    private val btnRsaDec by lazy { findViewById<Button>(R.id.btnRsaDec)}
-    private val btnClearAllKeys by lazy { findViewById<Button>(R.id.btnClearAllKeys) }
-    private val pbWaiting by lazy { findViewById<ProgressBar>(R.id.pbWaiting) }
-    private val tvIntro by lazy { findViewById<TextView>(R.id.tvIntro) }
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
+    private lateinit var binding: ActivityPinpadBinding
 
     private val mPinpadManager = PinPadProviderImpl.getInstance()
     private var encryptedDataCache: ByteArray? = null
@@ -135,38 +102,41 @@ class PinpadActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_pinpad)
+        binding = ActivityPinpadBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnIsKeysExist.setOnClickListener { onIsKeysExistButtonClicked() }
-        btnDeleteKeys.setOnClickListener { onDeleteKeysButtonClicked() }
-        btnDeleteAllKeys.setOnClickListener { onDeleteAllKeysButtonClicked() }
-        btnLoadTEK.setOnClickListener { onLoadTEKButtonClicked() }
-        btnLoadMK.setOnClickListener { onLoadMKButtonClicked() }
-        btnLoadEMK.setOnClickListener { onLoadEMKButtonClicked() }
-        btnLoadWK.setOnClickListener { onLoadWKButtonClicked() }
-        btnCalcMac.setOnClickListener { onCalcMacButtonClicked() }
-        btnEncDecData.setOnClickListener { onEncDecDataButtonClicked() }
-        btnCalcHash.setOnClickListener { onCalcHashButtonClicked() }
-        btnPinBlockWKOnline.setOnClickListener { onPinBlockWKOnlineButtonClicked() }
-        btnPinBlockWKOffline.setOnClickListener { onPinBlockWKOfflineButtonClicked() }
-        btnWriteTr34Data.setOnClickListener { onWriteTr34DataButtonClicked() }
-        btnReadTr34Data.setOnClickListener { onReadTr34DataButtonClicked() }
-        btnDownloadTr31Wk.setOnClickListener { onDownloadTr31WkButtonClicked() }
-        btnDownloadTr31DukptTDes.setOnClickListener { onDownloadTr31DukptTDesButtonClicked() }
+        binding.apply {
+            btnIsKeysExist.setOnClickListener { onIsKeysExistButtonClicked() }
+            btnDeleteKeys.setOnClickListener { onDeleteKeysButtonClicked() }
+            btnDeleteAllKeys.setOnClickListener { onDeleteAllKeysButtonClicked() }
+            btnLoadTEK.setOnClickListener { onLoadTEKButtonClicked() }
+            btnLoadMK.setOnClickListener { onLoadMKButtonClicked() }
+            btnLoadEMK.setOnClickListener { onLoadEMKButtonClicked() }
+            btnLoadWK.setOnClickListener { onLoadWKButtonClicked() }
+            btnCalcMac.setOnClickListener { onCalcMacButtonClicked() }
+            btnEncDecData.setOnClickListener { onEncDecDataButtonClicked() }
+            btnCalcHash.setOnClickListener { onCalcHashButtonClicked() }
+            btnPinBlockWKOnline.setOnClickListener { onPinBlockWKOnlineButtonClicked() }
+            btnPinBlockWKOffline.setOnClickListener { onPinBlockWKOfflineButtonClicked() }
+            btnWriteTr34Data.setOnClickListener { onWriteTr34DataButtonClicked() }
+            btnReadTr34Data.setOnClickListener { onReadTr34DataButtonClicked() }
+            btnDownloadTr31Wk.setOnClickListener { onDownloadTr31WkButtonClicked() }
+            btnDownloadTr31DukptTDes.setOnClickListener { onDownloadTr31DukptTDesButtonClicked() }
 
-        btnDownloadDukpt.setOnClickListener { onDownloadDukptButtonClicked() }
-        btnDukptGetKSN.setOnClickListener { onDukptGetKSNButtonClicked() }
-        btnDeleteDukpt.setOnClickListener { onDeleteDukptButtonClicked() }
-        btnCalcMacDukpt.setOnClickListener { onCalcMacDukptButtonClicked() }
-        btnEMVEnc_Dukpt.setOnClickListener { onEMVEncDukptButtonClicked() }
-        btnEMVDec_Dukpt.setOnClickListener { onEMVDecDukptButtonClicked() }
-        btnPinBlockDukpt.setOnClickListener { onPinBlockDukptButtonClicked() }
-        btnPinBlockDukptCustom.setOnClickListener { onPinBlockDukptCustomButtonClicked() }
-        btnGenerateRsa.setOnClickListener { onGenerateRsaButtonClicked() }
-        btnReadRsaPublicKey.setOnClickListener { onReadRsaPublicKeyButtonClicked() }
-        btnRsaEnc.setOnClickListener { onRsaEncButtonClicked() }
-        btnRsaDec.setOnClickListener { onRsaDecButtonClicked() }
-        btnClearAllKeys.setOnClickListener { onClearAllKeysButtonClicked() }
+            btnDownloadDukpt.setOnClickListener { onDownloadDukptButtonClicked() }
+            btnDukptGetKSN.setOnClickListener { onDukptGetKSNButtonClicked() }
+            btnDeleteDukpt.setOnClickListener { onDeleteDukptButtonClicked() }
+            btnCalcMacDukpt.setOnClickListener { onCalcMacDukptButtonClicked() }
+            btnEMVEncDukpt.setOnClickListener { onEMVEncDukptButtonClicked() }
+            btnEMVDecDukpt.setOnClickListener { onEMVDecDukptButtonClicked() }
+            btnPinBlockDukpt.setOnClickListener { onPinBlockDukptButtonClicked() }
+            btnPinBlockDukptCustom.setOnClickListener { onPinBlockDukptCustomButtonClicked() }
+            btnGenerateRsa.setOnClickListener { onGenerateRsaButtonClicked() }
+            btnReadRsaPublicKey.setOnClickListener { onReadRsaPublicKeyButtonClicked() }
+            btnRsaEnc.setOnClickListener { onRsaEncButtonClicked() }
+            btnRsaDec.setOnClickListener { onRsaDecButtonClicked() }
+            btnClearAllKeys.setOnClickListener { onClearAllKeysButtonClicked() }
+        }
     }
 
     override fun onStart() {
@@ -179,7 +149,7 @@ class PinpadActivity : AppCompatActivity() {
 
     private fun onIsKeysExistButtonClicked() {
         // Check if a keySlot has these four types of keys or not. (Each slot can have this four types of keys, but only of its kind)
-        val keySlot = etKeySlot.text.toString().trim().toIntOrNull()
+        val keySlot = binding.etKeySlot.text.toString().trim().toIntOrNull()
         var checkMK= false
         var checkTDKey= false
         var checkPinKey= false
@@ -191,7 +161,7 @@ class PinpadActivity : AppCompatActivity() {
             checkPinKey = mPinpadManager.isKeyExist(Constant.KeyType.PIN_KEY, keySlot)
             checkMacKey = mPinpadManager.isKeyExist(Constant.KeyType.MAC_KEY, keySlot)
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Check MK/SK results:\n")
                 append(" - TEK/MK(TMK) @ KeySlot=$keySlot: ${checkMK}\n")
                 append(" - TD_Key @ KeySlot=$keySlot: ${checkTDKey}\n")
@@ -201,14 +171,14 @@ class PinpadActivity : AppCompatActivity() {
                 append("Check if a keySlot[0, 255] has these four types of keys or not. (Each slot can have this four types of keys, but only of its kind)")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
 
     private fun onDeleteKeysButtonClicked() {
         // Delete all keys(TEK/TMK, TD_KEY, PIN_KEY, MAC_KEY) of specified keySlot
-        val keySlot = etKeySlot.text.toString().trim().toIntOrNull()
+        val keySlot = binding.etKeySlot.text.toString().trim().toIntOrNull()
         runCatching {
             if (keySlot == null || keySlot !in 1..255) throw Exception("Please enter an integer between 1 and 255")
             listOf(
@@ -221,7 +191,7 @@ class PinpadActivity : AppCompatActivity() {
                 mPinpadManager.deleteKey(type, keySlot)
             }
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Deleted all the Keys successfully:\n")
                 append(" - TEK / MK(TMK) @ KeySlot=$keySlot\n")
                 append(" - TD_KEY @ KeySlot=$keySlot\n")
@@ -229,7 +199,7 @@ class PinpadActivity : AppCompatActivity() {
                 append(" - MAC_KEY @ KeySlot=$keySlot")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -241,21 +211,23 @@ class PinpadActivity : AppCompatActivity() {
             .setTitle("Confirm")
             .setMessage("Are you sure to delete all the Keys(MK/SK) from Slot 1 - 255")
             .setPositiveButton("Delete") { dialog, which ->
-                pbWaiting.visibility = View.VISIBLE
-                tvIntro.visibility = View.INVISIBLE
-                tvResult.text = "Deleting all MK/SK Keys..."
-                btnIsKeysExist.isEnabled = false
-                btnDeleteKeys.isEnabled = false
-                btnDeleteAllKeys.isEnabled = false
-                btnLoadTEK.isEnabled = false
-                btnLoadMK.isEnabled = false
-                btnLoadEMK.isEnabled = false
-                btnLoadWK.isEnabled = false
-                btnCalcMac.isEnabled = false
-                btnCalcHash.isEnabled = false
-                btnEncDecData.isEnabled = false
-                btnPinBlockWKOnline.isEnabled = false
-                btnPinBlockWKOffline.isEnabled = false
+                binding.apply {
+                    pbWaiting.visibility = View.VISIBLE
+                    tvIntro.visibility = View.INVISIBLE
+                    tvResult.text = "Deleting all MK/SK Keys..."
+                    btnIsKeysExist.isEnabled = false
+                    btnDeleteKeys.isEnabled = false
+                    btnDeleteAllKeys.isEnabled = false
+                    btnLoadTEK.isEnabled = false
+                    btnLoadMK.isEnabled = false
+                    btnLoadEMK.isEnabled = false
+                    btnLoadWK.isEnabled = false
+                    btnCalcMac.isEnabled = false
+                    btnCalcHash.isEnabled = false
+                    btnEncDecData.isEnabled = false
+                    btnPinBlockWKOnline.isEnabled = false
+                    btnPinBlockWKOffline.isEnabled = false
+                }
                 Thread {
                     runCatching {
                         for (i in 1..255) {
@@ -271,7 +243,7 @@ class PinpadActivity : AppCompatActivity() {
                         }
                     }.onSuccess {
                         runOnUiThread {
-                            tvResult.text = buildString {
+                            binding.tvResult.text = buildString {
                                 append("Deleted all the Keys successfully:\n")
                                 append(" - TEK / MK(TMK) from KeySlot=[1, 255]\n")
                                 append(" - TD_KEY from KeySlot=[1, 255]\n")
@@ -281,25 +253,27 @@ class PinpadActivity : AppCompatActivity() {
                         }
                     }.onFailure {
                         runOnUiThread {
-                            tvResult.text = it.message
+                            binding.tvResult.text = it.message
                         }
                         it.printStackTrace()
                     }
                     runOnUiThread {
-                        pbWaiting.visibility = View.INVISIBLE
-                        tvIntro.visibility = View.VISIBLE
-                        btnIsKeysExist.isEnabled = true
-                        btnDeleteKeys.isEnabled = true
-                        btnDeleteAllKeys.isEnabled = true
-                        btnLoadTEK.isEnabled = true
-                        btnLoadMK.isEnabled = true
-                        btnLoadEMK.isEnabled = true
-                        btnLoadWK.isEnabled = true
-                        btnCalcMac.isEnabled = true
-                        btnCalcHash.isEnabled = true
-                        btnEncDecData.isEnabled = true
-                        btnPinBlockWKOnline.isEnabled = true
-                        btnPinBlockWKOffline.isEnabled = true
+                        binding.apply {
+                            pbWaiting.visibility = View.INVISIBLE
+                            tvIntro.visibility = View.VISIBLE
+                            btnIsKeysExist.isEnabled = true
+                            btnDeleteKeys.isEnabled = true
+                            btnDeleteAllKeys.isEnabled = true
+                            btnLoadTEK.isEnabled = true
+                            btnLoadMK.isEnabled = true
+                            btnLoadEMK.isEnabled = true
+                            btnLoadWK.isEnabled = true
+                            btnCalcMac.isEnabled = true
+                            btnCalcHash.isEnabled = true
+                            btnEncDecData.isEnabled = true
+                            btnPinBlockWKOnline.isEnabled = true
+                            btnPinBlockWKOffline.isEnabled = true
+                        }
                     }
                 }.start()
             }
@@ -309,7 +283,7 @@ class PinpadActivity : AppCompatActivity() {
 
     private fun onLoadTEKButtonClicked() {
         // Load plaintext TEK into the device; FYI, TEK is used to encrypt the MK to E_MK out of device, which will be decrypted using the same TEK during injection.
-        val keySlot = etKeySlot.text.toString().trim().toIntOrNull()
+        val keySlot = binding.etKeySlot.text.toString().trim().toIntOrNull()
         runCatching {
             if (keySlot == null || keySlot !in 1..255) throw Exception("Please enter an integer between 1 and 255")
             val checkValue = BytesUtil.hexString2Bytes(TEK_KCV)
@@ -317,14 +291,14 @@ class PinpadActivity : AppCompatActivity() {
             val result = mPinpadManager.loadTEK(keySlot, plainTEKBuffer, checkValue)
             if (!result) throw Exception("Loaded TEK failed")
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("TEK(Plain) loaded successfully!\n")
                 append("TEK(Plain): $TEK\n\n")
                 append("Please note:\n")
                 append("TEK(Terminal Encryption Key) is used to decrypt the encrypted MK(Main Key) to be loaded into the device.")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -332,7 +306,7 @@ class PinpadActivity : AppCompatActivity() {
 
     private fun onLoadMKButtonClicked() {
         // Load plaintext MK into the device; FYI, MK is used to encrypt the WK out of device to E_WK, which will be decrypted using the same MK during injection.
-        val keySlot = etKeySlot.text.toString().trim().toIntOrNull()
+        val keySlot = binding.etKeySlot.text.toString().trim().toIntOrNull()
         runCatching {
             if (keySlot == null || keySlot !in 1..255) throw Exception("Please enter an integer between 1 and 255")
             val checkValue = BytesUtil.hexString2Bytes(MK_KCV)
@@ -340,14 +314,14 @@ class PinpadActivity : AppCompatActivity() {
             val result = mPinpadManager.loadMainKey(keySlot, plainMKBuffer, checkValue)
             if (!result) throw Exception("Loaded Plain MK(TMK) failed")
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Plain MK(TMK) loaded successfully!\n")
                 append("Plain MK(TMK): $MK\n\n")
                 append("Please note:\n")
                 append("MK(Main Key) is used to decrypt the encrypted WK(Work Key) to be loaded into the device.")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -356,7 +330,7 @@ class PinpadActivity : AppCompatActivity() {
     private fun onLoadEMKButtonClicked() {
         // Load encrypted MK into the device; Device will use the same TEK inside for decryption of the E_MK
         // It's using DES(ECB/CBC mode) as the decryption algorithm.
-        val keySlot = etKeySlot.text.toString().trim().toIntOrNull()
+        val keySlot = binding.etKeySlot.text.toString().trim().toIntOrNull()
         val encryptedMK = ByteArray(BytesUtil.hexString2Bytes(MK).size)
         runCatching {
             if (keySlot == null || keySlot !in 1..255) throw Exception("Please enter an integer between 1 and 255")
@@ -368,7 +342,7 @@ class PinpadActivity : AppCompatActivity() {
                 mPinpadManager.loadEncryptMainKey(keySlot, keySlot, encryptedMK, checkValue)
             if (!result) throw Exception("Loaded Encrypted_MK(EMK) failed")
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("EMK loaded successfully! \n")
                 append("Encrypted_MK: ${BytesUtil.bytes2HexString(encryptedMK)}\n")
                 append("(Encrypted from MK, using calculateDes(); Excepted:\n$E_MK)\n\n")
@@ -378,7 +352,7 @@ class PinpadActivity : AppCompatActivity() {
                 append("EMK(Encrypted Main Key) will be decrypted by TEK and loaded into the device. And be used to encrypt WK(Work Key) in the future.")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -387,7 +361,7 @@ class PinpadActivity : AppCompatActivity() {
     private fun onLoadWKButtonClicked() {
         // Load encrypted WK(TD_KEY, PIN_KEY, MAC_KEY) into device. Device will use the same MK for decryption.
         // It's using DES(ECB/CBC mode) as the decryption algorithm.
-        val keySlot = etKeySlot.text.toString().trim().toIntOrNull()
+        val keySlot = binding.etKeySlot.text.toString().trim().toIntOrNull()
         var retTDKEy = false
         var retPINKey = false
         var retMACKey = false
@@ -406,7 +380,7 @@ class PinpadActivity : AppCompatActivity() {
                 BytesUtil.hexString2Bytes(E_MAC_KEY), BytesUtil.hexString2Bytes(MAC_KCV)
             )
         }.onSuccess {
-        tvResult.text = buildString {
+            binding.tvResult.text = buildString {
             append("TD_KEY load result: $retTDKEy\n")
             append("Please note: TD_KEY is used to encrypt Transaction Data\n\n")
             append("PIN_KEY load result: $retPINKey\n")
@@ -416,7 +390,7 @@ class PinpadActivity : AppCompatActivity() {
             append("-> If loaded fail, might because no MK in the device")
         }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -453,9 +427,9 @@ class PinpadActivity : AppCompatActivity() {
                 append("\nExpected: \n$MAC_ANSI_919\n\n")
                 append("ISO8583_DATA: \n$ISO8583_DATA")
             }
-            tvResult.text = result
+            binding.tvResult.text = result
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -518,7 +492,7 @@ class PinpadActivity : AppCompatActivity() {
 
         }.onSuccess {
             var data: String
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Using TD_Key at keySlot_99 for encryption:\n")
                 append("Track 2: \n$TRACK2_DATA\n\n")
                 if (retDesEcb_enc == 0x00) {
@@ -549,7 +523,7 @@ class PinpadActivity : AppCompatActivity() {
                 }
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -571,12 +545,12 @@ class PinpadActivity : AppCompatActivity() {
             if (ret != 0x00) throw Exception("Error when calculating HashCode")
             return@runCatching respData.copyOf(respLen[0].toInt())
         }.onSuccess { result ->
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Result: \n${BytesUtil.bytes2HexString(result)}\n")
                 append("Expected: $RANDOM_NUMBER_HASH")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -602,7 +576,7 @@ class PinpadActivity : AppCompatActivity() {
         runCatching {
             mPinpadManager.getPinBlockEx(pinpadBundle, mPinInputListener)
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -616,13 +590,13 @@ class PinpadActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun onWriteTr34DataButtonClicked() { // TR34 in this case means the [Encrypted_SessionKey + Encrypted_TR31] -> Raw Data
         runCatching {
-            val dataToWrite = etTr34Data.text.toString() + "\n" + LocalDateTime.now().format(
+            val dataToWrite = binding.etTr34Data.text.toString() + "\n" + LocalDateTime.now().format(
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
             val ret = PinpadUtil.writeTr34Cert(Tr34Type.TYPE_PED_CRT.type, 3, dataToWrite.toByteArray())
             if (ret != 0x00) throw Exception("Wrote TR34 Message failed")
             return@runCatching dataToWrite
         }.onSuccess { dataToWrite ->
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Wrote TR34 Message to PED_CRT_3 successfully\n\n")
                 append("Message: $dataToWrite\n\n")
                 append("Please note:\n")
@@ -641,7 +615,7 @@ class PinpadActivity : AppCompatActivity() {
             val ret = PinpadUtil.readTr34Cert(Tr34Type.TYPE_PED_CRT.type, 3, data, dataLen)
             if (ret != 0x00) throw Exception("Read TR34 Message failed")
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Read TR34 Message successfully\n\n")
                 append("Message: ${String(data.copyOf(dataLen[0]))}")
             }
@@ -680,7 +654,7 @@ class PinpadActivity : AppCompatActivity() {
             if (retInt != 0x00) throw Exception("Calculated KCV for Key downloaded failed")
             return@runCatching kcvBuffer
         }.onSuccess { kcvBuffer ->
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("TR31 Key Block Downloaded successfully!\n\n")
                 append("TR31: ${String(tr34MessageCache.copyOf(tr34MessageLen[0])).substring(0, 96)}\n")
                 append("Key Usage: ${PinpadUtil.parseTr31KeyUsage(String(tr34MessageCache.copyOf(tr34MessageLen[0])).substring(0, 96))}\n")
@@ -709,8 +683,8 @@ class PinpadActivity : AppCompatActivity() {
                 append(" - R: RSA")
             }
         }.onFailure {
-            tvResult.text = it.message
-            tvResult.append("\n\nThis might due to TR31 not being Valid e.g.:\n - Not Valid TR31 format\n - MAC verification fails")
+            binding.tvResult.text = it.message
+            binding.tvResult.append("\n\nThis might due to TR31 not being Valid e.g.:\n - Not Valid TR31 format\n - MAC verification fails")
             it.printStackTrace()
         }
 
@@ -725,17 +699,19 @@ class PinpadActivity : AppCompatActivity() {
 
     private fun onDownloadDukptButtonClicked() {
         // Download the Dukpt_01(00 is for IPEK) into device (Four types together)
-        pbWaiting.visibility = View.VISIBLE
-        tvIntro.visibility = View.INVISIBLE
-        tvResult.text = "Downloading Dukpt..."
-        btnDownloadDukpt.isEnabled = false
-        btnDukptGetKSN.isEnabled = false
-        btnDeleteDukpt.isEnabled = false
-        btnCalcMacDukpt.isEnabled = false
-        btnEMVEnc_Dukpt.isEnabled = false
-        btnEMVDec_Dukpt.isEnabled = false
-        btnPinBlockDukpt.isEnabled = false
-        btnPinBlockDukptCustom.isEnabled = false
+        binding.apply {
+            pbWaiting.visibility = View.VISIBLE
+            tvIntro.visibility = View.INVISIBLE
+            tvResult.text = "Downloading Dukpt..."
+            btnDownloadDukpt.isEnabled = false
+            btnDukptGetKSN.isEnabled = false
+            btnDeleteDukpt.isEnabled = false
+            btnCalcMacDukpt.isEnabled = false
+            btnEMVEncDukpt.isEnabled = false
+            btnEMVDecDukpt.isEnabled = false
+            btnPinBlockDukpt.isEnabled = false
+            btnPinBlockDukptCustom.isEnabled = false
+        }
         Thread {
             runCatching {
                 val result = buildString {
@@ -766,23 +742,25 @@ class PinpadActivity : AppCompatActivity() {
                 return@runCatching result
             }.onSuccess { result ->
                 runOnUiThread {
-                    tvResult.text = result
+                    binding.tvResult.text = result
                 }
             }.onFailure {
-                runOnUiThread { tvResult.text = it.message }
+                runOnUiThread { binding.tvResult.text = it.message }
                 it.printStackTrace()
             }
             runOnUiThread {
-                pbWaiting.visibility = View.INVISIBLE
-                tvIntro.visibility = View.VISIBLE
-                btnDownloadDukpt.isEnabled = true
-                btnDukptGetKSN.isEnabled = true
-                btnDeleteDukpt.isEnabled = true
-                btnCalcMacDukpt.isEnabled = true
-                btnEMVEnc_Dukpt.isEnabled = true
-                btnEMVDec_Dukpt.isEnabled = true
-                btnPinBlockDukpt.isEnabled = true
-                btnPinBlockDukptCustom.isEnabled = true
+                binding.apply {
+                    pbWaiting.visibility = View.INVISIBLE
+                    tvIntro.visibility = View.VISIBLE
+                    btnDownloadDukpt.isEnabled = true
+                    btnDukptGetKSN.isEnabled = true
+                    btnDeleteDukpt.isEnabled = true
+                    btnCalcMacDukpt.isEnabled = true
+                    btnEMVEncDukpt.isEnabled = true
+                    btnEMVDecDukpt.isEnabled = true
+                    btnPinBlockDukpt.isEnabled = true
+                    btnPinBlockDukptCustom.isEnabled = true
+                }
             }
         }.start()
 
@@ -807,9 +785,9 @@ class PinpadActivity : AppCompatActivity() {
             }
             return@runCatching result
         }.onSuccess { result ->
-            tvResult.text = result
+            binding.tvResult.text = result
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -821,10 +799,10 @@ class PinpadActivity : AppCompatActivity() {
             SEManager().DukptDeleteKey(Dukpt.PIN.index)
             SEManager().DukptDeleteKey(Dukpt.MAC.index)
         }.onSuccess {
-            tvResult.text = ""
+            binding.tvResult.text = ""
             Toast.makeText(this, "Deleted All Dukpt successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -854,13 +832,13 @@ class PinpadActivity : AppCompatActivity() {
             outputMac = ByteArray(outputLen[0])
             System.arraycopy(output, 0, outputMac, 0, outputMac.size)
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Using MAC_DUKPT for encryption:\n")
                 append("MAC: ${BytesUtil.bytes2HexString(outputMac)} (Calculated from ISO8583_DATA using DUKPT_MAC)\n")
                 append("KSN_MAC_DUPKT: ${BytesUtil.bytes2HexString(ksnBuffer)}")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -889,7 +867,7 @@ class PinpadActivity : AppCompatActivity() {
             )
             if (ret != 0x00) throw Exception("onEMVEncryptDupktButtonClicked: enc_ret=$ret")
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Enc result: ${BytesUtil.bytes2HexString(output)}\n")
                 append("KSN_EMV_DUKPT: ${BytesUtil.bytes2HexString(ksnBuffer)}\n\n")
                 append("Note:\n")
@@ -897,7 +875,7 @@ class PinpadActivity : AppCompatActivity() {
                 append("Original EMV_DATA: $EMV_DATA")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -926,14 +904,14 @@ class PinpadActivity : AppCompatActivity() {
             )
             if (ret != 0) throw Exception("onEMVEncryptDupktButtonClicked: dec_ret=$ret")
         }.onSuccess {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Dec result: \n${BytesUtil.bytes2HexString(output)}\n")
                 append("KSN_EMV_DUKPT: ${BytesUtil.bytes2HexString(ksnBuffer)}\n\n")
                 append("Please note, if using first KSN for encryption, the excepted result is: \n")
                 append("$EMV_DATA")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -959,7 +937,7 @@ class PinpadActivity : AppCompatActivity() {
         runCatching {
             mPinpadManager.GetDukptPinBlock(pinpadBundle, mPinInputListener)
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -1006,41 +984,45 @@ class PinpadActivity : AppCompatActivity() {
         runCatching {
             mPinpadManager.GetDukptPinBlock(pinpadBundle, mPinInputListener)
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
 
     private fun onGenerateRsaButtonClicked() {
-        pbWaiting.visibility = View.VISIBLE
-        tvIntro.visibility = View.INVISIBLE
-        tvResult.text = "Generating RSA Keypair @ RSA_Index_9..."
-        btnGenerateRsa.isEnabled = false
-        btnReadRsaPublicKey.isEnabled = false
-        btnRsaEnc.isEnabled = false
-        btnRsaDec.isEnabled = false
+        binding.apply {
+            pbWaiting.visibility = View.VISIBLE
+            tvIntro.visibility = View.INVISIBLE
+            tvResult.text = "Generating RSA Keypair @ RSA_Index_9..."
+            btnGenerateRsa.isEnabled = false
+            btnReadRsaPublicKey.isEnabled = false
+            btnRsaEnc.isEnabled = false
+            btnRsaDec.isEnabled = false
+        }
         Thread {
             runCatching {
                 val ret = mPinpadManager.generateRSAKey(INDEX_NINE, 2048, "010001")
                 if (ret != 0x00) throw Exception("Generated RSA Keypair failed")
             }.onSuccess {
                 runOnUiThread {
-                    tvResult.text = buildString {
+                    binding.tvResult.text = buildString {
                         append("Generated RSA Keypair at slot_9 [0, 9] successfully!\n")
                         append("KeySize: 2048; Exponent: 010001")
                     }
                 }
             }.onFailure {
-                runOnUiThread { tvResult.text = it.message }
+                runOnUiThread { binding.tvResult.text = it.message }
                 it.printStackTrace()
             }
             runOnUiThread {
-                pbWaiting.visibility = View.INVISIBLE
-                tvIntro.visibility = View.VISIBLE
-                btnGenerateRsa.isEnabled = true
-                btnReadRsaPublicKey.isEnabled = true
-                btnRsaEnc.isEnabled = true
-                btnRsaDec.isEnabled = true
+                binding.apply {
+                    pbWaiting.visibility = View.INVISIBLE
+                    tvIntro.visibility = View.VISIBLE
+                    btnGenerateRsa.isEnabled = true
+                    btnReadRsaPublicKey.isEnabled = true
+                    btnRsaEnc.isEnabled = true
+                    btnRsaDec.isEnabled = true
+                }
             }
         }.start()
     }
@@ -1051,7 +1033,7 @@ class PinpadActivity : AppCompatActivity() {
             throw Exception("Read RSA Keypair failed")
             return@runCatching rsaPublicKey
         }.onSuccess { rsaPublicKey ->
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Exponent:\n")
                 append("${rsaPublicKey.publicExponent}\n\n")
                 append("Modulus:\n")
@@ -1059,9 +1041,9 @@ class PinpadActivity : AppCompatActivity() {
             }
         }.onFailure {
             if (it.message?.contains("23") == true) {
-                tvResult.text = "No RSA key in slot_9"
+                binding.tvResult.text = "No RSA key in slot_9"
             } else {
-                tvResult.text = it.message
+                binding.tvResult.text = it.message
             }
             it.printStackTrace()
         }
@@ -1073,7 +1055,7 @@ class PinpadActivity : AppCompatActivity() {
             mPinpadManager.calculateWithRSAPublicKey(INDEX_NINE, rawData) ?: // No need to care about the padding
             throw Exception("RSA Encryption failed")
         }.onSuccess { encryptedData ->
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Raw Data: \n")
                 append("${String(rawData, UTF_8)}\n\n") // Do this since it's MEANINGFUL for to display as Characters
                 append("Encrypted Data:\n")
@@ -1083,9 +1065,9 @@ class PinpadActivity : AppCompatActivity() {
             }
         }.onFailure {
             if (it.message?.contains("23") == true) {
-                tvResult.text = "No RSA key in slot_9"
+                binding.tvResult.text = "No RSA key in slot_9"
             } else {
-                tvResult.text = it.message
+                binding.tvResult.text = it.message
             }
             it.printStackTrace()
         }
@@ -1101,7 +1083,7 @@ class PinpadActivity : AppCompatActivity() {
             mPinpadManager.calculateWithRSAPrivateKey(INDEX_NINE, encryptedData) ?: // No need to care about the padding
             throw Exception("RSA Decryption failed")
         }.onSuccess { rawData ->
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Encrypted Data: \n")
                 append("${encryptedData.toHexString()}\n\n") // Do this since it's NOT meaningful for to display as Characters
                 append("Decrypted Data: \n")
@@ -1110,9 +1092,9 @@ class PinpadActivity : AppCompatActivity() {
             }
         }.onFailure {
             if (it.message?.contains("23") == true) {
-                tvResult.text = "No RSA key in slot_9"
+                binding.tvResult.text = "No RSA key in slot_9"
             } else {
-                tvResult.text = it.message
+                binding.tvResult.text = it.message
             }
             it.printStackTrace()
         }
@@ -1131,7 +1113,7 @@ class PinpadActivity : AppCompatActivity() {
                     if (ret != 0) throw Exception("Clear all Keys(DUKPT+MK/SK) failed")
                     Triple(rspData, rspLen, ret)
                 }.onSuccess { (rspData, rspLen, ret) ->
-                    tvResult.text = buildString {
+                    binding.tvResult.text = buildString {
                         append("Clear all Keys successfully:\n")
                         append(" - MK/SK(TEK/MK, TD_KEY, PIN_KEY, MAC_KEY) from KeySlot=[1, 255]\n")
                         append(" - DUKPT(MSR, EMV, PIN, MAC)\n\n")
@@ -1141,7 +1123,7 @@ class PinpadActivity : AppCompatActivity() {
                         append(BytesUtil.bytes2HexString(rspData.copyOf(rspLen[0].toInt())))
                     }
                 }.onFailure {
-                    tvResult.text = it.message
+                    binding.tvResult.text = it.message
                     it.printStackTrace()
                 }
             }
@@ -1178,7 +1160,7 @@ class PinpadActivity : AppCompatActivity() {
                     append("PIN: ${PinpadUtil.getPinData(INDEX_NINETY_NINE, PAN, BytesUtil.hexString2Bytes(String(pinBlock)), TAG)}")
                     // Decrypt PIN from PINBlock must need PAN because PINBlock is generated using PAN
                 }
-                tvResult.text = result
+                binding.tvResult.text = result
             }
         }
 
@@ -1198,7 +1180,7 @@ class PinpadActivity : AppCompatActivity() {
                 return
             }
             runOnUiThread {
-                tvResult.text = buildString {
+                binding.tvResult.text = buildString {
                     append("PINBlock: ${BytesUtil.bytes2HexString(pinBlock)}\n")
                     append("ksn: \n${BytesUtil.bytes2HexString(ksn)}")
                 }

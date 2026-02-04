@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityApiTestBinding
 import com.example.posgeneralsdkdemo.others.PACKAGE_COMPONENT_INFO
 import com.example.posgeneralsdkdemo.others.PACKAGE_COMPONENT_MAIN
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
@@ -30,35 +31,29 @@ import java.security.Permission
 private const val TAG = "Patrick"
 class ApiTestActivity : AppCompatActivity() {
 
-    private val tvResult by lazy { findViewById<Button>(R.id.tvResult) }
-    private val btnTest1 by lazy { findViewById<Button>(R.id.btnTest1) }
-
-    private val btnTest2 by lazy { findViewById<Button>(R.id.btnTest2) }
-    private val btnTest3 by lazy { findViewById<Button>(R.id.btnTest3) }
-    private val btnTest4 by lazy { findViewById<Button>(R.id.btnTest4) }
-    private val ivTest by lazy { findViewById<ImageView>(R.id.ivTest) }
-
+    private lateinit var binding: ActivityApiTestBinding
 
     @SuppressLint("MissingPermission", "ServiceCast")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_api_test)
+        binding = ActivityApiTestBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         Log.e(TAG, "onCreate: $packageName", )
 
-        btnTest1.setOnClickListener {
+        binding.btnTest1.setOnClickListener {
             Log.e(TAG, "btnTest1")
             DeviceManager().setAllowInstallApps("com.example.abd", 0, 1)
         }
-        btnTest2.setOnClickListener {
+        binding.btnTest2.setOnClickListener {
             Log.e(TAG, "btnTest2")
             Log.e(TAG, "onCreate: ${DeviceManager().getAllowInstallApps(0)}", )
             
         }
-        btnTest3.setOnClickListener {
+        binding.btnTest3.setOnClickListener {
             Log.e(TAG, "btnTest3")
             DeviceManager().setAllowInstallApps("com.example.abd", 0, 2)
         }
-        btnTest4.setOnClickListener {
+        binding.btnTest4.setOnClickListener {
         }
 
         DeviceManager().setDeviceOwner(ComponentName.unflattenFromString("${packageName}/${MainActivity::class.java.name}"))

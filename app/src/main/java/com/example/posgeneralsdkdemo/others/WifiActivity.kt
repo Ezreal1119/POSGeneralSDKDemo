@@ -17,6 +17,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.R
+import com.example.posgeneralsdkdemo.databinding.ActivityWifiBinding
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
 import kotlin.getValue
 
@@ -38,40 +39,25 @@ private const val REQ_PERMISSION_WIFI = 1001
 
 class WifiActivity : AppCompatActivity() {
 
-    private val etSSID by lazy { findViewById<EditText>(R.id.etSSID) }
-    private val etWifiPassword by lazy { findViewById<EditText>(R.id.etWifiPassword) }
-    private val btnConnectWifi by lazy { findViewById<Button>(R.id.btnConnectWifi) }
-    private val btnSelectWifi by lazy { findViewById<Button>(R.id.btnSelectWifi) }
-    private val btnForgetAllWifi by lazy { findViewById<Button>(R.id.btnForgetAllWifi) }
-    private val btnTurnOnWifi by lazy { findViewById<Button>(R.id.btnTurnOnWifi) }
-    private val btnTurnOffWifi by lazy { findViewById<Button>(R.id.btnTurnOffWifi) }
-    private val btnEnableWifi by lazy { findViewById<Button>(R.id.btnEnableWifi) }
-    private val btnDisableWifi by lazy { findViewById<Button>(R.id.btnDisableWifi) }
-
-    private val etSSIDForWhitelist by lazy { findViewById<EditText>(R.id.etSSIDForWhitelist) }
-    private val btnAddToWhitelist by lazy { findViewById<Button>(R.id.btnAddToWhitelist) }
-    private val btnRemoveFromWhitelist by lazy { findViewById<Button>(R.id.btnRemoveFromWhitelist) }
-
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
-
-
+    private lateinit var binding: ActivityWifiBinding
 
     private lateinit var wifiManager: WifiManager
     private lateinit var connectivityManager: ConnectivityManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_wifi)
+        binding = ActivityWifiBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnConnectWifi.setOnClickListener { onConnectWifiButtonClicked() }
-        btnSelectWifi.setOnClickListener { onSelectWifiButtonClicked() }
-        btnForgetAllWifi.setOnClickListener { onForgetAllWifiButtonClicked() }
-        btnTurnOnWifi.setOnClickListener { onTurnOnWifiButtonClicked() }
-        btnTurnOffWifi.setOnClickListener { onTurnOffWifiButtonClicked() }
-        btnEnableWifi.setOnClickListener { onEnableWifiButtonClicked() }
-        btnDisableWifi.setOnClickListener { onDisableWifiButtonClicked() }
-        btnAddToWhitelist.setOnClickListener { onAddToWhitelistButtonClicked() }
-        btnRemoveFromWhitelist.setOnClickListener { onRemoveFromWhitelistButtonClicked() }
+        binding.btnConnectWifi.setOnClickListener { onConnectWifiButtonClicked() }
+        binding.btnSelectWifi.setOnClickListener { onSelectWifiButtonClicked() }
+        binding.btnForgetAllWifi.setOnClickListener { onForgetAllWifiButtonClicked() }
+        binding.btnTurnOnWifi.setOnClickListener { onTurnOnWifiButtonClicked() }
+        binding.btnTurnOffWifi.setOnClickListener { onTurnOffWifiButtonClicked() }
+        binding.btnEnableWifi.setOnClickListener { onEnableWifiButtonClicked() }
+        binding.btnDisableWifi.setOnClickListener { onDisableWifiButtonClicked() }
+        binding.btnAddToWhitelist.setOnClickListener { onAddToWhitelistButtonClicked() }
+        binding.btnRemoveFromWhitelist.setOnClickListener { onRemoveFromWhitelistButtonClicked() }
 
         wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
         connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -103,7 +89,7 @@ class WifiActivity : AppCompatActivity() {
         if (requestCode == REQ_PERMISSION_WIFI) {
             val granted = grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
             if (granted) {
-                tvResult.text = buildString {
+                binding.tvResult.text = buildString {
                     if ("unknown" in wifiManager.connectionInfo.ssid) {
                         append("Not connection to WiFi!\n\n")
                     } else {
@@ -124,14 +110,14 @@ class WifiActivity : AppCompatActivity() {
 
     private fun onConnectWifiButtonClicked() {
         runCatching {
-            DeviceManager().connectWifi(etSSID.text.toString().trim(), etWifiPassword.text.toString(), WifiType.WPA.type)
+            DeviceManager().connectWifi(binding.etSSID.text.toString().trim(), binding.etWifiPassword.text.toString(), WifiType.WPA.type)
         }.onSuccess {
-            Toast.makeText(this, "Connecting to ${etSSID.text.toString().trim()}", Toast.LENGTH_SHORT).show()
-            btnTurnOnWifi.isEnabled = false
-            btnTurnOffWifi.isEnabled = true
+            Toast.makeText(this, "Connecting to ${binding.etSSID.text.toString().trim()}", Toast.LENGTH_SHORT).show()
+            binding.btnTurnOnWifi.isEnabled = false
+            binding.btnTurnOffWifi.isEnabled = true
             uiRefreshOnEvent()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -143,7 +129,7 @@ class WifiActivity : AppCompatActivity() {
         }.onSuccess {
             Toast.makeText(this, "Please select a WiFi to connect", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -154,9 +140,8 @@ class WifiActivity : AppCompatActivity() {
             DeviceManager().forgetAllWifi()
         }.onSuccess {
             Toast.makeText(this, "Forgot all WiFi and disconnected from any WiFi successfully", Toast.LENGTH_SHORT).show()
-
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -168,11 +153,11 @@ class WifiActivity : AppCompatActivity() {
             DeviceManager().switchWifi(true)
         }.onSuccess {
             Toast.makeText(this, "Turn on Wifi successfully", Toast.LENGTH_SHORT).show()
-            btnTurnOnWifi.isEnabled = false
-            btnTurnOffWifi.isEnabled = true
+            binding.btnTurnOnWifi.isEnabled = false
+            binding.btnTurnOffWifi.isEnabled = true
             uiRefreshOnEvent()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -183,11 +168,11 @@ class WifiActivity : AppCompatActivity() {
             DeviceManager().switchWifi(false)
         }.onSuccess {
             Toast.makeText(this, "Turn off Wifi successfully", Toast.LENGTH_SHORT).show()
-            btnTurnOnWifi.isEnabled = true
-            btnTurnOffWifi.isEnabled = false
+            binding.btnTurnOnWifi.isEnabled = true
+            binding.btnTurnOffWifi.isEnabled = false
             uiRefreshOnEvent()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -198,7 +183,7 @@ class WifiActivity : AppCompatActivity() {
         }.onSuccess {
             Toast.makeText(this, "WiFi & WiFi Control have been turned on", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -210,31 +195,31 @@ class WifiActivity : AppCompatActivity() {
         }.onSuccess {
             Toast.makeText(this, "WiFi & WiFi Control have been turned off", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
 
     private fun onAddToWhitelistButtonClicked() {
         runCatching {
-            DeviceManager().insertToWifiWhiteList(etSSIDForWhitelist.text.toString())
+            DeviceManager().insertToWifiWhiteList(binding.etSSIDForWhitelist.text.toString())
         }.onSuccess {
-            Toast.makeText(this, "Added ${etSSIDForWhitelist.text} to whitelist successfully", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Added ${binding.etSSIDForWhitelist.text} to whitelist successfully", Toast.LENGTH_SHORT).show()
             uiRefreshOnEvent()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
 
     private fun onRemoveFromWhitelistButtonClicked() {
         runCatching {
-            DeviceManager().removeFromWifiWhiteList(etSSIDForWhitelist.text.toString())
+            DeviceManager().removeFromWifiWhiteList(binding.etSSIDForWhitelist.text.toString())
         }.onSuccess {
-            Toast.makeText(this, "Removed ${etSSIDForWhitelist.text} from whitelist successfully", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Removed ${binding.etSSIDForWhitelist.text} from whitelist successfully", Toast.LENGTH_SHORT).show()
             uiRefreshOnEvent()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -274,11 +259,11 @@ class WifiActivity : AppCompatActivity() {
             return
         }
         if (wifiManager.isWifiEnabled) {
-            btnTurnOnWifi.isEnabled = false
-            btnTurnOffWifi.isEnabled = true
+            binding.btnTurnOnWifi.isEnabled = false
+            binding.btnTurnOffWifi.isEnabled = true
         } else {
-            btnTurnOnWifi.isEnabled = true
-            btnTurnOffWifi.isEnabled = false
+            binding.btnTurnOnWifi.isEnabled = true
+            binding.btnTurnOffWifi.isEnabled = false
         }
     }
 
@@ -286,7 +271,7 @@ class WifiActivity : AppCompatActivity() {
         if (!PermissionUtil.requestPermissions(this, ARRAY_OF_PERMISSIONS, REQ_PERMISSION_WIFI)) {
             return
         }
-        tvResult.text = buildString {
+        binding.tvResult.text = buildString {
             if ("unknown" in wifiManager.connectionInfo.ssid) {
                 append("Not connection to WiFi!\n\n")
             } else {

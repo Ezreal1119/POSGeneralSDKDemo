@@ -10,54 +10,54 @@ import android.widget.Button
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityBeeperBinding
 import com.google.android.material.slider.Slider
 import com.urovo.sdk.beeper.BeeperImpl
 
+private val durationArray = arrayOf(100, 200, 500, 1000, 2000)
 class BeeperActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityBeeperBinding
 
     private val mBeeperManager = BeeperImpl.getInstance()
 
-    private val sliderBeeperCount by lazy { findViewById<Slider>(R.id.sliderBeeperCount) }
-    private val spDuration by lazy { findViewById<Spinner>(R.id.spDuration) }
-    private val btnStartBeeper by lazy { findViewById<Button>(R.id.btnStartBeeper) }
-    private val btnStopBeeper by lazy { findViewById<Button>(R.id.btnStopBeeper) }
-
-    private val durationArray = arrayOf(100, 200, 500, 1000, 2000)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_beeper)
+        binding = ActivityBeeperBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnStartBeeper.setOnClickListener { onStartBeeperButtonClicked() }
-        btnStopBeeper.setOnClickListener { onStopBeeperButtonClicked() }
-        spDuration.adapter = ArrayAdapter(this, simple_spinner_item, durationArray).apply {
+        binding.btnStartBeeper.setOnClickListener { onStartBeeperButtonClicked() }
+        binding.btnStopBeeper.setOnClickListener { onStopBeeperButtonClicked() }
+        binding.spDuration.adapter = ArrayAdapter(this, simple_spinner_item, durationArray).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
     }
 
 
     private fun onStartBeeperButtonClicked() {
-        try {
-            val count = sliderBeeperCount.value.toInt()
-            val duration = spDuration.selectedItem as Int
+        runCatching {
+            val count = binding.sliderBeeperCount.value.toInt()
+            val duration = binding.spDuration.selectedItem as Int
             mBeeperManager.startBeep(count, duration)
-            btnStartBeeper.isEnabled = false
+            return@runCatching Pair(count, duration)
+        }.onSuccess { (count, duration) ->
+            binding.btnStartBeeper.isEnabled = false
             Handler(Looper.getMainLooper()).postDelayed({
-                btnStartBeeper.isEnabled = true
+                binding.btnStartBeeper.isEnabled = true
             }, (count * duration * 2).toLong())
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Error on onStartBeeperButtonClicked()", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 
 
     private fun onStopBeeperButtonClicked() {
-        try {
+        runCatching {
             mBeeperManager.stopBeep()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Error on onStopBeeperButtonClicked()", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 }

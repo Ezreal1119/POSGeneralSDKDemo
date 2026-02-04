@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.R
 import androidx.core.content.edit
+import com.example.posgeneralsdkdemo.databinding.ActivityKioskRelatedBinding
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
 import com.example.posgeneralsdkdemo.utils.PermissionUtil.ensureCanWriteSettings
 import com.example.posgeneralsdkdemo.utils.PinpadUtil
@@ -26,48 +27,36 @@ const val PACKAGE_COMPONENT_MAIN = "com.example.posgeneralsdkdemo/com.example.po
 
 class KioskRelatedActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityKioskRelatedBinding
+
     private val etPackageForWhitelist by lazy { findViewById<EditText>(R.id.etPackageForWhitelist) }
-    private val btnEnableHome by lazy { findViewById<Button>(R.id.btnEnableHome) }
-    private val btnDisableHome by lazy { findViewById<Button>(R.id.btnDisableHome) }
-    private val btnEnableRecent by lazy { findViewById<Button>(R.id.btnEnableRecent) }
-    private val btnDisableRecent by lazy { findViewById<Button>(R.id.btnDisableRecent) }
-    private val btnEnableStatusBar by lazy { findViewById<Button>(R.id.btnEnableStatusBar) }
-    private val btnDisableStatusBar by lazy { findViewById<Button>(R.id.btnDisableStatusBar) }
-    private val btnSetKiosk by lazy { findViewById<Button>(R.id.btnSetKiosk) }
-    private val btnCancelKiosk by lazy { findViewById<Button>(R.id.btnCancelKiosk) }
-    private val btnSetKioskPwd123456 by lazy { findViewById<Button>(R.id.btnSetKioskPwd123456) }
-    private val btnSetAutoStart by lazy { findViewById<Button>(R.id.btnSetAutoStart) }
-    private val btnCancelAutoStart by lazy { findViewById<Button>(R.id.btnCancelAutoStart) }
-    private val btnSetDefaultLauncher by lazy { findViewById<Button>(R.id.btnSetDefaultLauncher) }
-    private val btnCancelDefaultLauncher by lazy { findViewById<Button>(R.id.btnCancelDefaultLauncher) }
-    private val btnSetForceLockScreen by lazy { findViewById<Button>(R.id.btnSetForceLockScreen) }
-    private val btnAddAppToWhitelist by lazy { findViewById<Button>(R.id.btnAddAppToWhitelist) }
-    private val btnGetAppWhitelist by lazy { findViewById<Button>(R.id.btnGetAppWhitelist) }
-    private val btnRemoveAppFromWhitelist by lazy { findViewById<Button>(R.id.btnRemoveAppFromWhitelist) }
+
+
 
     private fun pref() = getSharedPreferences(PREF_KIOSK, MODE_PRIVATE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_kiosk_related)
+        binding = ActivityKioskRelatedBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnEnableHome.setOnClickListener { onEnableHomeButtonClicked() }
-        btnDisableHome.setOnClickListener { onDisableHomeButtonClicked() }
-        btnEnableRecent.setOnClickListener { onEnableRecentButtonClicked() }
-        btnDisableRecent.setOnClickListener { onDisableRecentButtonClicked() }
-        btnEnableStatusBar.setOnClickListener { onEnableStatusBarButtonClicked() }
-        btnDisableStatusBar.setOnClickListener { onDisableStatusBarButtonClicked() }
-        btnSetKiosk.setOnClickListener { onSetKioskButtonClicked() }
-        btnCancelKiosk.setOnClickListener { onCancelKioskButtonClicked() }
-        btnSetKioskPwd123456.setOnClickListener { onSetKioskPwd123456ButtonClicked() }
-        btnSetAutoStart.setOnClickListener { onSetAutoStartButtonClicked() }
-        btnCancelAutoStart.setOnClickListener { onCancelAutoStartButtonClicked() }
-        btnSetDefaultLauncher.setOnClickListener { onSetDefaultLauncherButtonClicked() }
-        btnCancelDefaultLauncher.setOnClickListener { onCancelDefaultLauncherButtonClicked() }
-        btnSetForceLockScreen.setOnClickListener { onSetForceLockScreenButtonClicked() }
-        btnAddAppToWhitelist.setOnClickListener { onAddAppToWhitelistButtonClicked() }
-        btnGetAppWhitelist.setOnClickListener { onGetAppWhitelistButtonClicked() }
-        btnRemoveAppFromWhitelist.setOnClickListener { onRemoveAppFromWhitelistButtonClicked() }
+        binding.btnEnableHome.setOnClickListener { onEnableHomeButtonClicked() }
+        binding.btnDisableHome.setOnClickListener { onDisableHomeButtonClicked() }
+        binding.btnEnableRecent.setOnClickListener { onEnableRecentButtonClicked() }
+        binding.btnDisableRecent.setOnClickListener { onDisableRecentButtonClicked() }
+        binding.btnEnableStatusBar.setOnClickListener { onEnableStatusBarButtonClicked() }
+        binding.btnDisableStatusBar.setOnClickListener { onDisableStatusBarButtonClicked() }
+        binding.btnSetKiosk.setOnClickListener { onSetKioskButtonClicked() }
+        binding.btnCancelKiosk.setOnClickListener { onCancelKioskButtonClicked() }
+        binding.btnSetKioskPwd123456.setOnClickListener { onSetKioskPwd123456ButtonClicked() }
+        binding.btnSetAutoStart.setOnClickListener { onSetAutoStartButtonClicked() }
+        binding.btnCancelAutoStart.setOnClickListener { onCancelAutoStartButtonClicked() }
+        binding.btnSetDefaultLauncher.setOnClickListener { onSetDefaultLauncherButtonClicked() }
+        binding.btnCancelDefaultLauncher.setOnClickListener { onCancelDefaultLauncherButtonClicked() }
+        binding.btnSetForceLockScreen.setOnClickListener { onSetForceLockScreenButtonClicked() }
+        binding.btnAddAppToWhitelist.setOnClickListener { onAddAppToWhitelistButtonClicked() }
+        binding.btnGetAppWhitelist.setOnClickListener { onGetAppWhitelistButtonClicked() }
+        binding.btnRemoveAppFromWhitelist.setOnClickListener { onRemoveAppFromWhitelistButtonClicked() }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
@@ -119,25 +108,25 @@ class KioskRelatedActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         if (pref().getBoolean(KEY_HOME_ENABLED, true)) {
-            btnEnableHome.isEnabled = false
-            btnDisableHome.isEnabled = true
+            binding.btnEnableHome.isEnabled = false
+            binding.btnDisableHome.isEnabled = true
         } else {
-            btnEnableHome.isEnabled = true
-            btnDisableHome.isEnabled = false
+            binding.btnEnableHome.isEnabled = true
+            binding.btnDisableHome.isEnabled = false
         }
         if (pref().getBoolean(KEY_RECENT_ENABLED, true)) {
-            btnEnableRecent.isEnabled = false
-            btnDisableRecent.isEnabled = true
+            binding.btnEnableRecent.isEnabled = false
+            binding.btnDisableRecent.isEnabled = true
         } else {
-            btnEnableRecent.isEnabled = true
-            btnDisableRecent.isEnabled = false
+            binding.btnEnableRecent.isEnabled = true
+            binding.btnDisableRecent.isEnabled = false
         }
         if (pref().getBoolean(STATUS_BAR_ENABLED, true)) {
-            btnEnableStatusBar.isEnabled = false
-            btnDisableStatusBar.isEnabled = true
+            binding.btnEnableStatusBar.isEnabled = false
+            binding.btnDisableStatusBar.isEnabled = true
         } else {
-            btnEnableStatusBar.isEnabled = true
-            btnDisableStatusBar.isEnabled = false
+            binding.btnEnableStatusBar.isEnabled = true
+            binding.btnDisableStatusBar.isEnabled = false
         }
     }
 
@@ -153,8 +142,8 @@ class KioskRelatedActivity : AppCompatActivity() {
             DeviceManager().enableHomeKey(true)
         }.onSuccess {
             pref().edit { putBoolean(KEY_HOME_ENABLED, true) }
-            btnEnableHome.isEnabled = false
-            btnDisableHome.isEnabled = true
+            binding.btnEnableHome.isEnabled = false
+            binding.btnDisableHome.isEnabled = true
         }.onFailure {
             it.printStackTrace()
         }
@@ -166,8 +155,8 @@ class KioskRelatedActivity : AppCompatActivity() {
             DeviceManager().enableHomeKey(false)
         }.onSuccess {
             pref().edit { putBoolean(KEY_HOME_ENABLED, false) }
-            btnEnableHome.isEnabled = true
-            btnDisableHome.isEnabled = false
+            binding.btnEnableHome.isEnabled = true
+            binding.btnDisableHome.isEnabled = false
         }.onFailure {
             it.printStackTrace()
         }
@@ -183,8 +172,8 @@ class KioskRelatedActivity : AppCompatActivity() {
             }
         }.onSuccess {
             pref().edit { putBoolean(KEY_RECENT_ENABLED, true) }
-            btnEnableRecent.isEnabled = false
-            btnDisableRecent.isEnabled = true
+            binding.btnEnableRecent.isEnabled = false
+            binding.btnDisableRecent.isEnabled = true
         }.onFailure {
             it.printStackTrace()
         }
@@ -200,8 +189,8 @@ class KioskRelatedActivity : AppCompatActivity() {
             }
         }.onSuccess {
             pref().edit { putBoolean(KEY_RECENT_ENABLED, false) }
-            btnEnableRecent.isEnabled = true
-            btnDisableRecent.isEnabled = false
+            binding.btnEnableRecent.isEnabled = true
+            binding.btnDisableRecent.isEnabled = false
         }.onFailure {
             it.printStackTrace()
         }
@@ -213,8 +202,8 @@ class KioskRelatedActivity : AppCompatActivity() {
             DeviceManager().enableStatusBar(true)
         }.onSuccess {
             pref().edit { putBoolean(STATUS_BAR_ENABLED, true) }
-            btnEnableStatusBar.isEnabled = false
-            btnDisableStatusBar.isEnabled = true
+            binding.btnEnableStatusBar.isEnabled = false
+            binding.btnDisableStatusBar.isEnabled = true
         }.onFailure {
             it.printStackTrace()
         }
@@ -226,8 +215,8 @@ class KioskRelatedActivity : AppCompatActivity() {
             DeviceManager().enableStatusBar(false)
         }.onSuccess {
             pref().edit { putBoolean(STATUS_BAR_ENABLED, false) }
-            btnEnableStatusBar.isEnabled = true
-            btnDisableStatusBar.isEnabled = false
+            binding.btnEnableStatusBar.isEnabled = true
+            binding.btnDisableStatusBar.isEnabled = false
         }.onFailure {
             it.printStackTrace()
         }
@@ -238,8 +227,8 @@ class KioskRelatedActivity : AppCompatActivity() {
         runCatching {
             DeviceManager().setLockTaskMode(packageName, true)
         }.onSuccess {
-            btnSetKiosk.isEnabled = false
-            btnCancelKiosk.isEnabled = true
+            binding.btnSetKiosk.isEnabled = false
+            binding.btnCancelKiosk.isEnabled = true
         }.onFailure {
             it.printStackTrace()
         }
@@ -250,8 +239,8 @@ class KioskRelatedActivity : AppCompatActivity() {
         runCatching {
             DeviceManager().setLockTaskMode(packageName, false)
         }.onSuccess {
-            btnSetKiosk.isEnabled = true
-            btnCancelKiosk.isEnabled = false
+            binding.btnSetKiosk.isEnabled = true
+            binding.btnCancelKiosk.isEnabled = false
         }.onFailure {
             it.printStackTrace()
         }

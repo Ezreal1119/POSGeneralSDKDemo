@@ -121,7 +121,7 @@
             android:layout_weight="1"
             android:text="Install UMS"
             android:textSize="18sp"
-            android:layout_margin="5dp"
+            android:layout_margin="1dp"
             android:padding="0dp"/>
 
         <Button
@@ -131,7 +131,7 @@
             android:layout_weight="1"
             android:text="Uninstall UMS"
             android:textSize="18sp"
-            android:layout_margin="5dp"
+            android:layout_margin="1dp"
             android:padding="0dp"/>
 
     </LinearLayout>
@@ -149,7 +149,7 @@
             android:layout_weight="1"
             android:text="Install AppMarket_UMS"
             android:textSize="12sp"
-            android:layout_margin="5dp"
+            android:layout_margin="1dp"
             android:padding="0dp"/>
 
         <Button
@@ -159,7 +159,7 @@
             android:layout_weight="1"
             android:text="Uninstall AppMarket_UMS"
             android:textSize="12sp"
-            android:layout_margin="5dp"
+            android:layout_margin="1dp"
             android:padding="0dp"/>
 
     </LinearLayout>

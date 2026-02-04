@@ -8,29 +8,29 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.posgeneralsdkdemo.databinding.ActivityMagCardReaderBinding
 import com.urovo.sdk.magcard.MagCardReaderImpl
 import com.urovo.sdk.magcard.listener.MagCardListener
 
 private const val TIMEOUT = 30
 class MagCardReaderActivity : AppCompatActivity() {
 
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
-    private val btnStartSearch by lazy { findViewById<Button>(R.id.btnStartSearch) }
-    private val btnStopSearch by lazy { findViewById<Button>(R.id.btnStopSearch) }
+    private lateinit var binding: ActivityMagCardReaderBinding
     private val mMagCardReaderManager = MagCardReaderImpl.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_mag_card_reader)
+        binding = ActivityMagCardReaderBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnStartSearch.setOnClickListener { onStartSearchButtonClicked() }
-        btnStopSearch.setOnClickListener { onStopSearchButtonClicked() }
+        binding.btnStartSearch.setOnClickListener { onStartSearchButtonClicked() }
+        binding.btnStopSearch.setOnClickListener { onStopSearchButtonClicked() }
     }
 
     override fun onStart() {
         super.onStart()
-        btnStartSearch.isEnabled = true
-        btnStopSearch.isEnabled = false
+        binding.btnStartSearch.isEnabled = true
+        binding.btnStopSearch.isEnabled = false
         Toast.makeText(this, "Timeout=${TIMEOUT}s", Toast.LENGTH_SHORT).show()
     }
 
@@ -43,10 +43,10 @@ class MagCardReaderActivity : AppCompatActivity() {
         runCatching {
             mMagCardReaderManager.searchCard(TIMEOUT, mMagCardListener)
         }.onSuccess {
-            btnStartSearch.isEnabled = false
-            btnStopSearch.isEnabled = true
+            binding.btnStartSearch.isEnabled = false
+            binding.btnStopSearch.isEnabled = true
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -57,11 +57,11 @@ class MagCardReaderActivity : AppCompatActivity() {
             mMagCardReaderManager.stopSearch()
         }.onSuccess {
             Toast.makeText(this, "Stop Searching successfully", Toast.LENGTH_SHORT).show()
-            tvResult.text = ""
-            btnStartSearch.isEnabled = true
-            btnStopSearch.isEnabled = false
+            binding.tvResult.text = ""
+            binding.btnStartSearch.isEnabled = true
+            binding.btnStopSearch.isEnabled = false
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -74,7 +74,7 @@ class MagCardReaderActivity : AppCompatActivity() {
                     "Mag Card read successfully",
                     Toast.LENGTH_SHORT
                 ).show()
-                tvResult.text = buildString {
+                binding.tvResult.text = buildString {
                     append("Track 1: ${track?.getString(MagCardTag.TRACK1.value)}\n\n")
                     append("Track 2: ${track?.getString(MagCardTag.TRACK2.value)}\n\n")
                     append("Track 3: ${track?.getString(MagCardTag.TRACK3.value)}\n\n")
@@ -93,16 +93,16 @@ class MagCardReaderActivity : AppCompatActivity() {
                     "Mag Card read failed",
                     Toast.LENGTH_SHORT
                 ).show()
-                btnStartSearch.isEnabled = true
-                btnStopSearch.isEnabled = false
-                tvResult.text = "onError: error=$error, message=$message"
+                binding.btnStartSearch.isEnabled = true
+                binding.btnStopSearch.isEnabled = false
+                binding.tvResult.text = "onError: error=$error, message=$message"
             }
         }
 
         override fun onTimeout() {
             runOnUiThread {
-                btnStartSearch.isEnabled = true
-                btnStopSearch.isEnabled = false
+                binding.btnStartSearch.isEnabled = true
+                binding.btnStopSearch.isEnabled = false
                 Toast.makeText(this@MagCardReaderActivity, "onTimeout", Toast.LENGTH_SHORT)
                     .show()
             }

@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.btprinter.PERMISSIONS_BT
 import com.example.posgeneralsdkdemo.btprinter.PERMISSION_REQ_BT
 import com.example.posgeneralsdkdemo.btprinter.SppBluetoothPrinterActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityPrinterBinding
 import com.example.posgeneralsdkdemo.printers.WifiPrinterActivity
 
 import com.example.posgeneralsdkdemo.utils.ImageUtil
@@ -64,25 +65,8 @@ private const val MQTT_URL = "39.101.193.145"
 
 class PrinterActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityPrinterBinding
     private val mPrinterManager = PrinterProviderImpl.getInstance(this)
-
-    private val tvPrinterTitle by lazy { findViewById<TextView>(R.id.tvPrinterTitle) }
-    private val tvMqttInfo by lazy { findViewById<TextView>(R.id.tvMqttInfo) }
-    private val sliderPrintSpeed by lazy { findViewById<Slider>(R.id.sliderPrintSpeed) }
-    private val sliderGray by lazy { findViewById<Slider>(R.id.sliderGray) }
-    private val pbWaiting by lazy { findViewById<ProgressBar>(R.id.pbWaiting) }
-    private val btnPrintText by lazy { findViewById<Button>(R.id.btnPrintText) }
-    private val btnPrintTextLeftRight by lazy { findViewById<Button>(R.id.btnPrintTextLeftRight) }
-    private val btnPrintTextLeftMiddleRight by lazy { findViewById<Button>(R.id.btnPrintTextLeftMiddleRight) }
-    private val btnPrintBarcode by lazy { findViewById<Button>(R.id.btnPrintBarcode) }
-    private val btnPrintQrcode by lazy { findViewById<Button>(R.id.btnPrintQrcode) }
-    private val btnPrintImage by lazy { findViewById<Button>(R.id.btnPrintImage) }
-    private val btnPrintImageFromPhoto by lazy { findViewById<Button>(R.id.btnPrintImageFromPhoto) }
-    private val btnPrintBitmapCanvas by lazy { findViewById<Button>(R.id.btnPrintBitmapCanvas)}
-    private val btnLineFeed by lazy { findViewById<Button>(R.id.btnLineFeed) }
-    private val btnSppBluetoothPrinter by lazy { findViewById<Button>(R.id.btnSppBluetoothPrinter)}
-    private val btnWifiPrinter by lazy { findViewById<Button>(R.id.btnWifiPrinter) }
-
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -127,19 +111,22 @@ class PrinterActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_printer)
+        binding = ActivityPrinterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnPrintText.setOnClickListener { onPrintTextButtonClicked() }
-        btnPrintTextLeftRight.setOnClickListener { onPrintTextLeftRightButtonClicked() }
-        btnPrintTextLeftMiddleRight.setOnClickListener { onPrintTextLeftMiddleRightButtonClicked() }
-        btnPrintBarcode.setOnClickListener { onPrintBarcodeButtonClicked() }
-        btnPrintQrcode.setOnClickListener { onPrintQrcodeButtonClicked() }
-        btnPrintImage.setOnClickListener { onPrintImageButtonClicked() }
-        btnPrintImageFromPhoto.setOnClickListener { onPrintImageFromPhotoButtonClicked() }
-        btnPrintBitmapCanvas.setOnClickListener { onPrintBitmapCanvasButtonClicked() }
-        btnLineFeed.setOnClickListener { onLineFeedButtonClicked() }
-        btnSppBluetoothPrinter.setOnClickListener { onSppBluetoothPrinterButtonClicked() }
-        btnWifiPrinter.setOnClickListener { onWifiPrinterButtonClicked() }
+        binding.apply {
+            btnPrintText.setOnClickListener { onPrintTextButtonClicked() }
+            btnPrintTextLeftRight.setOnClickListener { onPrintTextLeftRightButtonClicked() }
+            btnPrintTextLeftMiddleRight.setOnClickListener { onPrintTextLeftMiddleRightButtonClicked() }
+            btnPrintBarcode.setOnClickListener { onPrintBarcodeButtonClicked() }
+            btnPrintQrcode.setOnClickListener { onPrintQrcodeButtonClicked() }
+            btnPrintImage.setOnClickListener { onPrintImageButtonClicked() }
+            btnPrintImageFromPhoto.setOnClickListener { onPrintImageFromPhotoButtonClicked() }
+            btnPrintBitmapCanvas.setOnClickListener { onPrintBitmapCanvasButtonClicked() }
+            btnLineFeed.setOnClickListener { onLineFeedButtonClicked() }
+            btnSppBluetoothPrinter.setOnClickListener { onSppBluetoothPrinterButtonClicked() }
+            btnWifiPrinter.setOnClickListener { onWifiPrinterButtonClicked() }
+        }
     }
 
     override fun onStart() {
@@ -178,8 +165,8 @@ class PrinterActivity : AppCompatActivity() {
                 if (mPrinterManager.status != 0x00) {
                     throw Exception("onPrintTextButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
                 }
-                mPrinterManager.setGray(sliderGray.value.toInt())
-                val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt() + 10)
+                mPrinterManager.setGray(binding.sliderGray.value.toInt())
+                val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt() + 10)
                 if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
                 mPrinterManager.addText(textFormat, CONTENT)
                 val ret = mPrinterManager.startPrint()
@@ -207,8 +194,8 @@ class PrinterActivity : AppCompatActivity() {
                 if (mPrinterManager.status != 0x00) {
                     throw Exception("onPrintTextLeftRightButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
                 }
-                mPrinterManager.setGray(sliderGray.value.toInt())
-                val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt() + 10)
+                mPrinterManager.setGray(binding.sliderGray.value.toInt())
+                val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt() + 10)
                 if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
                 mPrinterManager.addTextLeft_Right(textFormat, "Patrick", "Urovo")
                 val ret = mPrinterManager.startPrint()
@@ -236,8 +223,8 @@ class PrinterActivity : AppCompatActivity() {
                 if (mPrinterManager.status != 0x00) {
                     throw Exception("onPrintTextLeftMiddleRightButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
                 }
-                mPrinterManager.setGray(sliderGray.value.toInt())
-                val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt() + 10)
+                mPrinterManager.setGray(binding.sliderGray.value.toInt())
+                val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt() + 10)
                 if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
                 mPrinterManager.addTextLeft_Center_Right(
                     textFormat,
@@ -270,8 +257,8 @@ class PrinterActivity : AppCompatActivity() {
                 if (mPrinterManager.status != 0x00) {
                     throw Exception("onPrintBarcodeButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
                 }
-                mPrinterManager.setGray(sliderGray.value.toInt())
-                val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt() + 10)
+                mPrinterManager.setGray(binding.sliderGray.value.toInt())
+                val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt() + 10)
                 if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
                 mPrinterManager.addBarCode(barcodeFormat, "8618807737955Patrick")
                 mPrinterManager.feedLine(1) // If you pass -1, then negative line will be fed
@@ -300,8 +287,8 @@ class PrinterActivity : AppCompatActivity() {
                 if (mPrinterManager.status != 0x00) {
                     throw Exception("onPrintQrcodeButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
                 }
-                mPrinterManager.setGray(sliderGray.value.toInt())
-                val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt() + 10)
+                mPrinterManager.setGray(binding.sliderGray.value.toInt())
+                val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt() + 10)
                 if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
                 mPrinterManager.addQrCode(qrcodeFormat, content)
                 mPrinterManager.feedLine(1) // If you pass -1, then negative line will be fed
@@ -330,8 +317,8 @@ class PrinterActivity : AppCompatActivity() {
                 if (mPrinterManager.status != 0x00) {
                     throw Exception("onPrintImageButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
                 }
-                mPrinterManager.setGray(sliderGray.value.toInt())
-                val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt() + 10)
+                mPrinterManager.setGray(binding.sliderGray.value.toInt())
+                val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt() + 10)
                 if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
                 mPrinterManager.addImage(
                     imageFormat,
@@ -362,8 +349,8 @@ class PrinterActivity : AppCompatActivity() {
             if (mPrinterManager.status != 0x00) {
                 throw Exception("onPrintImageFromPhotoButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
             }
-            mPrinterManager.setGray(sliderGray.value.toInt())
-            val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt() + 10)
+            mPrinterManager.setGray(binding.sliderGray.value.toInt())
+            val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt() + 10)
             if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
             pickImageLauncher.launch(arrayOf("image/*"))
         }.onFailure {
@@ -381,8 +368,8 @@ class PrinterActivity : AppCompatActivity() {
                 if (mPrinterManager.status != 0x00) {
                     throw Exception("onPrintImageButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
                 }
-                mPrinterManager.setGray(sliderGray.value.toInt())
-                val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt() + 10)
+                mPrinterManager.setGray(binding.sliderGray.value.toInt())
+                val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt() + 10)
                 if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
                 val textBitmap = ImageUtil.textToBitmap(
                     lines = CONTENT.replace("$", "₦").split("\n").dropLast(3), // Testing special symbol
@@ -425,7 +412,7 @@ class PrinterActivity : AppCompatActivity() {
                 if (mPrinterManager.status != 0x00) {
                     throw Exception("onLineFeedButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
                 }
-                val retOnSetSpeed = mPrinterManager.setSpeed(sliderPrintSpeed.value.toInt())
+                val retOnSetSpeed = mPrinterManager.setSpeed(binding.sliderPrintSpeed.value.toInt())
                 if (retOnSetSpeed != 0x00) throw Exception("Set Print Speed failed")
                 mPrinterManager.feedLine(1) // If you pass -1, then negative line will be fed
                 val ret = mPrinterManager.startPrint()
@@ -511,7 +498,7 @@ class PrinterActivity : AppCompatActivity() {
             }
             runOnUiThread {
                 Toast.makeText(this, "Connected to MQTT successfully", Toast.LENGTH_SHORT).show()
-                tvMqttInfo.text = buildString {
+                binding.tvMqttInfo.text = buildString {
                     append("Mqtt: $host:$port - topic: $topic\n\n")
                     append("\"mosquitto_pub -h $host -p $port -t patrick/print/qrcode -m '<message>'\"")
                 }
@@ -523,37 +510,41 @@ class PrinterActivity : AppCompatActivity() {
     private fun mqttDisconnect() {
         mqttClient?.disconnect()
         mqttClient = null
-        tvMqttInfo.text = ""
+        binding.tvMqttInfo.text = ""
     }
 
     // <--------------------UI Helper methods--------------------> //
 
     private fun uiRefreshOnStartPrinting() {
-        btnPrintText.isEnabled = false
-        btnPrintTextLeftRight.isEnabled = false
-        btnPrintTextLeftMiddleRight.isEnabled = false
-        btnPrintBarcode.isEnabled = false
-        btnPrintQrcode.isEnabled = false
-        btnPrintImage.isEnabled = false
-        btnPrintImageFromPhoto.isEnabled = false
-        btnPrintBitmapCanvas.isEnabled = false
-        btnLineFeed.isEnabled = false
-        tvPrinterTitle.visibility = View.INVISIBLE
-        pbWaiting.visibility = View.VISIBLE
+        binding.apply {
+            btnPrintText.isEnabled = false
+            btnPrintTextLeftRight.isEnabled = false
+            btnPrintTextLeftMiddleRight.isEnabled = false
+            btnPrintBarcode.isEnabled = false
+            btnPrintQrcode.isEnabled = false
+            btnPrintImage.isEnabled = false
+            btnPrintImageFromPhoto.isEnabled = false
+            btnPrintBitmapCanvas.isEnabled = false
+            btnLineFeed.isEnabled = false
+            tvPrinterTitle.visibility = View.INVISIBLE
+            pbWaiting.visibility = View.VISIBLE
+        }
     }
 
     private fun uiRefreshOnStopPrinting() {
-        btnPrintText.isEnabled = true
-        btnPrintTextLeftRight.isEnabled = true
-        btnPrintTextLeftMiddleRight.isEnabled = true
-        btnPrintBarcode.isEnabled = true
-        btnPrintQrcode.isEnabled = true
-        btnPrintImage.isEnabled = true
-        btnPrintImageFromPhoto.isEnabled = true
-        btnPrintBitmapCanvas.isEnabled = true
-        btnLineFeed.isEnabled = true
-        tvPrinterTitle.visibility = View.VISIBLE
-        pbWaiting.visibility = View.INVISIBLE
+        binding.apply {
+            btnPrintText.isEnabled = true
+            btnPrintTextLeftRight.isEnabled = true
+            btnPrintTextLeftMiddleRight.isEnabled = true
+            btnPrintBarcode.isEnabled = true
+            btnPrintQrcode.isEnabled = true
+            btnPrintImage.isEnabled = true
+            btnPrintImageFromPhoto.isEnabled = true
+            btnPrintBitmapCanvas.isEnabled = true
+            btnLineFeed.isEnabled = true
+            tvPrinterTitle.visibility = View.VISIBLE
+            pbWaiting.visibility = View.INVISIBLE
+        }
     }
 }
 

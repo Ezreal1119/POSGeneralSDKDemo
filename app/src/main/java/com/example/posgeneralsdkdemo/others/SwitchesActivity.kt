@@ -10,84 +10,66 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.posgeneralsdkdemo.R
+import com.example.posgeneralsdkdemo.databinding.ActivitySwitchesBinding
 
 class SwitchesActivity : AppCompatActivity() {
 
-    private val btnSwitchDataSim1 by lazy { findViewById<Button>(R.id.btnSwitchDataSim1) }
-    private val btnSwitchDataSim2 by lazy { findViewById<Button>(R.id.btnSwitchDataSim2) }
-    private val btnSwitchCallSim1 by lazy { findViewById<Button>(R.id.btnSwitchCallSim1) }
-    private val btnSwitchCallSim2 by lazy { findViewById<Button>(R.id.btnSwitchCallSim2) }
-    private val btnSwitchSmsSim1 by lazy { findViewById<Button>(R.id.btnSwitchSmsSim1) }
-    private val btnSwitchSmsSim2 by lazy { findViewById<Button>(R.id.btnSwitchSmsSim2) }
-
-    private val btnTurnOnWifi by lazy { findViewById<Button>(R.id.btnTurnOnWifi) }
-    private val btnTurnOffWifi by lazy { findViewById<Button>(R.id.btnTurnOffWifi) }
-    private val btnEnableWifi by lazy { findViewById<Button>(R.id.btnEnableWifi) }
-    private val btnDisableWifi by lazy { findViewById<Button>(R.id.btnDisableWifi) }
-
-    private val btnTurnOnHotspot by lazy { findViewById<Button>(R.id.btnTurnOnHotspot) }
-    private val btnTurnOffHotspot by lazy { findViewById<Button>(R.id.btnTurnOffHotspot) }
-    private val btnEnableHotspot by lazy { findViewById<Button>(R.id.btnEnableHotspot) }
-    private val btnDisableHotspot by lazy { findViewById<Button>(R.id.btnDisableHotspot) }
-
-    private val btnTurnOnBluetooth by lazy { findViewById<Button>(R.id.btnTurnOnBluetooth) }
-    private val btnTurnOffBluetooth by lazy { findViewById<Button>(R.id.btnTurnOffBluetooth) }
-    private val btnEnableBluetooth by lazy { findViewById<Button>(R.id.btnEnableBluetooth) }
-    private val btnDisableBluetooth by lazy { findViewById<Button>(R.id.btnDisableBluetooth) }
-
-    private val btnTurnOnAirplane by lazy { findViewById<Button>(R.id.btnTurnOnAirplane) }
-    private val btnTurnOffAirplane by lazy { findViewById<Button>(R.id.btnTurnOffAirplane) }
-    private val btnEnableAirplane by lazy { findViewById<Button>(R.id.btnEnableAirplane) }
-    private val btnDisableAirplane by lazy { findViewById<Button>(R.id.btnDisableAirplane) }
-
-    private val btnTurnOnAdb by lazy { findViewById<Button>(R.id.btnTurnOnAdb) }
-    private val btnTurnOffAdb by lazy { findViewById<Button>(R.id.btnTurnOffAdb) }
-    private val btnEnableAdb by lazy { findViewById<Button>(R.id.btnEnableAdb) }
-    private val btnDisableAdb by lazy { findViewById<Button>(R.id.btnDisableAdb) }
-
-    private val btnTurnOnDT2W by lazy { findViewById<Button>(R.id.btnTurnOnDT2W) }
-    private val btnTurnOffDT2W by lazy { findViewById<Button>(R.id.btnTurnOffDT2W) }
-
+    private lateinit var binding: ActivitySwitchesBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_switches)
+        binding = ActivitySwitchesBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnSwitchDataSim1.setOnClickListener { onSwitchDataSim1ButtonClicked() }
-        btnSwitchDataSim2.setOnClickListener { onSwitchDataSim2ButtonClicked() }
-        btnSwitchCallSim1.setOnClickListener { onSwitchCallSim1ButtonClicked() }
-        btnSwitchCallSim2.setOnClickListener { onSwitchCallSim2ButtonClicked() }
-        btnSwitchSmsSim1.setOnClickListener { onSwitchSmsSim1ButtonClicked() }
-        btnSwitchSmsSim2.setOnClickListener { onSwitchSmsSim2ButtonClicked() }
+        binding.btnSwitchDataSim1.setOnClickListener { onSwitchDataSim1ButtonClicked() }
+        binding.btnSwitchDataSim2.setOnClickListener { onSwitchDataSim2ButtonClicked() }
+        binding.btnSwitchCallSim1.setOnClickListener { onSwitchCallSim1ButtonClicked() }
+        binding.btnSwitchCallSim2.setOnClickListener { onSwitchCallSim2ButtonClicked() }
+        binding.btnSwitchSmsSim1.setOnClickListener { onSwitchSmsSim1ButtonClicked() }
+        binding.btnSwitchSmsSim2.setOnClickListener { onSwitchSmsSim2ButtonClicked() }
 
-        btnTurnOnWifi.setOnClickListener { onTurnOnWiFiButtonClicked() }
-        btnTurnOffWifi.setOnClickListener { onTurnOffWifiButtonClicked() }
-        btnEnableWifi.setOnClickListener { onEnableWifiButtonClicked() }
-        btnDisableWifi.setOnClickListener { onDisableWifiButtonClicked() }
+        binding.btnTurnOnWifi.setOnClickListener { onTurnOnWiFiButtonClicked() }
+        binding.btnTurnOffWifi.setOnClickListener { onTurnOffWifiButtonClicked() }
+        binding.btnEnableWifi.setOnClickListener { onEnableWifiButtonClicked() }
+        binding.btnDisableWifi.setOnClickListener { onDisableWifiButtonClicked() }
 
-        btnTurnOnHotspot.setOnClickListener { onTurnOnHotspotButtonClicked() }
-        btnTurnOffHotspot.setOnClickListener { onTurnOffHotspotButtonClicked() }
-        btnEnableHotspot.setOnClickListener { onEnableHotspotButtonClicked() }
-        btnDisableHotspot.setOnClickListener { onDisableHotspotButtonClicked() }
+        binding.btnTurnOnMobileData.setOnClickListener { onTurnOnMobileDataButtonClicked() }
+        binding.btnTurnOffMobileData.setOnClickListener { onTurnOffMobileDataButtonClicked() }
+        binding.btnEnableMobileData.setOnClickListener { onEnableMobileDataButtonClicked() }
+        binding.btnDisableMobileData.setOnClickListener { onDisableMobileDataButtonClicked() }
 
-        btnTurnOnBluetooth.setOnClickListener { onTurnOnBluetoothButtonClicked() }
-        btnTurnOffBluetooth.setOnClickListener { onTurnOffBluetoothButtonClicked() }
-        btnEnableBluetooth.setOnClickListener { onEnableBluetoothButtonClicked() }
-        btnDisableBluetooth.setOnClickListener { onDisableBluetoothButtonClicked() }
+        binding.btnTurnOnHotspot.setOnClickListener { onTurnOnHotspotButtonClicked() }
+        binding.btnTurnOffHotspot.setOnClickListener { onTurnOffHotspotButtonClicked() }
+        binding.btnEnableHotspot.setOnClickListener { onEnableHotspotButtonClicked() }
+        binding.btnDisableHotspot.setOnClickListener { onDisableHotspotButtonClicked() }
 
-        btnTurnOnAirplane.setOnClickListener { onTurnOnAirplaneButtonClicked() }
-        btnTurnOffAirplane.setOnClickListener { onTurnOffAirplaneButtonClicked() }
-        btnEnableAirplane.setOnClickListener { onEnableAirplaneButtonClicked() }
-        btnDisableAirplane.setOnClickListener { onDisableAirplaneButtonClicked() }
+        binding.btnTurnOnBluetooth.setOnClickListener { onTurnOnBluetoothButtonClicked() }
+        binding.btnTurnOffBluetooth.setOnClickListener { onTurnOffBluetoothButtonClicked() }
+        binding.btnEnableBluetooth.setOnClickListener { onEnableBluetoothButtonClicked() }
+        binding.btnDisableBluetooth.setOnClickListener { onDisableBluetoothButtonClicked() }
 
-        btnTurnOnAdb.setOnClickListener { onTurnOnAdbButtonClicked() }
-        btnTurnOffAdb.setOnClickListener { onTurnOffAdbButtonClicked() }
-        btnEnableAdb.setOnClickListener { onEnableAdbButtonClicked() }
-        btnDisableAdb.setOnClickListener { onDisableAdbButtonClicked() }
+        binding.btnTurnOnAirplane.setOnClickListener { onTurnOnAirplaneButtonClicked() }
+        binding.btnTurnOffAirplane.setOnClickListener { onTurnOffAirplaneButtonClicked() }
+        binding.btnEnableAirplane.setOnClickListener { onEnableAirplaneButtonClicked() }
+        binding.btnDisableAirplane.setOnClickListener { onDisableAirplaneButtonClicked() }
 
-        btnTurnOnDT2W.setOnClickListener { onTurnOnDT2WButtonClicked() }
-        btnTurnOffDT2W.setOnClickListener { onTurnOffDT2WButtonClicked() }
+        binding.btnTurnOnGps.setOnClickListener { onTurnOnGpsButtonClicked() }
+        binding.btnTurnOffGps.setOnClickListener { onTurnOffGpsButtonClicked() }
+        binding.btnEnableGps.setOnClickListener { onEnableGpsButtonClicked() }
+        binding.btnDisableGps.setOnClickListener { onDisableGpsButtonClicked() }
+
+        binding.btnTurnOnAdb.setOnClickListener { onTurnOnAdbButtonClicked() }
+        binding.btnTurnOffAdb.setOnClickListener { onTurnOffAdbButtonClicked() }
+        binding.btnEnableAdb.setOnClickListener { onEnableAdbButtonClicked() }
+        binding.btnDisableAdb.setOnClickListener { onDisableAdbButtonClicked() }
+
+        binding.btnTurnOnDT2W.setOnClickListener { onTurnOnDT2WButtonClicked() }
+        binding.btnTurnOffDT2W.setOnClickListener { onTurnOffDT2WButtonClicked() }
+
+        binding.btnTurnOnSoftKeyboard.setOnClickListener { onTurnOnSoftKeyboardButtonClicked() }
+        binding.btnTurnOffSoftKeyboard.setOnClickListener { onTurnOffSoftKeyboardButtonClicked() }
     }
+
 
     private fun onSwitchDataSim1ButtonClicked() {
         runCatching {
@@ -209,6 +191,52 @@ class SwitchesActivity : AppCompatActivity() {
             it.printStackTrace()
         }
     }
+
+
+    private fun onTurnOnMobileDataButtonClicked() {
+        runCatching {
+            DeviceManager().enableMobileDate(true)
+        }.onSuccess {
+            Toast.makeText(this, "Turn on Mobile Data successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onTurnOffMobileDataButtonClicked() {
+        runCatching {
+            DeviceManager().enableMobileDate(false)
+        }.onSuccess {
+            Toast.makeText(this, "Turn off Mobile Data successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onEnableMobileDataButtonClicked() {
+        runCatching {
+            DeviceManager().controlMobileDate(true)
+        }.onSuccess {
+            Toast.makeText(this, "Enable & Turn on Mobile Data successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onDisableMobileDataButtonClicked() {
+        runCatching {
+            DeviceManager().controlMobileDate(false)
+        }.onSuccess {
+            Toast.makeText(this, "Disable & Turn off Mobile Data successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
 
     private fun onTurnOnHotspotButtonClicked() {
         runCatching {
@@ -351,6 +379,52 @@ class SwitchesActivity : AppCompatActivity() {
     }
 
 
+
+    private fun onTurnOnGpsButtonClicked() {
+        runCatching {
+            DeviceManager().enableGPS(true)
+        }.onSuccess {
+            Toast.makeText(this, "Turn on GPS successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onTurnOffGpsButtonClicked() {
+        runCatching {
+            DeviceManager().enableGPS(false)
+        }.onSuccess {
+            Toast.makeText(this, "Turn off GPS successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onEnableGpsButtonClicked() {
+        runCatching {
+            DeviceManager().controlGPS(true)
+        }.onSuccess {
+            Toast.makeText(this, "Enable & Turn on GPS successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onDisableGpsButtonClicked() {
+        runCatching {
+            DeviceManager().controlGPS(false)
+        }.onSuccess {
+            Toast.makeText(this, "Disable & Turn off GPS successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
     private fun onTurnOnAdbButtonClicked() {
         runCatching {
             DeviceManager().enableAdb(true)
@@ -416,6 +490,31 @@ class SwitchesActivity : AppCompatActivity() {
             DeviceManager().setSettingProperty("persist-persist.sys.urv.tp.wakeup.gesture", "")
         }.onSuccess {
             Toast.makeText(this, "Turn off DT2W successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+
+    private fun onTurnOnSoftKeyboardButtonClicked() {
+        runCatching {
+            DeviceManager().autoPopInputMethod = true
+        }.onSuccess {
+            Toast.makeText(this, "Turn on Soft Keyboard successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onTurnOffSoftKeyboardButtonClicked() {
+        runCatching {
+            DeviceManager().autoPopInputMethod = false
+        }.onSuccess {
+            Toast.makeText(this, "Turn off Soft Keyboard successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
             Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
             it.printStackTrace()

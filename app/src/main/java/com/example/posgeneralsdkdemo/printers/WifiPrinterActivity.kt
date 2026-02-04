@@ -22,6 +22,7 @@ import com.example.posgeneralsdkdemo.R
 import com.example.posgeneralsdkdemo.btprinter.CONTENT_2_INCH
 import com.example.posgeneralsdkdemo.btprinter.CONTENT_3_INCH
 import com.example.posgeneralsdkdemo.btprinter.CONTENT_4_INCH
+import com.example.posgeneralsdkdemo.databinding.ActivityWifiPrinterBinding
 import com.example.posgeneralsdkdemo.others.WifiActivity
 import com.example.posgeneralsdkdemo.utils.DeviceInfoUtil
 import java.net.Socket
@@ -30,12 +31,7 @@ import java.time.format.DateTimeFormatter
 
 class WifiPrinterActivity : AppCompatActivity() {
 
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
-    private val etPrinterIp by lazy { findViewById<EditText>(R.id.etPrinterIp) }
-    private val btnResetIp by lazy { findViewById<Button>(R.id.btnResetIp) }
-    private val btnWifiSettings by lazy { findViewById<Button>(R.id.btnWifiSettings) }
-    private val btnPrintText by lazy { findViewById<Button>(R.id.btnPrintText) }
-    private val spPrintSize by lazy { findViewById<Spinner>(R.id.spPrintSize) }
+    private lateinit var binding: ActivityWifiPrinterBinding
 
     private val arrayOfSize = arrayOf("2 inch", "3 inch", "4 inch")
 
@@ -43,28 +39,29 @@ class WifiPrinterActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_wifi_printer)
+        binding = ActivityWifiPrinterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnResetIp.setOnClickListener { etPrinterIp.setText(DeviceInfoUtil.getWifiIpv4(this)) }
-        btnPrintText.setOnClickListener { onPrintTextButtonClicked() }
-        btnWifiSettings.setOnClickListener { onWifiSettingsButtonClicked() }
-
-        etPrinterIp.doOnTextChanged { text, _, _, _ ->
-            btnPrintText.isEnabled = isValidIpv4(etPrinterIp.text.toString())
+        binding.apply {
+            btnResetIp.setOnClickListener { etPrinterIp.setText(DeviceInfoUtil.getWifiIpv4(this@WifiPrinterActivity)) }
+            btnPrintText.setOnClickListener { onPrintTextButtonClicked() }
+            btnWifiSettings.setOnClickListener { onWifiSettingsButtonClicked() }
         }
-
-        spPrintSize.adapter = ArrayAdapter(this, simple_spinner_item, arrayOfSize).apply {
+        binding.etPrinterIp.doOnTextChanged { text, _, _, _ ->
+            binding.btnPrintText.isEnabled = isValidIpv4(binding.etPrinterIp.text.toString())
+        }
+        binding.spPrintSize.adapter = ArrayAdapter(this, simple_spinner_item, arrayOfSize).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
     }
 
     override fun onStart() {
         super.onStart()
-        btnPrintText.isEnabled = isValidIpv4(etPrinterIp.text.toString())
+        binding.btnPrintText.isEnabled = isValidIpv4(binding.etPrinterIp.text.toString())
         if (DeviceInfoUtil.getWifiIpv4(this) == null) {
             Toast.makeText(this, "Please connect to WiFi first", Toast.LENGTH_SHORT).show()
         } else {
-            etPrinterIp.setText(DeviceInfoUtil.getWifiIpv4(this))
+            binding.etPrinterIp.setText(DeviceInfoUtil.getWifiIpv4(this))
         }
     }
 
@@ -77,9 +74,9 @@ class WifiPrinterActivity : AppCompatActivity() {
         Thread {
             val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             runCatching {
-                val socket = Socket(etPrinterIp.text.toString().trim(), 9100) // The default port for WiFi Printer
+                val socket = Socket(binding.etPrinterIp.text.toString().trim(), 9100) // The default port for WiFi Printer
                 val os = socket.outputStream
-                val contentInBytes: ByteArray = when (spPrintSize.selectedItem as String) { // If wants to support Chinese Characters, use "content.toByteArray(Charset.forName("GBK"))"
+                val contentInBytes: ByteArray = when (binding.spPrintSize.selectedItem as String) { // If wants to support Chinese Characters, use "content.toByteArray(Charset.forName("GBK"))"
                     arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charsets.UTF_8)
                     arrayOfSize[1] -> CONTENT_3_INCH.toByteArray(Charsets.UTF_8)
                     arrayOfSize[2] -> CONTENT_4_INCH.toByteArray(Charsets.UTF_8)
@@ -104,7 +101,7 @@ class WifiPrinterActivity : AppCompatActivity() {
                 }
             }.onFailure {
                 runOnUiThread {
-                    tvResult.text = it.message
+                    binding.tvResult.text = it.message
                     it.printStackTrace()
                 }
             }

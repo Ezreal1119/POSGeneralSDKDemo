@@ -3,6 +3,7 @@ package com.example.posgeneralsdkdemo.others
 import android.content.Context
 import android.content.pm.PackageManager
 import android.device.DeviceManager
+import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -14,6 +15,7 @@ import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.R
+import com.example.posgeneralsdkdemo.databinding.ActivityDeviceInfoBinding
 import com.example.posgeneralsdkdemo.utils.DeviceInfoUtil
 import com.urovo.sdk.utils.SystemProperties.getSystemProperty
 import java.nio.charset.StandardCharsets
@@ -35,9 +37,9 @@ private const val TAG = "Patrick_DeviceInfoActivity"
 const val PACKAGE_COMPONENT_INFO = "com.example.posgeneralsdkdemo/com.example.posgeneralsdkdemo.others.DeviceInfoActivity"
 class DeviceInfoActivity : AppCompatActivity() {
 
-    private val googleKey: ByteArray? = Base64.decode(GOOGLE_ROOT_PUBLIC_KEY, Base64.DEFAULT)
+    private lateinit var binding: ActivityDeviceInfoBinding
 
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
+    private val googleKey: ByteArray? = Base64.decode(GOOGLE_ROOT_PUBLIC_KEY, Base64.DEFAULT)
 
     private lateinit var wifiManager: WifiManager
 
@@ -45,7 +47,8 @@ class DeviceInfoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_device_info)
+        binding = ActivityDeviceInfoBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
     }
@@ -55,7 +58,7 @@ class DeviceInfoActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         runCatching {
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("SN: ${deviceManager.deviceId}\n")
                 append("Model: ${getDevType()}\n")
                 append("Firmware: \n - OS: ${Build.ID}\n")
@@ -90,15 +93,18 @@ class DeviceInfoActivity : AppCompatActivity() {
                 append("Batter Percentage: ${deviceManager.batteryInfo.getInt("level")}\n")
                 append("Batter plugged: ${deviceManager.batteryInfo.getInt("plugged")}\n")
                 append("NTP server: ${deviceManager.getSettingProperty("Global-ntp_server")}\n")
-                append("TimeZone: ${deviceManager.getSettingProperty("persist-persist.sys.timezone")} - ${deviceManager.getSettingProperty("persist-persist.sys.settimezone")}\n\n")
+                append("TimeZone: ${deviceManager.getSettingProperty("persist-persist.sys.timezone")} - ${deviceManager.getSettingProperty("persist-persist.sys.settimezone")}\n")
+                append("Top APP: ${deviceManager.topPackageName}\n\n")
 
                 append("UMS: ${isPackageInstalled("com.urovo.uhome")}\n")
                 append("AppMarket_UMS: ${isPackageInstalled("com.urovo.appmarket")}\n")
                 append("UTMS: ${isPackageInstalled("com.urovo.utms")}\n")
-                append("AppMarket_UTMS: ${isPackageInstalled("com.urovo.utms.appmarket")}\n")
+                append("AppMarket_UTMS: ${isPackageInstalled("com.urovo.utms.appmarket")}\n\n")
+
+                append("Location Providers: \n${getLocationProviders()}")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -116,7 +122,6 @@ class DeviceInfoActivity : AppCompatActivity() {
             return str
         }
         val str2: String = getSystemProperty("persist.radio.multisim.config", "")
-        Log.i("patrick", str2)
         return if (str2 == "dsds") "DS (Dual SIM)" else "WE (Without Extra SIM)"
     }
 
@@ -306,6 +311,11 @@ class DeviceInfoActivity : AppCompatActivity() {
         } catch (_: PackageManager.NameNotFoundException) {
             false
         }
+    }
+
+    private fun getLocationProviders(): String {
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        return locationManager.allProviders.toString()
     }
 
 }

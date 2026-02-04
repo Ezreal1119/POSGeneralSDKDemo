@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityCameraScanBinding
 
 import com.example.posgeneralsdkdemo.utils.DebugUtil
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
@@ -36,13 +37,10 @@ private const val PERMISSION_REQ_SCAN = 1001
 
 class CameraScanActivity : AppCompatActivity() {
 
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
-    private val btnFrontScan by lazy { findViewById<Button>(R.id.btnFrontScan) }
-    private val btnBackScan by lazy { findViewById<Button>(R.id.btnBackScan) }
+    private lateinit var binding: ActivityCameraScanBinding
 
     private val mCameraManager by lazy { InnerScannerImpl.getInstance(this) }
     private val mScanManager by lazy { ScanManager() }
-
 
     private val cameraParams = Bundle().apply {
         putString(Constant.Scankey.title, "Patrick's Title")
@@ -63,17 +61,18 @@ class CameraScanActivity : AppCompatActivity() {
                     append("barcodeLen: $barcodeLen\n\n")
                     append("barcodeType: $barcodeType")
                 }
-                tvResult.text = text
+                binding.tvResult.text = text
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_camera_scan)
+        binding = ActivityCameraScanBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnFrontScan.setOnClickListener { onFrontScanButtonClicked() }
-        btnBackScan.setOnClickListener { onBackScanButtonClicked() }
+        binding.btnFrontScan.setOnClickListener { onFrontScanButtonClicked() }
+        binding.btnBackScan.setOnClickListener { onBackScanButtonClicked() }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -102,13 +101,14 @@ class CameraScanActivity : AppCompatActivity() {
 
     private fun onFrontScanButtonClicked() {
         if (!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_SCAN)) {
+            Toast.makeText(this, "Please grant camera permission first", Toast.LENGTH_SHORT).show()
             return
         }
-        try {
+        runCatching {
             mCameraManager.startScan(this, cameraParams, Constant.CameraID.FRONT, 30, object: ScannerListener {
                 override fun onSuccess(data: String?, byteData: ByteArray?) {
                     runOnUiThread {
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("data onSuccess: \n$data")
                             append("\ndata in Bytes: \n${BytesUtil.bytes2HexString(byteData)}")
                         }
@@ -116,7 +116,7 @@ class CameraScanActivity : AppCompatActivity() {
                 }
                 override fun onError(error: Int, message: String?) {
                     runOnUiThread {
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("Error onSuccess: \n$error")
                             append("\nmessage: \n$message")
                         }
@@ -129,22 +129,22 @@ class CameraScanActivity : AppCompatActivity() {
                     runOnUiThread { DebugUtil.logAndToast(this@CameraScanActivity, TAG, "onCancel") }
                 }
             })
-        } catch (e: Exception) {
-            e.printStackTrace()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 
-
-
     private fun onBackScanButtonClicked() {
         if (!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_SCAN)) {
+            Toast.makeText(this, "Please grant camera permission first", Toast.LENGTH_SHORT).show()
             return
         }
-        try {
+        runCatching {
             mCameraManager.startScan(this, cameraParams, Constant.CameraID.BACK, 30, object: ScannerListener {
                 override fun onSuccess(data: String?, byteData: ByteArray?) {
                     runOnUiThread {
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("data onSuccess: \n$data")
                             append("\ndata in Bytes: \n${BytesUtil.bytes2HexString(byteData)}")
                         }
@@ -152,7 +152,7 @@ class CameraScanActivity : AppCompatActivity() {
                 }
                 override fun onError(error: Int, message: String?) {
                     runOnUiThread {
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("Error onSuccess: \n$error")
                             append("\nmessage: \n$message")
                         }
@@ -165,8 +165,9 @@ class CameraScanActivity : AppCompatActivity() {
                     runOnUiThread { DebugUtil.logAndToast(this@CameraScanActivity, TAG, "onCancel") }
                 }
             })
-        } catch (e: Exception) {
-            e.printStackTrace()
+        }.onFailure {
+            Toast.makeText(this , it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 

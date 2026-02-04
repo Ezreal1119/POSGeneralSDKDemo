@@ -292,6 +292,7 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
                 text = spec.label
                 isAllCaps = false
                 setPadding(0, 0, 0, 0)
+                textSize = 10F
                 updateBitButtonStyle(this, isBitOn(termCapBytes, spec.index))
                 setOnClickListener {
                     flipBit(termCapBytes, spec.index)

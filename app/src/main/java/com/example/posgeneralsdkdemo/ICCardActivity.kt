@@ -13,6 +13,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityIccardBinding
 import com.example.posgeneralsdkdemo.iccard.Sle4442Activity
 import com.example.posgeneralsdkdemo.utils.DebugUtil
 import com.urovo.sdk.insertcard.InsertCardHandlerImpl
@@ -33,51 +34,40 @@ import kotlin.random.Random
 //      -> if ARQC(Online Authorization): IS08583(ARQC&Other_PINBlock_MAC) [CDA & onlinePIN will also be done during this Stage]
 //      -> GAC-2(TC/AAC)
 private const val TAG = "Patrick_ICCardActivity"
-
+private val cardTypeArray = arrayOf(CardType.ICCard, CardType.PSAM_1, CardType.PSAM_2)
+private val apduCommandArray = arrayOf(
+    ApduCommand.SELECT_PSE,
+    ApduCommand.READ_RECORD_SFI_1_R_1,
+    ApduCommand.SELECT_AID,
+    ApduCommand.GPO,
+    ApduCommand.APDU_IN_BOX,
+    ApduCommand.GET_CHALLENGE)
 class ICCardActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityIccardBinding
+
     private val mICCardReaderManager = InsertCardHandlerImpl.getInstance()
-
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
-    private val etApdu by lazy { findViewById<EditText>(R.id.etApdu) }
-    private val btnStartSearch by lazy { findViewById<Button>(R.id.btnStartSearch) }
-    private val btnStopSearch by lazy { findViewById<Button>(R.id.btnStopSearch) }
-    private val btnPowerOn by lazy { findViewById<Button>(R.id.btnPowerOn) }
-    private val btnPowerOff by lazy { findViewById<Button>(R.id.btnPowerOff) }
-    private val btnSendApdu by lazy { findViewById<Button>(R.id.btnSendApdu) }
-    private val btnCheckCardIn by lazy { findViewById<Button>(R.id.btnCheckCardIn) }
-    private val btnSle4442 by lazy { findViewById<Button>(R.id.btnSle4442) }
-    private val spCardType by lazy { findViewById<Spinner>(R.id.spCardType) }
-    private val spApdu by lazy { findViewById<Spinner>(R.id.spApdu) }
-
-    private val cardTypeArray = arrayOf(CardType.ICCard, CardType.PSAM_1, CardType.PSAM_2)
-    private val apduCommandArray = arrayOf(
-        ApduCommand.SELECT_PSE,
-        ApduCommand.READ_RECORD_SFI_1_R_1,
-        ApduCommand.SELECT_AID,
-        ApduCommand.GPO,
-        ApduCommand.APDU_IN_BOX,
-        ApduCommand.GET_CHALLENGE)
 
     private var selectAidDynamic = "-"
     private var gpoDynamic = "-"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_iccard)
+        binding = ActivityIccardBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnStartSearch.setOnClickListener { onStartSearchButtonClicked() }
-        btnStopSearch.setOnClickListener { onStopSearchButtonClicked() }
-        btnPowerOn.setOnClickListener { onPowerOnButtonClicked() }
-        btnPowerOff.setOnClickListener { onPowerOffButtonClicked() }
-        btnCheckCardIn.setOnClickListener { onCheckCardInButtonClicked() }
-        btnSendApdu.setOnClickListener { onSendApduButtonClicked() }
-        btnSle4442.setOnClickListener { startActivity(Intent(this, Sle4442Activity::class.java)) }
+        binding.btnStartSearch.setOnClickListener { onStartSearchButtonClicked() }
+        binding.btnStopSearch.setOnClickListener { onStopSearchButtonClicked() }
+        binding.btnPowerOn.setOnClickListener { onPowerOnButtonClicked() }
+        binding.btnPowerOff.setOnClickListener { onPowerOffButtonClicked() }
+        binding.btnCheckCardIn.setOnClickListener { onCheckCardInButtonClicked() }
+        binding.btnSendApdu.setOnClickListener { onSendApduButtonClicked() }
+        binding.btnSle4442.setOnClickListener { startActivity(Intent(this, Sle4442Activity::class.java)) }
 
-        spCardType.adapter = ArrayAdapter(this, simple_spinner_item, cardTypeArray).apply {
+        binding.spCardType.adapter = ArrayAdapter(this, simple_spinner_item, cardTypeArray).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
-        spApdu.adapter = ArrayAdapter(this, simple_spinner_item, apduCommandArray).apply {
+        binding.spApdu.adapter = ArrayAdapter(this, simple_spinner_item, apduCommandArray).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
     }
@@ -85,7 +75,7 @@ class ICCardActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         uiRefreshOnPowerOff()
-        tvResult.text = buildString {
+        binding.tvResult.text = buildString {
             append("Three Key Systems in ICCard Transaction:\n\n")
             append(" - ODA: ICCPrivateKey / ICCCert(PK) / IssuerCert(PK) / CA\n")
             append(" - ARQC(CDOL1)/ARPC(8A/89): ICC Master Key / ICC Session Key [Issuer Master Key]\n")
@@ -95,7 +85,7 @@ class ICCardActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        if (btnPowerOff.isEnabled) {
+        if (binding.btnPowerOff.isEnabled) {
             mICCardReaderManager.powerDown(CardType.ICCard.slot)
             selectAidDynamic = "-"
             gpoDynamic = "-"
@@ -104,16 +94,16 @@ class ICCardActivity : AppCompatActivity() {
 
 
     private fun onStartSearchButtonClicked() {
-        btnStartSearch.isEnabled = false
-        btnPowerOn.isEnabled = false
-        btnStopSearch.isEnabled = true
+        binding.btnStartSearch.isEnabled = false
+        binding.btnPowerOn.isEnabled = false
+        binding.btnStopSearch.isEnabled = true
         Toast.makeText(this, "Please insert ICCard", Toast.LENGTH_SHORT).show()
         startDetectOnce (object : CardDetectListener {
             override fun onDetected() {
-                btnStopSearch.isEnabled = false
+                binding.btnStopSearch.isEnabled = false
                 Toast.makeText(this@ICCardActivity, "Card detected", Toast.LENGTH_SHORT).show()
                 val atrBuffer = ByteArray(64)
-                val selectedCardType = spCardType.selectedItem as CardType
+                val selectedCardType = binding.spCardType.selectedItem as CardType
                 runCatching {
                     val outputLen = mICCardReaderManager.powerUp(selectedCardType.slot, atrBuffer)
                     if (outputLen <= 0) throw Exception("Power on failed")
@@ -121,15 +111,15 @@ class ICCardActivity : AppCompatActivity() {
                 }.onSuccess { outputLen ->
                     uiRefreshOnPowerOn()
                     val data = atrBuffer.copyOf(outputLen)
-                    tvResult.text = buildString {
+                    binding.tvResult.text = buildString {
                         append("Power on successfully! ATR: \n")
                         append(BytesUtil.bytes2HexString(data))
                         append("\n\n")
                         append("Note: if any ATR(Answer to Reset) returns, then means ICC is powered on successfully.")
                     }
-                    spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_PSE))
+                    binding.spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_PSE))
                 }.onFailure {
-                    tvResult.text = it.message
+                    binding.tvResult.text = it.message
                     it.printStackTrace()
                 }
             }
@@ -147,7 +137,7 @@ class ICCardActivity : AppCompatActivity() {
         }.onSuccess {
             uiRefreshOnPowerOff()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -158,7 +148,7 @@ class ICCardActivity : AppCompatActivity() {
             return
         }
         val atrBuffer = ByteArray(64)
-        val selectedCardType = spCardType.selectedItem as CardType
+        val selectedCardType = binding.spCardType.selectedItem as CardType
         runCatching {
             val outputLen = mICCardReaderManager.powerUp(selectedCardType.slot, atrBuffer)
             if (outputLen <= 0) throw Exception("Power on failed")
@@ -166,15 +156,15 @@ class ICCardActivity : AppCompatActivity() {
         }.onSuccess { outputLen ->
             uiRefreshOnPowerOn()
             val data = atrBuffer.copyOf(outputLen)
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Power on successfully! ATR: \n")
                 append(BytesUtil.bytes2HexString(data))
                 append("\n\n")
                 append("Note: if any ATR(Answer to Reset) returns, then means ICC is powered on successfully.")
             }
-            spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_PSE))
+            binding.spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_PSE))
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -186,19 +176,19 @@ class ICCardActivity : AppCompatActivity() {
             uiRefreshOnPowerOff()
             return
         }
-        val selectedCardType = spCardType.selectedItem as CardType
+        val selectedCardType = binding.spCardType.selectedItem as CardType
         runCatching {
             val ret = mICCardReaderManager.powerDown(selectedCardType.slot)
             if (!ret) throw Exception("Power off failed")
         }.onSuccess {
             uiRefreshOnPowerOff()
             DebugUtil.logAndToast(this, TAG, "Power off successfully")
-            tvResult.text = ""
+            binding.tvResult.text = ""
             selectAidDynamic = "-"
             gpoDynamic = "-"
-            etApdu.setText("")
+            binding.etApdu.setText("")
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -209,14 +199,14 @@ class ICCardActivity : AppCompatActivity() {
             uiRefreshOnPowerOff()
             return
         }
-        val apduStr = if (spApdu.selectedItem as ApduCommand == ApduCommand.APDU_IN_BOX) {
-            etApdu.text.toString()
-        } else if (spApdu.selectedItem as ApduCommand == ApduCommand.SELECT_AID) {
+        val apduStr = if (binding.spApdu.selectedItem as ApduCommand == ApduCommand.APDU_IN_BOX) {
+            binding.etApdu.text.toString()
+        } else if (binding.spApdu.selectedItem as ApduCommand == ApduCommand.SELECT_AID) {
             selectAidDynamic
-        } else if (spApdu.selectedItem as ApduCommand == ApduCommand.GPO) {
+        } else if (binding.spApdu.selectedItem as ApduCommand == ApduCommand.GPO) {
             gpoDynamic
         } else {
-            (spApdu.selectedItem as ApduCommand).apduStr
+            (binding.spApdu.selectedItem as ApduCommand).apduStr
         }
         val apdu = BytesUtil.hexString2Bytes(apduStr)
         runCatching {
@@ -226,15 +216,15 @@ class ICCardActivity : AppCompatActivity() {
             if (rspData == null) throw Exception("No APDU received. \nAPDU_sent = $apduStr")
             Triple(startTime, rspData, endTime)
         }.onSuccess { (startTime, rspData, endTime) ->
-            tvResult.text = buildString {
-                append("APDU sent: (${(spApdu.selectedItem as ApduCommand)})\n$apduStr \n\n")
+            binding.tvResult.text = buildString {
+                append("APDU sent: (${(binding.spApdu.selectedItem as ApduCommand)})\n$apduStr \n\n")
                 append("APDU received: \n${BytesUtil.bytes2HexString(rspData)}\n\n")
                 append("Duration: ${endTime - startTime}ms\n\n")
             }
             when (apduStr) {
                 ApduCommand.SELECT_PSE.apduStr -> {
-                    spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.READ_RECORD_SFI_1_R_1))
-                    tvResult.apply {
+                    binding.spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.READ_RECORD_SFI_1_R_1))
+                    binding.tvResult.apply {
                         append("Note: \n")
                         append(" - \"6F\": Prefix for SELECT_resp\n")
                         append(" - \"84\": Name of the File Selected(PSE)\n")
@@ -243,15 +233,15 @@ class ICCardActivity : AppCompatActivity() {
                     }
                 }
                 ApduCommand.READ_RECORD_SFI_1_R_1.apduStr -> {
-                    spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_AID))
-                    etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_1.apduStr)
+                    binding.spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_AID))
+                    binding.etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_1.apduStr)
                     selectAidDynamic = buildString {
                         append("00A40400")
                         append(extractTlvLenHex(BytesUtil.bytes2HexString(rspData), "4F"))
                         append(extractTlvValue(BytesUtil.bytes2HexString(rspData), "4F"))
                         append("00")
                     }
-                    tvResult.apply {
+                    binding.tvResult.apply {
                         append("Note: \n")
                         append(" - \"70\": Prefix for READ_RECORD_resp\n")
                         append("If READ AID_LIST: [\"61\"(App Template) -> \"4F\"(AID) + \"50\"(APP_Name_ASCII) + \"87\"(APP_Priority)]\n")
@@ -265,12 +255,12 @@ class ICCardActivity : AppCompatActivity() {
                         append(" - \"9F0D\"/\"9F0E\"/\"9F0F\": IAC_Default / IAC_Denial / IAC_Online\n")
                     }
                 }
-                ApduCommand.READ_RECORD_SFI_2_R_1.apduStr -> etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_2.apduStr)
-                ApduCommand.READ_RECORD_SFI_2_R_2.apduStr -> etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_3.apduStr)
-                ApduCommand.READ_RECORD_SFI_2_R_3.apduStr -> etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_4.apduStr)
-                ApduCommand.READ_RECORD_SFI_2_R_4.apduStr -> etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_5.apduStr)
+                ApduCommand.READ_RECORD_SFI_2_R_1.apduStr -> binding.etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_2.apduStr)
+                ApduCommand.READ_RECORD_SFI_2_R_2.apduStr -> binding.etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_3.apduStr)
+                ApduCommand.READ_RECORD_SFI_2_R_3.apduStr -> binding.etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_4.apduStr)
+                ApduCommand.READ_RECORD_SFI_2_R_4.apduStr -> binding.etApdu.setText(ApduCommand.READ_RECORD_SFI_2_R_5.apduStr)
                 selectAidDynamic -> {
-                    spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.GPO))
+                    binding.spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.GPO))
                     val pdol = extractTlvValue(BytesUtil.bytes2HexString(rspData), "9F38") ?: ""
                     gpoDynamic = buildString {
                         append("80A800000C83")
@@ -278,7 +268,7 @@ class ICCardActivity : AppCompatActivity() {
                         append(randomNumberString(pdolTotalBytes(pdol)))
                         append("00")
                     }
-                    tvResult.apply {
+                    binding.tvResult.apply {
                         append("Note: \n")
                         append(" - \"6F\": Prefix for SELECT_resp\n")
                         append(" - \"84\": Name of the File Selected(AID)\n")
@@ -291,8 +281,8 @@ class ICCardActivity : AppCompatActivity() {
                     }
                 }
                 gpoDynamic -> {
-                    spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.READ_RECORD_SFI_1_R_1))
-                    tvResult.apply {
+                    binding.spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.READ_RECORD_SFI_1_R_1))
+                    binding.tvResult.apply {
                         append("Note: \n")
                         append(" - \"80\": Prefix for GPO_resp\n")
                         append(" - AIP(4Bytes) + AFL(Rest)\n")
@@ -300,7 +290,7 @@ class ICCardActivity : AppCompatActivity() {
                 }
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -313,13 +303,13 @@ class ICCardActivity : AppCompatActivity() {
             val isPsam2In = mICCardReaderManager.isPSAMCardExists(CardType.PSAM_2.slot)
             Triple(isCardIn, isPsam1In, isPsam2In)
         }.onSuccess { (isCardIn, isPsam1In, isPsam2In) ->
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("ICCard status: \n$isCardIn\n\n")
                 append("PSAM_1 status: \n$isPsam1In\n\n")
                 append("PSAM_2 status: \n$isPsam2In")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -494,18 +484,18 @@ class ICCardActivity : AppCompatActivity() {
 
     // <---------------UI helper methods--------------->
     private fun uiRefreshOnPowerOn() {
-        btnPowerOn.isEnabled = false
-        btnPowerOff.isEnabled = true
-        btnSendApdu.isEnabled = true
-        btnStartSearch.isEnabled = false
+        binding.btnPowerOn.isEnabled = false
+        binding.btnPowerOff.isEnabled = true
+        binding.btnSendApdu.isEnabled = true
+        binding.btnStartSearch.isEnabled = false
     }
 
     private fun uiRefreshOnPowerOff() {
-        btnStartSearch.isEnabled = true
-        btnPowerOn.isEnabled = true
-        btnPowerOff.isEnabled = false
-        btnSendApdu.isEnabled = false
-        btnStopSearch.isEnabled = false
+        binding.btnStartSearch.isEnabled = true
+        binding.btnPowerOn.isEnabled = true
+        binding.btnPowerOff.isEnabled = false
+        binding.btnSendApdu.isEnabled = false
+        binding.btnStopSearch.isEnabled = false
     }
 }
 

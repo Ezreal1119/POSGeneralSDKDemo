@@ -27,6 +27,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
 import com.example.posgeneralsdkdemo.R
+import com.example.posgeneralsdkdemo.databinding.ActivitySppBluetoothPrinterBinding
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -118,14 +119,7 @@ const val CONTENT_4_INCH =
 
 class SppBluetoothPrinterActivity : AppCompatActivity() {
 
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
-    private val etBluetoothMac by lazy { findViewById<EditText>(R.id.etBluetoothMac) }
-    private val btnSelfMac by lazy { findViewById<Button>(R.id.btnSelfMac) }
-    private val btnScanBluetooth by lazy { findViewById<Button>(R.id.btnScanBluetooth) }
-    private val btnConnectBluetooth by lazy { findViewById<Button>(R.id.btnConnectBluetooth) }
-    private val btnDisconnectBluetooth by lazy { findViewById<Button>(R.id.btnDisconnectBluetooth) }
-    private val btnPrintText by lazy { findViewById<Button>(R.id.btnPrintText) }
-    private val spPrintSize by lazy { findViewById<Spinner>(R.id.spPrintSize) }
+    private lateinit var binding: ActivitySppBluetoothPrinterBinding
 
     private var socket: BluetoothSocket? = null
     private val foundDevices = mutableListOf<BluetoothDevice>() // Use to
@@ -162,19 +156,22 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_spp_bluetooth_printer)
+        binding = ActivitySppBluetoothPrinterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnSelfMac.setOnClickListener { onSelfMacButtonClicked() }
-        btnScanBluetooth.setOnClickListener { onScanBluetoothButtonClicked() }
-        btnConnectBluetooth.setOnClickListener { onConnectBluetoothButtonClicked() }
-        btnDisconnectBluetooth.setOnClickListener { onDisconnectBluetoothButtonClicked() }
-        btnPrintText.setOnClickListener { onPrintTextButtonClicked() }
-
-        etBluetoothMac.doOnTextChanged { text, _, _, _ ->
-            btnConnectBluetooth.isEnabled = isValidMacAddress(etBluetoothMac.text.toString())
+        binding.apply {
+            btnSelfMac.setOnClickListener { onSelfMacButtonClicked() }
+            btnScanBluetooth.setOnClickListener { onScanBluetoothButtonClicked() }
+            btnConnectBluetooth.setOnClickListener { onConnectBluetoothButtonClicked() }
+            btnDisconnectBluetooth.setOnClickListener { onDisconnectBluetoothButtonClicked() }
+            btnPrintText.setOnClickListener { onPrintTextButtonClicked() }
         }
 
-        spPrintSize.adapter = ArrayAdapter(this, simple_spinner_item, arrayOfSize).apply {
+        binding.etBluetoothMac.doOnTextChanged { text, _, _, _ ->
+            binding.btnConnectBluetooth.isEnabled = isValidMacAddress(binding.etBluetoothMac.text.toString())
+        }
+
+        binding.spPrintSize.adapter = ArrayAdapter(this, simple_spinner_item, arrayOfSize).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
     }
@@ -182,9 +179,9 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         if(!PermissionUtil.requestPermissions(this, PERMISSIONS_BT, PERMISSION_REQ_BT)) return
-        btnConnectBluetooth.isEnabled = isValidMacAddress(etBluetoothMac.text.toString())
-        btnDisconnectBluetooth.isEnabled = false
-        btnPrintText.isEnabled = false
+        binding.btnConnectBluetooth.isEnabled = isValidMacAddress(binding.etBluetoothMac.text.toString())
+        binding.btnDisconnectBluetooth.isEnabled = false
+        binding.btnPrintText.isEnabled = false
         val filter = IntentFilter().apply {
             addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
             addAction(BluetoothDevice.ACTION_FOUND)
@@ -200,13 +197,13 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
         scanDialog?.dismiss()
         socket?.close() // Make sure the connect with the BT device is disconnected
         socket = null // Clean up the handle, release the memory
-        isValidMacAddress(etBluetoothMac.text.toString())
-        btnDisconnectBluetooth.isEnabled = false
-        btnPrintText.isEnabled = false
+        isValidMacAddress(binding.etBluetoothMac.text.toString())
+        binding.btnDisconnectBluetooth.isEnabled = false
+        binding.btnPrintText.isEnabled = false
     }
 
     private fun onSelfMacButtonClicked() {
-        etBluetoothMac.setText("FF:FF:FF:FF:FF:FF")
+        binding.etBluetoothMac.setText("FF:FF:FF:FF:FF:FF")
         Toast.makeText(this, "Simulate Printer Selected", Toast.LENGTH_SHORT).show()
     }
 
@@ -227,7 +224,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
                 this.adapter = scanAdapter
                 setOnItemClickListener { _, _, position, _ ->
                     val device = foundDevices[position]
-                    etBluetoothMac.setText(device.address)
+                    binding.etBluetoothMac.setText(device.address)
                     Toast.makeText(this@SppBluetoothPrinterActivity, "Device selected: ${device.address}", Toast.LENGTH_SHORT).show()
                     BluetoothAdapter.getDefaultAdapter()?.cancelDiscovery() // Terminate discovery if select any device
                     scanDialog?.dismiss() // Cancel the dialog if select any device
@@ -251,7 +248,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun onConnectBluetoothButtonClicked() {
-        val mac = etBluetoothMac.text.toString().trim()
+        val mac = binding.etBluetoothMac.text.toString().trim()
         Thread {
             runCatching {
                 val adapter = BluetoothAdapter.getDefaultAdapter() ?: throw Exception("No BluetoothAdapter") // Make sure Device supports BT
@@ -265,13 +262,13 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
                     Toast.makeText(this, "Connected to: $mac", Toast.LENGTH_SHORT).show()
                 }
                 runOnUiThread {
-                    btnConnectBluetooth.isEnabled = false
-                    btnDisconnectBluetooth.isEnabled = true
-                    btnPrintText.isEnabled = true
+                    binding.btnConnectBluetooth.isEnabled = false
+                    binding.btnDisconnectBluetooth.isEnabled = true
+                    binding.btnPrintText.isEnabled = true
                 }
             }.onFailure {
                 runOnUiThread {
-                    tvResult.text = it.message
+                    binding.tvResult.text = it.message
                     it.printStackTrace()
                 }
                 socket?.close() // Make sure the connect with the BT device is disconnected
@@ -287,12 +284,12 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
             socket = null // Clean up the handle, release the memory
         }.onSuccess {
             Toast.makeText(this, "Disconnected successfully", Toast.LENGTH_SHORT).show()
-            tvResult.text = ""
-            btnConnectBluetooth.isEnabled                                                                                                                                                                                                                         = isValidMacAddress(etBluetoothMac.text.toString())
-            btnDisconnectBluetooth.isEnabled = false
-            btnPrintText.isEnabled = false
+            binding.tvResult.text = ""
+            binding.btnConnectBluetooth.isEnabled = isValidMacAddress(binding.etBluetoothMac.text.toString())
+            binding.btnDisconnectBluetooth.isEnabled = false
+            binding.btnPrintText.isEnabled = false
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -305,7 +302,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
             runCatching {
                 val s = socket ?: throw Exception("Not connected yet")
                 val os = s.outputStream
-                val contentInBytes: ByteArray = when (spPrintSize.selectedItem as String) { // If wants to support Chinese Characters, use "content.toByteArray(Charset.forName("GBK"))"
+                val contentInBytes: ByteArray = when (binding.spPrintSize.selectedItem as String) { // If wants to support Chinese Characters, use "content.toByteArray(Charset.forName("GBK"))"
                     arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charsets.UTF_8)
                     arrayOfSize[1] -> CONTENT_3_INCH.toByteArray(Charsets.UTF_8)
                     arrayOfSize[2] -> CONTENT_4_INCH.toByteArray(Charsets.UTF_8)
@@ -330,7 +327,7 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
                 }
             }.onFailure {
                 runOnUiThread {
-                    tvResult.text = it.message
+                    binding.tvResult.text = it.message
                     it.printStackTrace()
                 }
             }

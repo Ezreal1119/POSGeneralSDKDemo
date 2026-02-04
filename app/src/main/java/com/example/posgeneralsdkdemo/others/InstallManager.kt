@@ -27,6 +27,7 @@ import java.io.FileOutputStream
 import java.util.zip.ZipInputStream
 import kotlin.getValue
 import androidx.core.net.toUri
+import com.example.posgeneralsdkdemo.databinding.ActivityInstallManagerBinding
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
 
 // <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
@@ -42,15 +43,7 @@ private const val UMS_PACKAGE = "com.urovo.uhome"
 private const val APPMARKET_UMS_PACKAGE = "com.urovo.appmarket"
 class InstallManager : AppCompatActivity() {
 
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
-    private val etApkPath by lazy { findViewById<EditText>(R.id.etApkPath) }
-    private val etPackageName by lazy { findViewById<EditText>(R.id.etPackageName) }
-    private val btnInstallApp by lazy { findViewById<Button>(R.id.btnInstallApp) }
-    private val btnUninstallApp by lazy { findViewById<Button>(R.id.btnUninstallApp) }
-    private val btnInstallUMS by lazy { findViewById<Button>(R.id.btnInstallUMS) }
-    private val btnUninstallUMS by lazy { findViewById<Button>(R.id.btnUninstallUMS) }
-    private val btnInstallAppMarketUMS by lazy { findViewById<Button>(R.id.btnInstallAppMarketUMS) }
-    private val btnUninstallAppMarketUMS by lazy { findViewById<Button>(R.id.btnUninstallAppMarketUMS) }
+    private lateinit var binding: ActivityInstallManagerBinding
 
     private val mInstallManager by lazy { InstallManagerImpl.getInstance(this) }
     private var isUmsOrAppMarket = true // true means UMS, false means AppMarket
@@ -62,25 +55,25 @@ class InstallManager : AppCompatActivity() {
             returnMsg: String?
         ) {
             runOnUiThread {
-                tvResult.text = buildString {
+                binding.tvResult.text = buildString {
                     append("APP installation finished:\n\n")
                     append(" - Package Name: \n$packageName\n\n")
                     append(" - Return Code: \n$returnCode\n\n")
                     append(" - Return Message: \n$returnMsg\n\n")
                 }
                 if (isPackageInstalled(UMS_PACKAGE)) {
-                    btnInstallUMS.isEnabled = false
-                    btnUninstallUMS.isEnabled = true
+                    binding.btnInstallUMS.isEnabled = false
+                    binding.btnUninstallUMS.isEnabled = true
                 } else {
-                    btnInstallUMS.isEnabled = true
-                    btnUninstallUMS.isEnabled = false
+                    binding.btnInstallUMS.isEnabled = true
+                    binding.btnUninstallUMS.isEnabled = false
                 }
                 if (isPackageInstalled(APPMARKET_UMS_PACKAGE)) {
-                    btnInstallAppMarketUMS.isEnabled = false
-                    btnUninstallAppMarketUMS.isEnabled = true
+                    binding.btnInstallAppMarketUMS.isEnabled = false
+                    binding.btnUninstallAppMarketUMS.isEnabled = true
                 } else {
-                    btnInstallAppMarketUMS.isEnabled = true
-                    btnUninstallAppMarketUMS.isEnabled = false
+                    binding.btnInstallAppMarketUMS.isEnabled = true
+                    binding.btnUninstallAppMarketUMS.isEnabled = false
                 }
             }
         }
@@ -91,25 +84,25 @@ class InstallManager : AppCompatActivity() {
             returnMsg: String?
         ) {
             runOnUiThread {
-                tvResult.text = buildString {
+                binding.tvResult.text = buildString {
                     append("APP Uninstallation finished:\n\n")
                     append(" - Package Name: \n$packageName\n\n")
                     append(" - Return Code: \n$returnCode\n\n")
                     append(" - Return Message: \n$returnMsg\n\n")
                 }
                 if (isPackageInstalled(UMS_PACKAGE)) {
-                    btnInstallUMS.isEnabled = false
-                    btnUninstallUMS.isEnabled = true
+                    binding.btnInstallUMS.isEnabled = false
+                    binding.btnUninstallUMS.isEnabled = true
                 } else {
-                    btnInstallUMS.isEnabled = true
-                    btnUninstallUMS.isEnabled = false
+                    binding.btnInstallUMS.isEnabled = true
+                    binding.btnUninstallUMS.isEnabled = false
                 }
                 if (isPackageInstalled(APPMARKET_UMS_PACKAGE)) {
-                    btnInstallAppMarketUMS.isEnabled = false
-                    btnUninstallAppMarketUMS.isEnabled = true
+                    binding.btnInstallAppMarketUMS.isEnabled = false
+                    binding.btnUninstallAppMarketUMS.isEnabled = true
                 } else {
-                    btnInstallAppMarketUMS.isEnabled = true
-                    btnUninstallAppMarketUMS.isEnabled = false
+                    binding.btnInstallAppMarketUMS.isEnabled = true
+                    binding.btnUninstallAppMarketUMS.isEnabled = false
                 }
             }
         }
@@ -158,7 +151,7 @@ class InstallManager : AppCompatActivity() {
                     "appmarket_ums_patrick.apk"-> Toast.makeText(this@InstallManager, "Installing AppMarket_UMS", Toast.LENGTH_SHORT).show()
                 }
             }.onFailure {
-                tvResult.text = it.message
+                binding.tvResult.text = it.message
                 it.printStackTrace()
             }
         }
@@ -166,14 +159,15 @@ class InstallManager : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_install_manager)
+        binding = ActivityInstallManagerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnInstallApp.setOnClickListener { onInstallAppButtonClicked() }
-        btnUninstallApp.setOnClickListener { onUninstallAppButtonClicked() }
-        btnInstallUMS.setOnClickListener { onInstallUMSButtonClicked() }
-        btnUninstallUMS.setOnClickListener { onUninstallUMSButtonClicked() }
-        btnInstallAppMarketUMS.setOnClickListener { onInstallAppMarketUMSButtonClicked() }
-        btnUninstallAppMarketUMS.setOnClickListener { onUninstallAppMarketUMSButtonClicked() }
+        binding.btnInstallApp.setOnClickListener { onInstallAppButtonClicked() }
+        binding.btnUninstallApp.setOnClickListener { onUninstallAppButtonClicked() }
+        binding.btnInstallUMS.setOnClickListener { onInstallUMSButtonClicked() }
+        binding.btnUninstallUMS.setOnClickListener { onUninstallUMSButtonClicked() }
+        binding.btnInstallAppMarketUMS.setOnClickListener { onInstallAppMarketUMSButtonClicked() }
+        binding.btnUninstallAppMarketUMS.setOnClickListener { onUninstallAppMarketUMSButtonClicked() }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -181,18 +175,18 @@ class InstallManager : AppCompatActivity() {
         super.onStart()
 //        PermissionUtil.ensureAllFilesAccess(this)
         if (isPackageInstalled(UMS_PACKAGE)) {
-            btnInstallUMS.isEnabled = false
-            btnUninstallUMS.isEnabled = true
+            binding.btnInstallUMS.isEnabled = false
+            binding.btnUninstallUMS.isEnabled = true
         } else {
-            btnInstallUMS.isEnabled = true
-            btnUninstallUMS.isEnabled = false
+            binding.btnInstallUMS.isEnabled = true
+            binding.btnUninstallUMS.isEnabled = false
         }
         if (isPackageInstalled(APPMARKET_UMS_PACKAGE)) {
-            btnInstallAppMarketUMS.isEnabled = false
-            btnUninstallAppMarketUMS.isEnabled = true
+            binding.btnInstallAppMarketUMS.isEnabled = false
+            binding.btnUninstallAppMarketUMS.isEnabled = true
         } else {
-            btnInstallAppMarketUMS.isEnabled = true
-            btnUninstallAppMarketUMS.isEnabled = false
+            binding.btnInstallAppMarketUMS.isEnabled = true
+            binding.btnUninstallAppMarketUMS.isEnabled = false
         }
         registerReceiver(downloadReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
     }
@@ -204,16 +198,16 @@ class InstallManager : AppCompatActivity() {
 
     private fun onInstallAppButtonClicked() {
         runCatching {
-            if (!File(etApkPath.text.toString().trim()).isFile) {
-                tvResult.text = "Apk not exists!"
+            if (!File(binding.etApkPath.text.toString().trim()).isFile) {
+                binding.tvResult.text = "Apk not exists!"
                 return
             }
-            mInstallManager.install(etApkPath.text.toString().trim(), myInstallApkListener)
+            mInstallManager.install(binding.etApkPath.text.toString().trim(), myInstallApkListener)
         }.onSuccess {
-            tvResult.text = ""
+            binding.tvResult.text = ""
             Toast.makeText(this, "Installing App", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -222,12 +216,12 @@ class InstallManager : AppCompatActivity() {
     private fun onUninstallAppButtonClicked() {
         runCatching {
             mInstallManager.uninstall(
-                etPackageName.text.toString().trim(), myInstallApkListener)
+                binding.etPackageName.text.toString().trim(), myInstallApkListener)
         }.onSuccess {
-            tvResult.text = ""
-            Toast.makeText(this, "Uninstalling ${etPackageName.text.toString().trim()}", Toast.LENGTH_SHORT).show()
+            binding.tvResult.text = ""
+            Toast.makeText(this, "Uninstalling ${binding.etPackageName.text.toString().trim()}", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -247,18 +241,18 @@ class InstallManager : AppCompatActivity() {
         dm.enqueue(request)
         isUmsOrAppMarket = true
         Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
-        btnInstallUMS.isEnabled = false
+        binding.btnInstallUMS.isEnabled = false
     }
 
     private fun onUninstallUMSButtonClicked() {
         runCatching {
             mInstallManager.uninstall(UMS_PACKAGE, myInstallApkListener)
         }.onSuccess {
-            tvResult.text = ""
-            btnUninstallUMS.isEnabled = false
+            binding.tvResult.text = ""
+            binding.btnUninstallUMS.isEnabled = false
             Toast.makeText(this, "Uninstalling UMS", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -278,7 +272,7 @@ class InstallManager : AppCompatActivity() {
         dm.enqueue(request)
         isUmsOrAppMarket = false
         Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
-        btnInstallAppMarketUMS.isEnabled = false
+        binding.btnInstallAppMarketUMS.isEnabled = false
     }
 
 
@@ -286,11 +280,11 @@ class InstallManager : AppCompatActivity() {
         runCatching {
             mInstallManager.uninstall(APPMARKET_UMS_PACKAGE, myInstallApkListener)
         }.onSuccess {
-            tvResult.text = ""
-            btnUninstallAppMarketUMS.isEnabled = false
+            binding.tvResult.text = ""
+            binding.btnUninstallAppMarketUMS.isEnabled = false
             Toast.makeText(this, "Uninstalling AppMarket_UMS", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -314,8 +308,6 @@ class InstallManager : AppCompatActivity() {
             false
         }
     }
-
-
 
 }
 

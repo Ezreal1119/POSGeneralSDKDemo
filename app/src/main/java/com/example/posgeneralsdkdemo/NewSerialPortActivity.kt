@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityNewSerialPortBinding
 import com.urovo.serial.utils.SerialPortListener
 import com.urovo.serial.utils.SerialPortTool
 import com.urovo.smartpos.device.core.SerialPortDriverImpl
@@ -20,17 +21,10 @@ import kotlin.text.Charsets.UTF_8
  */
 private const val SERIAL_PORT_PATH_PREFIX = "/dev/ttyGS"
 private const val GENERAL_BAUD_RATE_115200 = 115200
+private val baudRateArray = arrayOf(1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
 class NewSerialPortActivity : AppCompatActivity() {
 
-    private val tvIntro by lazy { findViewById<TextView>(R.id.tvIntro) }
-    private val tvResult by lazy { findViewById<TextView>(R.id.tvResult) }
-    private val etSerialPortData by lazy { findViewById<EditText>(R.id.etSerialPortData) }
-    private val btnOpenSerialPort by lazy { findViewById<Button>(R.id.btnOpenSerialPort) }
-    private val btnCloseSerialPort by lazy { findViewById<Button>(R.id.btnCloseSerialPort) }
-    private val btnSendHexData by lazy { findViewById<Button>(R.id.btnSendHexData) }
-    private val btnSendUtf8Data by lazy { findViewById<Button>(R.id.btnSendUtf8Data) }
-    private val btnClearConsole by lazy { findViewById<Button>(R.id.btnClearConsole) }
-
+    private lateinit var binding: ActivityNewSerialPortBinding
     private var mSerialPortManager: SerialPortTool? = null
     private val mSerialPortListener = object: SerialPortListener {
         override fun onReceive(dataReceived: ByteArray?) {
@@ -39,7 +33,7 @@ class NewSerialPortActivity : AppCompatActivity() {
                     Toast.makeText(this@NewSerialPortActivity, "Received null data", Toast.LENGTH_SHORT).show()
                     return@runOnUiThread
                 }
-                tvResult.apply {
+                binding.tvResult.apply {
                     append("RX: \n")
                     append(" - HEX: ${BytesUtil.bytes2HexString(dataReceived)}\n")
                     append(" - HEX_ASCII: ${BytesUtil.bcd2Ascii(dataReceived)}\n")
@@ -49,7 +43,7 @@ class NewSerialPortActivity : AppCompatActivity() {
         }
         override fun onFail(errorCode: String?, errorMessage: String?) {
             runOnUiThread {
-                tvResult.text = "onFail: errorCode=$errorCode\n"
+                binding.tvResult.text = "onFail: errorCode=$errorCode\n"
             }
         }
     }
@@ -57,17 +51,17 @@ class NewSerialPortActivity : AppCompatActivity() {
     private val serialPortList: List<String> = List(10) { i ->
         SERIAL_PORT_PATH_PREFIX + i
     }
-    private val baudRateArray = arrayOf(1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_new_serial_port)
+        binding = ActivityNewSerialPortBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnOpenSerialPort.setOnClickListener { onOpenSerialPortButtonClicked() }
-        btnCloseSerialPort.setOnClickListener { onCloseSerialPortButtonClicked() }
-        btnSendHexData.setOnClickListener { onSendHexDataButtonClicked() }
-        btnSendUtf8Data.setOnClickListener { onSendUtf8ButtonClicked() }
-        btnClearConsole.setOnClickListener { onClearConsoleButtonClicked() }
+        binding.btnOpenSerialPort.setOnClickListener { onOpenSerialPortButtonClicked() }
+        binding.btnCloseSerialPort.setOnClickListener { onCloseSerialPortButtonClicked() }
+        binding.btnSendHexData.setOnClickListener { onSendHexDataButtonClicked() }
+        binding.btnSendUtf8Data.setOnClickListener { onSendUtf8ButtonClicked() }
+        binding.btnClearConsole.setOnClickListener { onClearConsoleButtonClicked() }
     }
 
     override fun onStart() {
@@ -97,7 +91,7 @@ class NewSerialPortActivity : AppCompatActivity() {
             uiRefreshOnPortOpen()
             Toast.makeText(this, "Serial Port opened successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -112,13 +106,13 @@ class NewSerialPortActivity : AppCompatActivity() {
             uiRefreshOnPortClose()
             Toast.makeText(this, "Serial Port closed successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
 
     private fun onSendHexDataButtonClicked() {
-        val dataAsString = etSerialPortData.text.toString().trim()
+        val dataAsString = binding.etSerialPortData.text.toString().trim()
         val dataAsBytes = BytesUtil.hexString2Bytes(dataAsString)
         runCatching {
             if (mSerialPortManager == null) {
@@ -127,15 +121,15 @@ class NewSerialPortActivity : AppCompatActivity() {
             }
             mSerialPortManager?.sendData(dataAsBytes, dataAsBytes.size)
         }.onSuccess {
-            tvResult.append("TX(HEX): \n${BytesUtil.bytes2HexString(dataAsBytes)}\n\n")
+            binding.tvResult.append("TX(HEX): \n${BytesUtil.bytes2HexString(dataAsBytes)}\n\n")
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
 
     private fun onSendUtf8ButtonClicked() {
-        val dataAsString = etSerialPortData.text.toString().trim()
+        val dataAsString = binding.etSerialPortData.text.toString().trim()
         val dataAsBytes = dataAsString.toByteArray(UTF_8)
         runCatching {
             if (mSerialPortManager == null) {
@@ -144,36 +138,36 @@ class NewSerialPortActivity : AppCompatActivity() {
             }
             mSerialPortManager?.sendData(dataAsBytes, dataAsBytes.size)
         }.onSuccess {
-            tvResult.append("TX(UTF-8): \n${BytesUtil.bytes2HexString(dataAsBytes)}\n\n")
+            binding.tvResult.append("TX(UTF-8): \n${BytesUtil.bytes2HexString(dataAsBytes)}\n\n")
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
 
     private fun onClearConsoleButtonClicked() {
-        tvResult.text = ""
+        binding.tvResult.text = ""
     }
 
     // <------------------UI helper methods----------------->
 
     private fun uiRefreshOnPortOpen() {
-        btnOpenSerialPort.isEnabled = false
-        btnCloseSerialPort.isEnabled = true
-        btnSendHexData.isEnabled = true
-        btnSendUtf8Data.isEnabled = true
-        btnClearConsole.isEnabled = true
-        tvResult.text = ""
-        tvIntro.setTextColor(Color.GREEN)
+        binding.btnOpenSerialPort.isEnabled = false
+        binding.btnCloseSerialPort.isEnabled = true
+        binding.btnSendHexData.isEnabled = true
+        binding.btnSendUtf8Data.isEnabled = true
+        binding.btnClearConsole.isEnabled = true
+        binding.tvResult.text = ""
+        binding.tvIntro.setTextColor(Color.GREEN)
     }
 
     private fun uiRefreshOnPortClose() {
-        btnOpenSerialPort.isEnabled = true
-        btnCloseSerialPort.isEnabled = false
-        btnSendHexData.isEnabled = false
-        btnSendUtf8Data.isEnabled = false
-        btnClearConsole.isEnabled = false
-        tvResult.text = ""
-        tvIntro.setTextColor(Color.RED)
+        binding.btnOpenSerialPort.isEnabled = true
+        binding.btnCloseSerialPort.isEnabled = false
+        binding.btnSendHexData.isEnabled = false
+        binding.btnSendUtf8Data.isEnabled = false
+        binding.btnClearConsole.isEnabled = false
+        binding.tvResult.text = ""
+        binding.tvIntro.setTextColor(Color.RED)
     }
 }

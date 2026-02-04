@@ -26,6 +26,7 @@ import com.example.posgeneralsdkdemo.others.SwitchesActivity
 import com.urovo.sdk.utils.SystemProperties.getSystemProperty
 import java.io.File
 import androidx.core.net.toUri
+import com.example.posgeneralsdkdemo.databinding.ActivityOthersBinding
 import com.example.posgeneralsdkdemo.others.SettingsActivity
 import com.example.posgeneralsdkdemo.others.WifiActivity
 import okhttp3.Call
@@ -48,19 +49,7 @@ private const val FILE_PATH = "filePath"
 private const val FILE_NAME= "gms_urovo_patrick.zip"
 class OthersActivity : AppCompatActivity() {
 
-    private val btnGetDeviceInfo by lazy { findViewById<Button>(R.id.btnGetDeviceInfo) }
-    private val btnInstallManager by lazy { findViewById<Button>(R.id.btnInstallManager) }
-    private val btnKioskRelated by lazy { findViewById<Button>(R.id.btnKioskRelated) }
-    private val btnWifi by lazy { findViewById<Button>(R.id.btnWifi) }
-    private val btnSwitches by lazy { findViewById<Button>(R.id.btnSwitches) }
-    private val btnFactoryMenu by lazy { findViewById<Button>(R.id.btnFactoryMenu) }
-    private val btnOtherSettings by lazy { findViewById<Button>(R.id.btnOtherSettings) }
-    private val btnLoadGMS by lazy { findViewById<Button>(R.id.btnLoadGMS) }
-    private val btnDebuglogger by lazy { findViewById<Button>(R.id.btnDebuglogger) }
-    private val btnUploadLog by lazy { findViewById<Button>(R.id.btnUploadLog) }
-    private val btnShutDown by lazy { findViewById<Button>(R.id.btnShutDown) }
-    private val btnReboot by lazy { findViewById<Button>(R.id.btnReboot) }
-    private val btnReset by lazy { findViewById<Button>(R.id.btnReset) }
+    private lateinit var binding: ActivityOthersBinding
 
     private var url: String = ""
 
@@ -86,27 +75,28 @@ class OthersActivity : AppCompatActivity() {
                 }
                 .setNegativeButton("Cancel", null)
                 .show()
-            btnLoadGMS.isEnabled = true
+            binding.btnLoadGMS.isEnabled = true
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_others)
+        binding = ActivityOthersBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnGetDeviceInfo.setOnClickListener { startActivity(Intent(this, DeviceInfoActivity::class.java)) }
-        btnInstallManager.setOnClickListener { startActivity(Intent(this, InstallManager::class.java)) }
-        btnKioskRelated.setOnClickListener { startActivity(Intent(this, KioskRelatedActivity::class.java)) }
-        btnWifi.setOnClickListener { startActivity(Intent(this, WifiActivity::class.java)) }
-        btnSwitches.setOnClickListener { startActivity(Intent(this, SwitchesActivity::class.java)) }
-        btnFactoryMenu.setOnClickListener { onFactoryMenuButtonClicked() }
-        btnOtherSettings.setOnClickListener { startActivity((Intent(this, SettingsActivity::class.java))) }
-        btnLoadGMS.setOnClickListener { onLoadGMSButtonClicked() }
-        btnDebuglogger.setOnClickListener { onDebugloggerButtonClicked() }
-        btnUploadLog.setOnClickListener { onUploadLogButtonClicked() }
-        btnShutDown.setOnClickListener { onShutDownButtonClicked() }
-        btnReboot.setOnClickListener { onRebootButtonClicked() }
-        btnReset.setOnClickListener { onResetButtonClicked() }
+        binding.btnGetDeviceInfo.setOnClickListener { startActivity(Intent(this, DeviceInfoActivity::class.java)) }
+        binding.btnInstallManager.setOnClickListener { startActivity(Intent(this, InstallManager::class.java)) }
+        binding.btnKioskRelated.setOnClickListener { startActivity(Intent(this, KioskRelatedActivity::class.java)) }
+        binding.btnWifi.setOnClickListener { startActivity(Intent(this, WifiActivity::class.java)) }
+        binding.btnSwitches.setOnClickListener { startActivity(Intent(this, SwitchesActivity::class.java)) }
+        binding.btnFactoryMenu.setOnClickListener { onFactoryMenuButtonClicked() }
+        binding.btnOtherSettings.setOnClickListener { startActivity((Intent(this, SettingsActivity::class.java))) }
+        binding.btnLoadGMS.setOnClickListener { onLoadGMSButtonClicked() }
+        binding.btnDebuglogger.setOnClickListener { onDebugloggerButtonClicked() }
+        binding.btnUploadLog.setOnClickListener { onUploadLogButtonClicked() }
+        binding.btnShutDown.setOnClickListener { onShutDownButtonClicked() }
+        binding.btnReboot.setOnClickListener { onRebootButtonClicked() }
+        binding.btnReset.setOnClickListener { onResetButtonClicked() }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -119,9 +109,9 @@ class OthersActivity : AppCompatActivity() {
             }
         }
         if ("GMS" in DeviceManager().getSettingProperty("ro.ufs.custom") || url.isEmpty()) {
-            btnLoadGMS.isEnabled = false
+            binding.btnLoadGMS.isEnabled = false
         }
-        btnUploadLog.isEnabled = File("/sdcard/debuglogger").isDirectory
+        binding.btnUploadLog.isEnabled = File("/sdcard/debuglogger").isDirectory
         registerReceiver(downloadReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
     }
 
@@ -145,7 +135,7 @@ class OthersActivity : AppCompatActivity() {
         val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         dm.enqueue(request)
         Toast.makeText(this, "Download started", Toast.LENGTH_SHORT).show()
-        btnLoadGMS.isEnabled = false
+        binding.btnLoadGMS.isEnabled = false
     }
 
 
@@ -196,14 +186,14 @@ class OthersActivity : AppCompatActivity() {
             .setTitle("Confirm")
             .setMessage("Are you sure you want to Upload the log?")
             .setPositiveButton("Confirm") { _, _ ->
-                btnUploadLog.isEnabled = false
+                binding.btnUploadLog.isEnabled = false
                 val srcDir = File("/sdcard/debuglogger")
                 val zipFile = File(getExternalFilesDir(null), "debuglogger.zip")
                 runCatching {
                     zipFolder(srcDir, zipFile)
                 }.onFailure {
                     it.printStackTrace()
-                    btnUploadLog.isEnabled = true
+                    binding.btnUploadLog.isEnabled = true
                     return@setPositiveButton
                 }
                 runCatching {
@@ -216,7 +206,7 @@ class OthersActivity : AppCompatActivity() {
                     Toast.makeText(this, "Start uploading", Toast.LENGTH_SHORT).show()
                 }.onFailure {
                     it.printStackTrace()
-                    btnUploadLog.isEnabled = true
+                    binding.btnUploadLog.isEnabled = true
                     return@setPositiveButton
                 }
             }
@@ -332,7 +322,7 @@ class OthersActivity : AppCompatActivity() {
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
                     Toast.makeText(this@OthersActivity, "Upload failed", Toast.LENGTH_SHORT).show()
-                    btnUploadLog.isEnabled = true
+                    binding.btnUploadLog.isEnabled = true
                 }
             }
 
@@ -346,7 +336,7 @@ class OthersActivity : AppCompatActivity() {
                     } else {
                         Toast.makeText(this@OthersActivity, "Upload failed: $code", Toast.LENGTH_SHORT).show()
                     }
-                    btnUploadLog.isEnabled = true
+                    binding.btnUploadLog.isEnabled = true
                 }
             }
         })

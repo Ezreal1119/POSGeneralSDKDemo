@@ -7,37 +7,29 @@ import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityMainBinding
 import kotlin.getValue
 
 class MainActivity : AppCompatActivity() {
 
-    private val btnEMV by lazy { findViewById<Button>(R.id.btnEMV) }
-    private val btnPinpad by lazy { findViewById<Button>(R.id.btnPinpad) }
-    private val btnBeeper by lazy { findViewById<Button>(R.id.btnBeeper) }
-    private val btnLed by lazy { findViewById<Button>(R.id.btnLed) }
-    private val btnPrinter by lazy { findViewById<Button>(R.id.btnPrinter) }
-    private val btnNewSerialPort by lazy { findViewById<Button>(R.id.btnNewSerialPort) }
-    private val btnCameraScan by lazy { findViewById<Button>(R.id.btnCameraScan) }
-    private val btnMagCardReader by lazy { findViewById<Button>(R.id.btnMagCardReader) }
-    private val btnICCardReader by lazy { findViewById<Button>(R.id.btnICCardReader) }
-    private val btnOthers by lazy { findViewById<Button>(R.id.btnOthers) }
-    private val btnApiTest by lazy { findViewById<Button>(R.id.btnApiTest) }
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnEMV.setOnClickListener { startActivity(Intent(this, EmvActivity::class.java)) }
-        btnPinpad.setOnClickListener { startActivity(Intent(this, PinpadActivity::class.java)) }
-        btnBeeper.setOnClickListener { startActivity(Intent(this, BeeperActivity::class.java)) }
-        btnLed.setOnClickListener { startActivity(Intent(this, LedActivity::class.java)) }
-        btnPrinter.setOnClickListener { startActivity(Intent(this, PrinterActivity::class.java))}
-        btnNewSerialPort.setOnClickListener { startActivity(Intent(this, NewSerialPortActivity::class.java)) }
-        btnCameraScan.setOnClickListener { startActivity(Intent(this, CameraScanActivity::class.java)) }
-        btnMagCardReader.setOnClickListener { startActivity(Intent(this, MagCardReaderActivity::class.java)) }
-        btnICCardReader.setOnClickListener { startActivity(Intent(this, ICCardActivity::class.java)) }
-        btnOthers.setOnClickListener { startActivity(Intent(this, OthersActivity::class.java)) }
-        btnApiTest.setOnClickListener { startActivity(Intent(this, ApiTestActivity::class.java)) }
+        binding.btnEMV.setOnClickListener { startActivity(Intent(this, EmvActivity::class.java)) }
+        binding.btnPinpad.setOnClickListener { startActivity(Intent(this, PinpadActivity::class.java)) }
+        binding.btnBeeper.setOnClickListener { startActivity(Intent(this, BeeperActivity::class.java)) }
+        binding.btnLed.setOnClickListener { startActivity(Intent(this, LedActivity::class.java)) }
+        binding.btnPrinter.setOnClickListener { startActivity(Intent(this, PrinterActivity::class.java))}
+        binding.btnNewSerialPort.setOnClickListener { startActivity(Intent(this, NewSerialPortActivity::class.java)) }
+        binding.btnCameraScan.setOnClickListener { startActivity(Intent(this, CameraScanActivity::class.java)) }
+        binding.btnMagCardReader.setOnClickListener { startActivity(Intent(this, MagCardReaderActivity::class.java)) }
+        binding.btnICCardReader.setOnClickListener { startActivity(Intent(this, ICCardActivity::class.java)) }
+        binding.btnOthers.setOnClickListener { startActivity(Intent(this, OthersActivity::class.java)) }
+        binding.btnApiTest.setOnClickListener { startActivity(Intent(this, ApiTestActivity::class.java)) }
     }
 
 

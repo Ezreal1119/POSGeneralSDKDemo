@@ -8,74 +8,75 @@ import android.widget.Button
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posgeneralsdkdemo.databinding.ActivityLedBinding
 import com.urovo.sdk.led.LEDDriverImpl
 
 class LedActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityLedBinding
     private val mLedManager = LEDDriverImpl.getInstance()
-
-    private val btnTurnOnLed by lazy { findViewById<Button>(R.id.btnTurnOnLed) }
-    private val btnTurnOffLed by lazy { findViewById<Button>(R.id.btnTurnOffLed) }
-    private val btnTurnOnAllLed by lazy { findViewById<Button>(R.id.btnTurnOnAllLed) }
-    private val btnTurnOffAllLed by lazy { findViewById<Button>(R.id.btnTurnOffAllLed) }
-    private val spLedColor by lazy { findViewById<Spinner>(R.id.spLedColor) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_led)
+        binding = ActivityLedBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        btnTurnOnLed.setOnClickListener { onTurnOnLedButtonClicked() }
-        btnTurnOffLed.setOnClickListener { onTurnOffLedButtonClicked() }
-        btnTurnOnAllLed.setOnClickListener { onTurnOnAllLedButtonClicked() }
-        btnTurnOffAllLed.setOnClickListener { onTurnOffAllLedButtonClicked() }
+        binding.btnTurnOnLed.setOnClickListener { onTurnOnLedButtonClicked() }
+        binding.btnTurnOffLed.setOnClickListener { onTurnOffLedButtonClicked() }
+        binding.btnTurnOnAllLed.setOnClickListener { onTurnOnAllLedButtonClicked() }
+        binding.btnTurnOffAllLed.setOnClickListener { onTurnOffAllLedButtonClicked() }
 
-        spLedColor.adapter = ArrayAdapter(this, simple_spinner_item, LedColor.entries).apply {
+        binding.spLedColor.adapter = ArrayAdapter(this, simple_spinner_item, LedColor.entries).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
         }
     }
 
     private fun onTurnOnLedButtonClicked() {
-        try {
-            val color = spLedColor.selectedItem as LedColor
+        runCatching {
+            val color = binding.spLedColor.selectedItem as LedColor
             mLedManager.turnOn(color.id)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Error on onTurnOnLedButtonClicked()", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 
 
     private fun onTurnOffLedButtonClicked() {
-        try {
-            val color = spLedColor.selectedItem as LedColor
+        runCatching {
+            val color = binding.spLedColor.selectedItem as LedColor
             mLedManager.turnOff(color.id)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Error on onTurnOffLedButtonClicked()", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 
 
     private fun onTurnOnAllLedButtonClicked() {
-        try {
+        runCatching {
             for (i in 1..4) {
                 mLedManager.turnOn(i)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Error on onTurnOnAllLedButtonClicked()", Toast.LENGTH_SHORT).show()
+        }.onSuccess {
+            Toast.makeText(this, "Turned on all LEDs successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure{
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 
 
     private fun onTurnOffAllLedButtonClicked() {
-        try {
+        runCatching {
             for (i in 1..4) {
                 mLedManager.turnOff(i)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Error on onTurnOffAllLedButtonClicked", Toast.LENGTH_SHORT).show()
+        }.onSuccess {
+            Toast.makeText(this, "Turned off all LEDs successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure{
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 
