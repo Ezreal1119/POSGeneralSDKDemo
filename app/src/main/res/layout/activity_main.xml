@@ -1,112 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp"
-    android:orientation="vertical">
+    android:background="@drawable/bg_gradient">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:textSize="30dp"
-        android:text="SDK Demo - Patrick"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:layout_margin="3dp"
-        android:background="@drawable/border"/>
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <!-- Top Title Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="10dp"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="3dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#E5E7EB"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="16dp"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/btnEMV"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="EMV"
+                android:text="POS SDK Demo"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:textColor="#111827"
+                android:gravity="center"/>
 
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnPinpad"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="PinPad"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnBeeper"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Beeper"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnLed"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="LED"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnPrinter"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Printer"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnNewSerialPort"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Serial Port"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnCameraScan"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Camera Scan"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnMagCardReader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="MagCardReader"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnICCardReader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="ICCardReader"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnOthers"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Others"
-                android:textSize="20sp"/>
-
-            <Button
-                android:id="@+id/btnApiTest"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="API Test"
-                android:textSize="20sp"/>
+                android:layout_marginTop="2dp"
+                android:text="Developed by Patrick"
+                android:textSize="12sp"
+                android:textColor="#9CA3AF"
+                android:gravity="center"/>
 
         </LinearLayout>
 
-    </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
 
-</LinearLayout>
+    <!-- Main Content Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardContent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp"
+        app:cardUseCompatPadding="true"
+        app:layout_constraintTop_toBottomOf="@id/cardTitle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:overScrollMode="never">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:orientation="vertical">
+
+                <!-- Quick hint -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Select a module to start"
+                    android:textSize="14sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- Buttons -->
+                <Button
+                    android:id="@+id/btnEMV"
+                    style="@style/FancyActionButton"
+                    android:text="EMV"/>
+
+                <Button
+                    android:id="@+id/btnPinpad"
+                    style="@style/FancyActionButton"
+                    android:text="PinPad"/>
+
+                <Button
+                    android:id="@+id/btnBeeper"
+                    style="@style/FancyActionButton"
+                    android:text="Beeper"/>
+
+                <Button
+                    android:id="@+id/btnLed"
+                    style="@style/FancyActionButton"
+                    android:text="LED"/>
+
+                <Button
+                    android:id="@+id/btnPrinter"
+                    style="@style/FancyActionButton"
+                    android:text="Printer"/>
+
+                <Button
+                    android:id="@+id/btnNewSerialPort"
+                    style="@style/FancyActionButton"
+                    android:text="Serial Port"/>
+
+                <Button
+                    android:id="@+id/btnCameraScan"
+                    style="@style/FancyActionButton"
+                    android:text="Camera Scan"/>
+
+                <Button
+                    android:id="@+id/btnMagCardReader"
+                    style="@style/FancyActionButton"
+                    android:text="MagCardReader"/>
+
+                <Button
+                    android:id="@+id/btnICCardReader"
+                    style="@style/FancyActionButton"
+                    android:text="ICCardReader"/>
+
+                <Button
+                    android:id="@+id/btnOthers"
+                    style="@style/FancyActionButton"
+                    android:text="Others"/>
+
+                <Button
+                    android:id="@+id/btnApiTest"
+                    style="@style/FancyActionButton"
+                    android:text="API Test"/>
+
+                <!-- Bottom spacing -->
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"/>
+
+            </LinearLayout>
+        </ScrollView>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
