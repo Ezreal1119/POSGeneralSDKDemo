@@ -24,8 +24,8 @@
             android:id="@+id/tvIntro"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Only DES(TDES) is used in this DEMO"
-            android:textSize="18sp"
+            android:text="Only TDES(16Bytes) is used in this DEMO"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:layout_gravity="center"/>
 
@@ -196,12 +196,13 @@
                     android:textSize="10sp"
                     android:padding="0dp"/>
 
+
                 <Button
-                    android:id="@+id/btnPinBlockWKOffline"
+                    android:id="@+id/btnGenerateSessionKey"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="PinBlockWK_Offline_99"
+                    android:text="Generate SessionKey"
                     android:layout_marginStart="5dp"
                     android:textSize="10sp"
                     android:padding="0dp"/>

@@ -1,6 +1,7 @@
 package com.example.posgeneralsdkdemo
 
 import android.annotation.SuppressLint
+import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothAdapter
 import android.content.ComponentName
 import android.content.Context
@@ -41,8 +42,16 @@ class ApiTestActivity : AppCompatActivity() {
         Log.e(TAG, "onCreate: $packageName", )
 
         binding.btnTest1.setOnClickListener {
-            Log.e(TAG, "btnTest1")
-            DeviceManager().setAllowInstallApps("com.example.abd", 0, 1)
+            Log.e(TAG, "onCreate: btnTest1")
+
+            val pName = "com.urovo.appmarket"
+
+            val pm = this.packageManager
+            val intent = pm.getLaunchIntentForPackage(pName)
+
+            intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            this.startActivity(intent)
+
         }
         binding.btnTest2.setOnClickListener {
             Log.e(TAG, "btnTest2")

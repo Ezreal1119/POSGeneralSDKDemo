@@ -168,6 +168,7 @@ class InstallManager : AppCompatActivity() {
         binding.btnUninstallUMS.setOnClickListener { onUninstallUMSButtonClicked() }
         binding.btnInstallAppMarketUMS.setOnClickListener { onInstallAppMarketUMSButtonClicked() }
         binding.btnUninstallAppMarketUMS.setOnClickListener { onUninstallAppMarketUMSButtonClicked() }
+        binding.btnJumpToAppMarketUms.setOnClickListener { onJumpToAppMarketUmsButtonClicked() }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -289,6 +290,15 @@ class InstallManager : AppCompatActivity() {
         }
     }
 
+    private fun onJumpToAppMarketUmsButtonClicked() {
+        runCatching {
+            val intent = packageManager.getLaunchIntentForPackage(APPMARKET_UMS_PACKAGE) ?: throw Exception("APP not installed")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        }.onFailure {
+            binding.tvResult.text = it.message
+        }
+    }
 
 
     private fun getNetworkType(): String? {

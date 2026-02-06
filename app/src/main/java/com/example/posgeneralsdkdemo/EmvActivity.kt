@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.example.posgeneralsdkdemo.databinding.ActivityEmvBinding
 import com.example.posgeneralsdkdemo.fragments.emv.AppParamsFragment
 import com.example.posgeneralsdkdemo.fragments.emv.HomeFragment
 import com.example.posgeneralsdkdemo.fragments.emv.TerminalParamsFragment
@@ -17,18 +18,18 @@ import com.urovo.i9000s.api.emv.EmvNfcKernelApi
 
 class EmvActivity : AppCompatActivity() {
 
-    private val tabLayout by lazy { findViewById<TabLayout>(R.id.tabLayout) }
-    private val viewPager by lazy { findViewById<ViewPager2>(R.id.viewPager) }
+    private lateinit var binding: ActivityEmvBinding
 
     val mEmvKernelManager: EmvNfcKernelApi by lazy { EmvNfcKernelApi.getInstance(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_emv)
+        binding = ActivityEmvBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        viewPager.adapter = MainPagerAdapter(this)
-        viewPager.offscreenPageLimit = 2
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+        binding.viewPager.adapter = MainPagerAdapter(this)
+        binding.viewPager.offscreenPageLimit = 2
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.text = when (position) {
                 0 -> "EMV"
                 1 -> "TermParams"

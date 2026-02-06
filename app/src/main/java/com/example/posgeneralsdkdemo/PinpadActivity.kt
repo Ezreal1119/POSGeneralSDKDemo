@@ -49,20 +49,20 @@ private const val TAG = "Pinpad_Patrick"
 private const val INDEX_NINETY_NINE = 99 // MK/SK
 private const val INDEX_NINE = 9// RSA
 private const val TEK = "00000000000000000000000000000000" // 16 Bytes
-private const val TEK_KCV = "8CA64DE9C1B123A7" // 8 Bytes
+private const val TEK_KCV = "8CA64D" // 6 digits
 
 private const val MK = "11111111111111111111111111111111" // 16 Bytes
 private const val E_MK = "89B07B35A1B3F47E89B07B35A1B3F47E" // // 16 Bytes
-private const val MK_KCV = "82E13665B4624DF5" // 8 Bytes
-// private const val PIN_KEY = "22222222222222222222222222222222" // 16 Bytes
+private const val MK_KCV = "82E136" // 6 digits
+private const val PIN_KEY = "22222222222222222222222222222222" // 16 Bytes
 private const val E_PIN_KEY = "950973182317F80B950973182317F80B" // 16 Bytes, encrypted from PIN_KEY
-private const val PIN_KCV = "00962B60AA556E65" // 8 Bytes
-// private const val TD_KEY = "44444444444444444444444444444444" // 16 Bytes
+private const val PIN_KCV = "00962B" // 6 digits
+private const val TD_KEY = "44444444444444444444444444444444" // 16 Bytes
 private const val E_TD_KEY = "A0C45C59F1E549BBA0C45C59F1E549BB" // 16 Bytes, encrypted from TD_KEY
-private const val TD_KCV = "E2F2434039AA34AC" // 8 Bytes
-// private const val MAC_KEY = "33333333333333334444444444444444" // 16 Bytes
+private const val TD_KCV = "E2F243" // 6 digits
+private const val MAC_KEY = "33333333333333334444444444444444" // 16 Bytes
 private const val E_MAC_KEY = "F679786E2411E3DEA0C45C59F1E549BB" // 16 Bytes, encrypted from MAC_KEY
-private const val MAC_KCV = "E18DE25ECBCF1591" // 8 Bytes
+private const val MAC_KCV = "E18DE2" // 6 digits
 
 private const val ISO8583_DATA = "1200721405D820C0820116986009010120744800000000000001000020211104115855211104115855241200000101100020015065999211101001379860090101207448D24122011374015900000012733370041988888888028602869F2608FF852238242376749F2701809F10120114A74003020000000000000000000000FF9F370478D842739F360201C7950500800080009A032111049C01009F02060000000100005F2A020860820239009F1A0208609F03060000000000009F3303E0F0C89F34034403029F3501229F1E0830303030303030308407A08600010000019F090200209F41040000000443D0964F00000000"
 private const val EMV_DATA = "9F260814E50F30268921459F2701409F1007060201039400029F3704A7D8F2329F36020601950500800000009A031901029B02E8009C0100"
@@ -117,7 +117,7 @@ class PinpadActivity : AppCompatActivity() {
             btnEncDecData.setOnClickListener { onEncDecDataButtonClicked() }
             btnCalcHash.setOnClickListener { onCalcHashButtonClicked() }
             btnPinBlockWKOnline.setOnClickListener { onPinBlockWKOnlineButtonClicked() }
-            btnPinBlockWKOffline.setOnClickListener { onPinBlockWKOfflineButtonClicked() }
+            btnGenerateSessionKey.setOnClickListener { onGenerateSessionKeyButtonClicked() }
             btnWriteTr34Data.setOnClickListener { onWriteTr34DataButtonClicked() }
             btnReadTr34Data.setOnClickListener { onReadTr34DataButtonClicked() }
             btnDownloadTr31Wk.setOnClickListener { onDownloadTr31WkButtonClicked() }
@@ -168,7 +168,8 @@ class PinpadActivity : AppCompatActivity() {
                 append(" - PIN_Key(TPK) @ KeySlot=$keySlot: ${checkPinKey}\n")
                 append(" - MAC_Key @ KeySlot=$keySlot: ${checkMacKey}\n\n")
                 append("Please Note: \n")
-                append("Check if a keySlot[0, 255] has these four types of keys or not. (Each slot can have this four types of keys, but only of its kind)")
+                append("Check if a keySlot[0, 255] has these four types of keys or not. (Each slot can have this four types of keys, but only of its kind)\n")
+                append("TD_Key is the same as ENC_DEC_Key")
             }
         }.onFailure {
             binding.tvResult.text = it.message
@@ -186,7 +187,6 @@ class PinpadActivity : AppCompatActivity() {
                 Constant.KeyType.TD_KEY,
                 Constant.KeyType.PIN_KEY,
                 Constant.KeyType.MAC_KEY,
-                Constant.KeyType.ENCDEC_KEY
             ).forEach { type ->
                 mPinpadManager.deleteKey(type, keySlot)
             }
@@ -194,7 +194,7 @@ class PinpadActivity : AppCompatActivity() {
             binding.tvResult.text = buildString {
                 append("Deleted all the Keys successfully:\n")
                 append(" - TEK / MK(TMK) @ KeySlot=$keySlot\n")
-                append(" - TD_KEY @ KeySlot=$keySlot\n")
+                append(" - TD_KEY(ENC_DEC) @ KeySlot=$keySlot\n")
                 append(" - PIN_KEY @ KeySlot=$keySlot\n")
                 append(" - MAC_KEY @ KeySlot=$keySlot")
             }
@@ -226,7 +226,6 @@ class PinpadActivity : AppCompatActivity() {
                     btnCalcHash.isEnabled = false
                     btnEncDecData.isEnabled = false
                     btnPinBlockWKOnline.isEnabled = false
-                    btnPinBlockWKOffline.isEnabled = false
                 }
                 Thread {
                     runCatching {
@@ -272,7 +271,6 @@ class PinpadActivity : AppCompatActivity() {
                             btnCalcHash.isEnabled = true
                             btnEncDecData.isEnabled = true
                             btnPinBlockWKOnline.isEnabled = true
-                            btnPinBlockWKOffline.isEnabled = true
                         }
                     }
                 }.start()
@@ -349,7 +347,8 @@ class PinpadActivity : AppCompatActivity() {
                 append("(Using the TEK of the same slot for encryption. Can be changed, will failed if no have TEK)\n")
                 append("Means: EMK ---<TEK>---> MK \n\n")
                 append("Please note:\n")
-                append("EMK(Encrypted Main Key) will be decrypted by TEK and loaded into the device. And be used to encrypt WK(Work Key) in the future.")
+                append("EMK(Encrypted Main Key) will be decrypted by TEK and loaded into the device. And be used to encrypt WK(Work Key) in the future.\n")
+                append("Can only decrypt EMK that was encrypted using DES_ECB (Can't be DEC_CBC)")
             }
         }.onFailure {
             binding.tvResult.text = it.message
@@ -381,20 +380,35 @@ class PinpadActivity : AppCompatActivity() {
             )
         }.onSuccess {
             binding.tvResult.text = buildString {
-            append("TD_KEY load result: $retTDKEy\n")
-            append("Please note: TD_KEY is used to encrypt Transaction Data\n\n")
-            append("PIN_KEY load result: $retPINKey\n")
-            append("Please note: PIN_KEY is used to encrypt PIN Data\n\n")
-            append("MAC_KEY load result: $retMACKey\n")
-            append("Please note: MAC_KEY is used to encrypt calculated MAC Data\n\n")
-            append("-> If loaded fail, might because no MK in the device")
-        }
+                append("TD_KEY load result: $retTDKEy\n")
+                append("PIN_KEY load result: $retPINKey\n")
+                append("MAC_KEY load result: $retMACKey\n\n")
+                append("Please note: TD_KEY is used to encrypt Transaction Data\n")
+                append("TD_KEY_PLAIN:\n$TD_KEY\n")
+                append("TD_KEY_E:\n$E_TD_KEY\n")
+                append("TD_KEY_KCV_CALCULATED:\n${calculateKcv(Constant.KeyType.TD_KEY, INDEX_NINETY_NINE)}\n")
+                append("TD_KEY_KCV_EXPECTED:\n$TD_KCV\n")
+                append(" - KCV is calculated by encrypting ByteArray(0) using DES_ECB(NOT DES_CBC)\n\n")
+                append("Please note: PIN_KEY is used to encrypt PIN Data\n")
+                append("PIN_KEY_PLAIN:\n$PIN_KEY\n")
+                append("PIN_KEY_E:\n$E_PIN_KEY\n")
+                append("PIN_KEY_KCV_CALCULATED:\n${calculateKcv(Constant.KeyType.PIN_KEY, INDEX_NINETY_NINE)}\n")
+                append("PIN_KEY_KCV_EXPECTED:\n$PIN_KCV\n")
+                append(" - KCV is calculated by encrypting ByteArray(0) using DES_ECB(NOT DES_CBC)\n\n")
+                append("Please note: MAC_KEY is used to encrypt calculated MAC Data\n")
+                append("MAC_KEY_PLAIN:\n$MAC_KEY\n")
+                append("MAC_KEY_E:\n$E_MAC_KEY\n")
+                append("MAC_KEY_KCV_CALCULATED:\n${calculateKcv(Constant.KeyType.MAC_KEY, INDEX_NINETY_NINE)}\n")
+                append("MAC_KEY_KCV_EXPECTED:\n$MAC_KCV\n")
+                append(" - KCV is calculated by encrypting ByteArray(0) using DES_ECB(NOT DES_CBC)\n\n")
+                append("-> If loaded fail, might because no MK in the device\n\n")
+                append("Can only decrypt WK that was encrypted using DES_ECB (Can't be DEC_CBC)")
+            }
         }.onFailure {
             binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
-
 
     private fun onCalcMacButtonClicked() {
         // Calculate MAC using given ISO8583_DATA with different algorithms.
@@ -417,7 +431,7 @@ class PinpadActivity : AppCompatActivity() {
             Pair(macX99, macX919)
         }.onSuccess { (macX99, macX919) ->
             val result = buildString {
-                append("Using MAC_Key at keySlot_99 for encryption:\n")
+                append("Using MAC_Key at keySlot_99 for to calculate MAC:\n")
                 append("MAC(ANSI X9.9): \n")
                 append(macX99)
                 append("\nExpected: \n$MAC_ANSI_99\n\n")
@@ -425,6 +439,11 @@ class PinpadActivity : AppCompatActivity() {
                 append("MAC(ANSI X9.19): \n")
                 append(macX919)
                 append("\nExpected: \n$MAC_ANSI_919\n\n")
+
+                append("Please note:\n")
+                append(" - MAC is always 8 Bytes. KCV is 6 digits")
+                append(" - MAC is used for fabrication-proof, both sides must have MAC_Key. KCV is used to verify the result, no need any Key")
+
                 append("ISO8583_DATA: \n$ISO8583_DATA")
             }
             binding.tvResult.text = result
@@ -433,7 +452,6 @@ class PinpadActivity : AppCompatActivity() {
             it.printStackTrace()
         }
     }
-
 
     private fun onEncDecDataButtonClicked() {
         // To encrypt a piece of data(e.g., TRACK_2) using TD_KEY
@@ -493,7 +511,7 @@ class PinpadActivity : AppCompatActivity() {
         }.onSuccess {
             var data: String
             binding.tvResult.text = buildString {
-                append("Using TD_Key at keySlot_99 for encryption:\n")
+                append("Using TD_Key(ENC_DEC) at keySlot_99 for encryption:\n")
                 append("Track 2: \n$TRACK2_DATA\n\n")
                 if (retDesEcb_enc == 0x00) {
                     append("Track 2(DES_ECB encrypted): \n${DataUtil.toHexString(outputDesEcb_enc)}")
@@ -581,11 +599,26 @@ class PinpadActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun onPinBlockWKOfflineButtonClicked() {
-        // Test this in EMV module, because it needs to interact with the Card for the result.
-        Toast.makeText(this, "Test this in EMV Module", Toast.LENGTH_SHORT).show()
+    private fun onGenerateSessionKeyButtonClicked() {
+        runCatching {
+            val ret = mPinpadManager.diversifiedKey(INDEX_NINETY_NINE, INDEX_NINETY_NINE, INDEX_NINETY_NINE, "00000000000000000000000000000000")
+            if (ret != 0x00) throw Exception("Generated Session Key failed")
+        }.onSuccess {
+            binding.tvResult.text = buildString {
+                append("Session PIN_KEY has been generated to KeySlot_99\n\n")
+                append("KCV_CALCULATED: \n${calculateKcv(Constant.KeyType.PIN_KEY, INDEX_NINETY_NINE)}")
+                append("Expected KCV of first SessionKey:\n8010CF\n\n")
+                append("Note:")
+                append(" - Only PIN_KEY is used in this case\n")
+                append(" - SessionKey is generated by MasterKey encrypting 2 Diversified Data(8 Bytes of 0s in this case), then combine them together.\n\n")
+                append("00962B60AA556E65(E_of_0s) + 00962B60AA556E65(E_of_0s) -> SessionKey(KCV = 8010CF)")
+            }
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun onWriteTr34DataButtonClicked() { // TR34 in this case means the [Encrypted_SessionKey + Encrypted_TR31] -> Raw Data
@@ -1211,7 +1244,17 @@ class PinpadActivity : AppCompatActivity() {
 
     // <---------------------Helper methods---------------------> //
 
-
-
+    private fun calculateKcv(keyType: Int, keyIndex: Int): String {
+        val kcvInBytes = ByteArray(8)
+        mPinpadManager.calculateDes(
+            Constant.DesMode.ENC,
+            Constant.Algorithm.DES_ECB,
+            keyType,
+            keyIndex,
+            kcvInBytes,
+            kcvInBytes
+        )
+        return BytesUtil.bytes2HexString(kcvInBytes).substring(0, 6)
+    }
 }
 
