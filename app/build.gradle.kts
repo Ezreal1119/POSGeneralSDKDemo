@@ -64,4 +64,5 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0") // For upload log
     implementation("androidx.fragment:fragment-ktx:1.6.2") // sharedViewModel for EMV
     implementation("com.hivemq:hivemq-mqtt-client:1.3.12") // For MQTT online Printer
+    implementation("com.google.code.gson:gson:2.10.1") // For design of Blind PinPad
 }

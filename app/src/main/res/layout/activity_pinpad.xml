@@ -402,9 +402,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="PinBlockDukpt"
-                    android:textSize="12sp"
-                    android:layout_marginStart="3dp"
+                    android:text="PinDukpt"
+                    android:textSize="11sp"
+                    android:layout_marginStart="1dp"
                     android:padding="0dp"/>
 
                 <Button
@@ -412,9 +412,19 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="PinBlockDukptCustom"
-                    android:textSize="12sp"
-                    android:layout_marginStart="3dp"
+                    android:text="PinDukptCustom"
+                    android:textSize="11sp"
+                    android:layout_marginStart="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnPinBlockDukptBlind"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="PinDukptBlind"
+                    android:textSize="11sp"
+                    android:layout_marginStart="1dp"
                     android:padding="0dp"/>
 
             </LinearLayout>

@@ -1,5 +1,7 @@
 package com.example.posgeneralsdkdemo.utils
 
+import kotlin.random.Random
+
 object DataUtil {
 
     fun toHexString(data: ByteArray?): String {
@@ -12,5 +14,11 @@ object DataUtil {
             sb.append(String.format("%02X", b))
         }
         return sb.toString().trim()
+    }
+
+    fun randomHex(bytes: Int): String {
+        return ByteArray(bytes).also {
+            Random.nextBytes(it)
+        }.joinToString("") { "%02X".format(it) }
     }
 }

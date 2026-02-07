@@ -26,6 +26,7 @@ import com.example.posgeneralsdkdemo.utils.DebugUtil
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
 import com.example.posgeneralsdkdemo.utils.PinpadUtil
 import com.example.posgeneralsdkdemo.utils.PinpadUtil.toHexString
+import com.example.posgeneralsdkdemo.utils.ScreenUtil
 import com.example.posgeneralsdkdemo.utils.Tr34Type
 import com.urovo.i9000s.api.emv.ContantPara
 import com.urovo.sdk.pinpad.PinPadProviderImpl
@@ -131,6 +132,7 @@ class PinpadActivity : AppCompatActivity() {
             btnEMVDecDukpt.setOnClickListener { onEMVDecDukptButtonClicked() }
             btnPinBlockDukpt.setOnClickListener { onPinBlockDukptButtonClicked() }
             btnPinBlockDukptCustom.setOnClickListener { onPinBlockDukptCustomButtonClicked() }
+            btnPinBlockDukptBlind.setOnClickListener { onPinBlockDukptBlindButtonClicked() }
             btnGenerateRsa.setOnClickListener { onGenerateRsaButtonClicked() }
             btnReadRsaPublicKey.setOnClickListener { onReadRsaPublicKeyButtonClicked() }
             btnRsaEnc.setOnClickListener { onRsaEncButtonClicked() }
@@ -983,13 +985,36 @@ class PinpadActivity : AppCompatActivity() {
         val okBitemap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "ok_butt_off.png")
         val backspaceBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "back_white.png.png")
         val imageViewBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "lock_art.png")
-        val bodyBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "bg_720x1280.png")
-        val strJson = PinpadUtil.getJson("json_custom4_720x1280.json", this@PinpadActivity)
+        var bodyBitmap: Bitmap?
+        var strJson: String
+        if (ScreenUtil.getScreenWidth(this) == 720) {
+            bodyBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "bg_720x1280.png")
+            strJson = PinpadUtil.getJson("json_custom4_720x1280.json", this@PinpadActivity)
+        } else {
+            bodyBitmap = PinpadUtil.getImageFromAssetsFile(this@PinpadActivity, "bg_480x800.png")
+            strJson = PinpadUtil.getJson("json_custom4_480x800.json", this@PinpadActivity)
+        }
+        /*
+            public static final int SECURITY_KEYBOARD_TITLE = 0;
+            public static final int SECURITY_KEYBOARD_INFO = 1;
+            public static final int SECURITY_KEYBOARD_PASSWORD = 2;
+            public static final int SECURITY_KEYBOARD_KEY_NUMBER = 3;
+            public static final int SECURITY_KEYBOARD_KEY_CANCEL = 4;
+            public static final int SECURITY_KEYBOARD_KEY_DELETE = 5;
+            public static final int SECURITY_KEYBOARD_KEY_OK = 6;
+            public static final int SECURITY_KEYBOARD_HEAD = 7;
+            public static final int SECURITY_KEYBOARD_MONEY = 8;
+            public static final int SECURITY_KEYBOARD_VIEW = 9;
+            public static final int SECURITY_KEYBOARD_KEY_BLANK = 10;
+            public static final int SECURITY_KEYBOARD_KEY = 11;
+            public static final int SECURITY_KEYBOARD_BODY = 12;
+            public static final int SECURITY_KEYBOARD_BACKSPACE = 13;
+         */
         val backgroundColor = intArrayOf(0X00FFFFFF, 0X00FFFFFF, 0X00FFFFFF, 0X00e3452f, 0X00895623, 0X00258945, 0X00364952, 0XFF123456.toInt(), 0XFF876328.toInt(), 0X00FFFFFF, 0XFF877454.toInt(), 0X00FFFFFF, 0xff1234FF.toInt(), 0X001c1c1c)
         val textColor = intArrayOf(Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE)
 
         val pinpadBundle = Bundle().apply {
-            putString(PinParams.CARD_NO.tag, PAN) // The field is a Must for generating PINBlock
+            putString(PinParams.CARD_NO.tag, PAN) // The field is a Must for generating PINBlock (Online PIN)
             putString(PinParams.TITLE.tag, PAD_TITLE) // "" by default
             putString(PinParams.MESSAGE.tag, PAD_MESSAGE) // "" by default
             putString(PinParams.INFO_LOCATION.tag, CENTER) // CENTER by default. Can change to LEFT or RIGHT
@@ -1022,6 +1047,60 @@ class PinpadActivity : AppCompatActivity() {
             it.printStackTrace()
         }
     }
+
+    private fun onPinBlockDukptBlindButtonClicked() {
+        Toast.makeText(this, "Not yet implemented", Toast.LENGTH_SHORT).show()
+        return
+
+        var strJson: String
+        strJson = PinpadUtil.getJson("json_custom_blind_720x1280.json", this@PinpadActivity)
+//        val jsonPinpad = Gson()
+        /*
+         public static final int SECURITY_KEYBOARD_TITLE = 0;
+         public static final int SECURITY_KEYBOARD_INFO = 1;
+         public static final int SECURITY_KEYBOARD_PASSWORD = 2;
+         public static final int SECURITY_KEYBOARD_KEY_NUMBER = 3;
+         public static final int SECURITY_KEYBOARD_KEY_CANCEL = 4;
+         public static final int SECURITY_KEYBOARD_KEY_DELETE = 5;
+         public static final int SECURITY_KEYBOARD_KEY_OK = 6;
+         public static final int SECURITY_KEYBOARD_HEAD = 7;
+         public static final int SECURITY_KEYBOARD_MONEY = 8;
+         public static final int SECURITY_KEYBOARD_VIEW = 9;
+         public static final int SECURITY_KEYBOARD_KEY_BLANK = 10;
+         public static final int SECURITY_KEYBOARD_KEY = 11;
+         public static final int SECURITY_KEYBOARD_BODY = 12;
+         public static final int SECURITY_KEYBOARD_BACKSPACE = 13;
+      */
+        val textColor = intArrayOf(Color.BLACK, Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK)
+
+        val pinpadBundle = Bundle().apply {
+            putString(PinParams.CARD_NO.tag, PAN) // The field is a Must for generating PINBlock (Online PIN)
+            putString(PinParams.TITLE.tag, PAD_TITLE) // "" by default
+            putString(PinParams.MESSAGE.tag, PAD_MESSAGE) // "" by default
+            putString(PinParams.INFO_LOCATION.tag, CENTER) // CENTER by default. Can change to LEFT or RIGHT
+            putBoolean(PinParams.ONLINE_PIN.tag, true) // Custom Dukpt PinPad for Online PIN
+            putBoolean(PinParams.SOUND.tag, true) // Sound will be turned on when using the PinPad (lasting effect); "false" by default
+            putBoolean(PinParams.BYPASS.tag, false) // Support 0 PIN or not. false by default.
+            putString(PinParams.SUPPORT_PIN_LEN.tag, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
+            putBoolean(PinParams.FULL_SCREEN.tag, true) // true by default. Won't have Cancel button when half screen
+            putLong(PinParams.TIMEOUT_MS.tag, TIMEOUT_MS) // Time out since opening the Pad. 0 by default, must set!
+            putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
+            putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.tag, false)
+            putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.tag, false) // false by default. Only by this, Custom UI can take place
+            putInt(PinParams.PIN_KEY_NO.tag, Dukpt.PIN.index) // The keySlot of the PIN_KEY to use for encryption. Must Set since onlinePin must be encrypted!
+
+            putBoolean(PinParams.CUSTOMIZATION.tag, true)
+            putString(PinParams.STR_JSON.tag, strJson)
+            putIntArray(PinParams.TEXT_COLOR.tag, textColor)
+        }
+        runCatching {
+            mPinpadManager.GetDukptPinBlock(pinpadBundle, mPinInputListener)
+        }.onFailure {
+            binding.tvResult.text = it.message
+            it.printStackTrace()
+        }
+    }
+
 
     private fun onGenerateRsaButtonClicked() {
         binding.apply {

@@ -152,30 +152,32 @@
                     android:layout_height="wrap_content"
                     android:hint="Please enter APDU"/>
 
-                <Button
-                    android:id="@+id/btnCheckCardIn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="0dp"
-                    android:text="Check Card In(ICC/PSAM_1_2)"
-                    android:textSize="20sp" />
-
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <Button
-                        android:id="@+id/btnSle4442"
-                        android:layout_width="match_parent"
+                        android:id="@+id/btnCheckCardIn"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="SLE4442"
-                        android:textSize="20sp"
+                        android:layout_weight="1"
+                        android:padding="0dp"
+                        android:text="Check Card In"
+                        android:layout_margin="1dp"
+                        android:textSize="15sp" />
+
+                    <Button
+                        android:id="@+id/btnSleCard"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="SLE4442/SLE4428"
+                        android:layout_margin="1dp"
+                        android:textSize="15sp"
                         android:padding="0dp"/>
 
                 </LinearLayout>
-
 
             </LinearLayout>
 

@@ -143,15 +143,6 @@
                     android:drawableEnd="@drawable/settings_icon"
                     />
 
-                <Button
-                    android:id="@+id/btnApiTest"
-                    style="@style/FancyActionButton"
-                    android:text="API Test"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="italic"
-                    android:drawableEnd="@drawable/api_icon"
-                    />
 
                 <Button
                     android:id="@+id/btnCameraScan"
@@ -191,6 +182,17 @@
                     android:textSize="18sp"
                     android:textStyle="italic"
                     android:drawableEnd="@drawable/serial_port_icon"
+                    />
+
+
+                <Button
+                    android:id="@+id/btnApiTest"
+                    style="@style/FancyActionButton"
+                    android:text="API Test"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/api_icon"
                     />
 
                 <!-- Bottom spacing -->

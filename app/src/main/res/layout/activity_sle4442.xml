@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,188 +6,16 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tvIntro"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:textSize="25dp"
-        android:text="SLE4442 Demo - Patrick"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:layout_margin="5dp"
-        android:background="@drawable/border"/>
-
-    <LinearLayout
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/border"
-        android:layout_margin="5dp"
-        android:orientation="horizontal">
+        app:tabIndicatorFullWidth="false"/>
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Data: "
-            android:textSize="25sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_margin="5dp"/>
-
-        <EditText
-            android:id="@+id/etSle4442Data"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:layout_weight="2"
-            android:text="F0F0F0F0F0F0F0F0F0F0"
-            android:textSize="15sp"/>
-
-    </LinearLayout>
-
-    <ScrollView
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="5dp"
-        android:background="@drawable/border">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="3dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnPowerUpSle4442"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="1dp"
-                    android:text="Power Up SLE4442"
-                    android:textSize="13sp"
-                    android:padding="0dp"/>
-
-
-
-                <Button
-                    android:id="@+id/btnPowerDownSle4442"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="1dp"
-                    android:text="Power Down SLE4442"
-                    android:textSize="13sp"
-                    android:padding="0dp"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnResetSle4442"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="1dp"
-                    android:text="Activate(Reset) SLE4442"
-                    android:textSize="13sp"
-                    android:padding="0dp"/>
-
-                <Button
-                    android:id="@+id/btnDeactivateSle4442"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="1dp"
-                    android:text="Deactivate SLE4442"
-                    android:textSize="13sp"
-                    android:padding="0dp"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnWriteSle4442"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="1dp"
-                    android:text="Write Data to SLE4442"
-                    android:textSize="13sp"
-                    android:padding="0dp"/>
-
-                <Button
-                    android:id="@+id/btnReadSle4442"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="1dp"
-                    android:text="Read Data from SLE4442"
-                    android:textSize="13sp"
-                    android:padding="0dp"/>
-
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnWriteSle4442Protected"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="1dp"
-                    android:text="Write Sle4442 Protected"
-                    android:textSize="13sp"
-                    android:padding="0dp"/>
-
-                <Button
-                    android:id="@+id/btnReadSle4442Protected"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_margin="1dp"
-                    android:text="Read Sle4442 Protected"
-                    android:textSize="13sp"
-                    android:padding="0dp"/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </ScrollView>
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="5dp"
-        android:background="@drawable/border"
-        android:padding="5dp">
-
-        <TextView
-            android:id="@+id/tvResult"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"/>
-
-    </ScrollView>
-
+        android:layout_weight="1"/>
 
 </LinearLayout>

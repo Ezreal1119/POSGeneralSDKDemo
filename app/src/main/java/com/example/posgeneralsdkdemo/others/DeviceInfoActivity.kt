@@ -18,6 +18,7 @@ import com.example.posgeneralsdkdemo.R
 import com.example.posgeneralsdkdemo.databinding.ActivityDeviceInfoBinding
 import com.example.posgeneralsdkdemo.utils.DeviceInfoUtil
 import com.urovo.sdk.utils.SystemProperties.getSystemProperty
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.security.KeyPairGenerator
 import java.security.KeyStore
@@ -69,7 +70,8 @@ class DeviceInfoActivity : AppCompatActivity() {
                 append("GMS: ${isPackageInstalled("com.google.android.gms")}\n")
                 append("GSF: ${isPackageInstalled("com.google.android.gsf")}\n")
                 append("Chrome: ${isPackageInstalled("com.android.chrome")}\n")
-                append("PlayStore: ${isPackageInstalled("com.android.vending")}\n\n")
+                append("PlayStore: ${isPackageInstalled("com.android.vending")}\n")
+                append("Maps: ${isPackageInstalled("com.google.android.apps.maps")}\n\n")
 
                 append("OTA Firmware version:\n")
                 append("OS version: \n - ${getOSVersion()}\n")
@@ -101,7 +103,7 @@ class DeviceInfoActivity : AppCompatActivity() {
                 append("UTMS: ${isPackageInstalled("com.urovo.utms")}\n")
                 append("AppMarket_UTMS: ${isPackageInstalled("com.urovo.utms.appmarket")}\n\n")
 
-                append("Location Providers: \n${getLocationProviders()}")
+                append("Location Providers: \n${getLocationProviders()}\n")
             }
         }.onFailure {
             binding.tvResult.text = it.message

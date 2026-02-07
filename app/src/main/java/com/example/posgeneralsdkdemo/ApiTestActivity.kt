@@ -1,6 +1,9 @@
 package com.example.posgeneralsdkdemo
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.ComponentCaller
 import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothAdapter
 import android.content.ComponentName
@@ -33,6 +36,8 @@ import java.security.Permission
 import java.util.Locale
 
 private const val TAG = "Patrick"
+private val PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+private const val PERMISSION_REQ_SCAN = 1001
 class ApiTestActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityApiTestBinding
@@ -47,136 +52,58 @@ class ApiTestActivity : AppCompatActivity() {
         Log.e(TAG, "onCreate: $packageName", )
 
         binding.btnTest1.setOnClickListener {
-            Log.e(TAG, "onCreate: btnTest1")
-
-
-            tts = TextToSpeech(this) { status ->
-                if (status == TextToSpeech.SUCCESS) {
-                    tts.language = Locale.ITALIAN
-                    tts.setSpeechRate(1F)
-                    tts.setPitch(1F)
-                    tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                        override fun onDone(utteranceId: String?) {
-                            Log.e(TAG, "onDone: ", )
-                        }
-
-                        override fun onError(utteranceId: String?) {
-                            Log.e(TAG, "onError: ", )
-                        }
-
-                        override fun onStart(utteranceId: String?) {
-                            Log.e(TAG, "onStart: ", )
-                        }
-                    })
-
-                    tts.speak(
-                        "Ciao, sono Patrick. Ciao Ciao?",
-                        TextToSpeech.QUEUE_FLUSH,
-                        null,
-                        "speechId1"
-                    )
-                }
+            if (!PermissionUtil.requestPermissions(this, PERMISSIONS, PERMISSION_REQ_SCAN)) {
+                Toast.makeText(this, "Please grant camera permission first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
-
-
+            val intent = Intent("com.ubx.scandemo.SCAN").apply {
+                putExtra("camera", 1)
+                putExtra("timeout", 30)
+                putExtra("title", "Scan")
+                putExtra("up_prompt", "")
+                putExtra("down_prompt", "")
+                putExtra("flash_enable", true)
+            }
+            startActivityForResult(intent, 1002)
         }
-        binding.btnTest2.setOnClickListener {
-            Log.e(TAG, "btnTest2")
-            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("Global-ntp_server")}", )
-            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("persist-persist.sys.timezone")}", )
-            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("persist-persist.sys.settimezone")}", )
-
-        }
-        binding.btnTest3.setOnClickListener {
-            Log.e(TAG, "btnTest3")
-            DeviceManager().setAllowInstallApps("com.example.abd", 0, 2)
-        }
-        binding.btnTest4.setOnClickListener {
-        }
-
-        DeviceManager().setDeviceOwner(ComponentName.unflattenFromString("${packageName}/${MainActivity::class.java.name}"))
-        runCatching {
-            Log.e(TAG, "onCreate: ${DeviceManager().deviceOwner}", )
-
-        }.onFailure {
-            it.printStackTrace()
-        }
-        DeviceManager().setDeviceOwner(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN))
+//        binding.btnTest2.setOnClickListener {
+//            Log.e(TAG, "btnTest2")
+//            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("Global-ntp_server")}", )
+//            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("persist-persist.sys.timezone")}", )
+//            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("persist-persist.sys.settimezone")}", )
+//
+//        }
+//        binding.btnTest3.setOnClickListener {
+//            Log.e(TAG, "btnTest3")
+//            DeviceManager().setAllowInstallApps("com.example.abd", 0, 2)
+//        }
+//        binding.btnTest4.setOnClickListener {
+//        }
+//
+//        DeviceManager().setDeviceOwner(ComponentName.unflattenFromString("${packageName}/${MainActivity::class.java.name}"))
+//        runCatching {
+//            Log.e(TAG, "onCreate: ${DeviceManager().deviceOwner}", )
+//
+//        }.onFailure {
+//            it.printStackTrace()
+//        }
+//        DeviceManager().setDeviceOwner(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN))
 
     }
 
-    fun printText(ip: String, port: Int = 9100, text: String) {
-        Thread {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+    ) {
+        super.onActivityResult(requestCode, resultCode, data)
 
-            var socket: Socket? = null
-            try {
-                socket = Socket(ip, port)
-                socket.soTimeout = 5000
-
-                val out = socket.getOutputStream()
-
-
-                out.write(byteArrayOf(0x1B, 0x40)) // Initialize
-                out.write(text.toByteArray(Charsets.UTF_8))
-                out.write(byteArrayOf(0x0A)) // feed line
-
-
-                out.flush()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                try { socket?.close() } catch (_: Exception) {}
-            }
-        }.start()
-    }
-
-
-
-
-    fun initTtsAndSpeak(context: Context) {
-        tts = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-
-                // 设置西班牙语（西班牙）
-                val result = tts.setLanguage(Locale("es", "ES"))
-
-                if (result == TextToSpeech.LANG_MISSING_DATA ||
-                    result == TextToSpeech.LANG_NOT_SUPPORTED
-                ) {
-                    Log.e("TTS", "Spanish language not supported or missing data")
-                    return@TextToSpeech
+        if (requestCode == 1002) {
+            if (resultCode == RESULT_OK) {
+                val scanResult = data?.getStringExtra("scan_result")
+                runOnUiThread {
+                    Toast.makeText(this, scanResult, Toast.LENGTH_SHORT).show()
                 }
-
-                // 可选：语速 & 音调
-                tts.setSpeechRate(1.0f)   // 1.0 = 正常
-                tts.setPitch(1.0f)        // 1.0 = 正常
-
-                // 监听播报状态（很重要，POS 常用）
-                tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                    override fun onStart(utteranceId: String) {
-                        Log.d("TTS", "Speech started: $utteranceId")
-                    }
-
-                    override fun onDone(utteranceId: String) {
-                        Log.d("TTS", "Speech done: $utteranceId")
-                    }
-
-                    override fun onError(utteranceId: String) {
-                        Log.e("TTS", "Speech error: $utteranceId")
-                    }
-                })
-
-                // 西班牙语内容（一定要写西语）
-                val spanishText = "Hola, este es Patrick hablando. ¿Cómo estás?"
-
-                tts.speak(
-                    spanishText,
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "spanish_speech_001"
-                )
-            } else {
-                Log.e("TTS", "TTS init failed")
             }
         }
     }

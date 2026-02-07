@@ -43,26 +43,26 @@
                 android:text="btnTest1"
                 android:textSize="20sp"/>
 
-            <Button
-                android:id="@+id/btnTest2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="btnTest2"
-                android:textSize="20sp"/>
+<!--            <Button-->
+<!--                android:id="@+id/btnTest2"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="btnTest2"-->
+<!--                android:textSize="20sp"/>-->
 
-            <Button
-                android:id="@+id/btnTest3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="btnTest3"
-                android:textSize="20sp"/>
+<!--            <Button-->
+<!--                android:id="@+id/btnTest3"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="btnTest3"-->
+<!--                android:textSize="20sp"/>-->
 
-            <Button
-                android:id="@+id/btnTest4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="btnTest4"
-                android:textSize="20sp"/>
+<!--            <Button-->
+<!--                android:id="@+id/btnTest4"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="btnTest4"-->
+<!--                android:textSize="20sp"/>-->
 
             <ImageView
                 android:id="@+id/ivTest"

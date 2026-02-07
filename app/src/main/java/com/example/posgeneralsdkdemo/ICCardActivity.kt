@@ -6,15 +6,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.Spinner
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posgeneralsdkdemo.databinding.ActivityIccardBinding
-import com.example.posgeneralsdkdemo.iccard.Sle4442Activity
+import com.example.posgeneralsdkdemo.iccard.SleCardActivity
 import com.example.posgeneralsdkdemo.utils.DebugUtil
 import com.urovo.sdk.insertcard.InsertCardHandlerImpl
 import com.urovo.sdk.utils.BytesUtil
@@ -62,7 +59,7 @@ class ICCardActivity : AppCompatActivity() {
         binding.btnPowerOff.setOnClickListener { onPowerOffButtonClicked() }
         binding.btnCheckCardIn.setOnClickListener { onCheckCardInButtonClicked() }
         binding.btnSendApdu.setOnClickListener { onSendApduButtonClicked() }
-        binding.btnSle4442.setOnClickListener { startActivity(Intent(this, Sle4442Activity::class.java)) }
+        binding.btnSleCard.setOnClickListener { startActivity(Intent(this, SleCardActivity::class.java)) }
 
         binding.spCardType.adapter = ArrayAdapter(this, simple_spinner_item, cardTypeArray).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
@@ -98,37 +95,7 @@ class ICCardActivity : AppCompatActivity() {
         binding.btnPowerOn.isEnabled = false
         binding.btnStopSearch.isEnabled = true
         Toast.makeText(this, "Please insert ICCard", Toast.LENGTH_SHORT).show()
-        startDetectOnce (object : CardDetectListener {
-            override fun onDetected() {
-                binding.btnStopSearch.isEnabled = false
-                Toast.makeText(this@ICCardActivity, "Card detected", Toast.LENGTH_SHORT).show()
-                val atrBuffer = ByteArray(64)
-                val selectedCardType = binding.spCardType.selectedItem as CardType
-                runCatching {
-                    val outputLen = mICCardReaderManager.powerUp(selectedCardType.slot, atrBuffer)
-                    if (outputLen <= 0) throw Exception("Power on failed")
-                    return@runCatching outputLen
-                }.onSuccess { outputLen ->
-                    uiRefreshOnPowerOn()
-                    val data = atrBuffer.copyOf(outputLen)
-                    binding.tvResult.text = buildString {
-                        append("Power on successfully! ATR: \n")
-                        append(BytesUtil.bytes2HexString(data))
-                        append("\n\n")
-                        append("Note: if any ATR(Answer to Reset) returns, then means ICC is powered on successfully.")
-                    }
-                    binding.spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_PSE))
-                }.onFailure {
-                    binding.tvResult.text = it.message
-                    it.printStackTrace()
-                }
-            }
-
-            override fun onTimeout() {
-                Toast.makeText(this@ICCardActivity, "Timeout=20s!", Toast.LENGTH_SHORT).show()
-                uiRefreshOnPowerOff()
-            }
-        })
+        startDetectCardStatusChanged(false, mCardDetectListener)
     }
 
     private fun onStopSearchButtonClicked() {
@@ -155,6 +122,8 @@ class ICCardActivity : AppCompatActivity() {
             return@runCatching outputLen
         }.onSuccess { outputLen ->
             uiRefreshOnPowerOn()
+            startDetectCardStatusChanged(true, mCardDetectListener)
+            Toast.makeText(this, "Powered on ICC successfully", Toast.LENGTH_SHORT).show()
             val data = atrBuffer.copyOf(outputLen)
             binding.tvResult.text = buildString {
                 append("Power on successfully! ATR: \n")
@@ -317,30 +286,55 @@ class ICCardActivity : AppCompatActivity() {
     // <-----------------------------Helper methods-----------------------------> //
 
     private interface CardDetectListener {
-        fun onDetected()
+        fun onDetectCardIn()
+        fun onDetectCardOut()
         fun onTimeout()
     }
 
+    private val handler = Handler(Looper.getMainLooper())
+    private var timeoutRunnable: Runnable? = null
     private lateinit var detectThread: Thread
 
-    private fun startDetectOnce(listener: CardDetectListener) {
-        detectThread = Thread {
-            Handler(Looper.getMainLooper()).postDelayed({
-                listener.onTimeout()
-                detectThread.interrupt()
-            }, 20000)
-            while (true) {
-                if (mICCardReaderManager.isCardIn) {
-                    runOnUiThread { listener.onDetected() }
-                    return@Thread
+    private fun startDetectCardStatusChanged(isReadingCard: Boolean = false, listener: CardDetectListener) {
+        if (!mICCardReaderManager.isCardIn) {
+            detectThread = Thread {
+                timeoutRunnable = Runnable {
+                    listener.onTimeout()
+                    detectThread.interrupt()
                 }
-                runCatching {
-                    Thread.sleep(50)
-                }.onFailure {
-                    return@Thread
+                handler.postDelayed(timeoutRunnable!!, 20000)
+                while (!Thread.currentThread().isInterrupted) {
+                    if (mICCardReaderManager.isCardIn) {
+                        handler.removeCallbacks(timeoutRunnable!!)
+                        runOnUiThread { listener.onDetectCardIn() }
+                        return@Thread
+                    }
+                    runCatching {
+                        Thread.sleep(50)
+                    }.onFailure {
+                        return@Thread
+                    }
                 }
+            }.apply { start() }
+        } else {
+            if (isReadingCard) {
+                Thread {
+                    while(!Thread.currentThread().isInterrupted) {
+                        if (!mICCardReaderManager.isCardIn) {
+                            runOnUiThread { listener.onDetectCardOut() }
+                            return@Thread
+                        }
+                        runCatching {
+                            Thread.sleep(50)
+                        }.onFailure {
+                            return@Thread
+                        }
+                    }
+                }.start()
+            } else {
+                onPowerOnButtonClicked()
             }
-        }.apply { start() }
+        }
     }
 
 
@@ -488,6 +482,7 @@ class ICCardActivity : AppCompatActivity() {
         binding.btnPowerOff.isEnabled = true
         binding.btnSendApdu.isEnabled = true
         binding.btnStartSearch.isEnabled = false
+        binding.btnStopSearch.isEnabled = false
     }
 
     private fun uiRefreshOnPowerOff() {
@@ -496,6 +491,43 @@ class ICCardActivity : AppCompatActivity() {
         binding.btnPowerOff.isEnabled = false
         binding.btnSendApdu.isEnabled = false
         binding.btnStopSearch.isEnabled = false
+    }
+
+    private val mCardDetectListener = object : CardDetectListener {
+        override fun onDetectCardIn() {
+            binding.btnStopSearch.isEnabled = false
+            Toast.makeText(this@ICCardActivity, "Card detected", Toast.LENGTH_SHORT).show()
+            val atrBuffer = ByteArray(64)
+            val selectedCardType = binding.spCardType.selectedItem as CardType
+            runCatching {
+                val outputLen = mICCardReaderManager.powerUp(selectedCardType.slot, atrBuffer)
+                if (outputLen <= 0) throw Exception("Power on failed")
+                return@runCatching outputLen
+            }.onSuccess { outputLen ->
+                uiRefreshOnPowerOn()
+                val data = atrBuffer.copyOf(outputLen)
+                startDetectCardStatusChanged(true, this)
+                binding.tvResult.text = buildString {
+                    append("Power on successfully! ATR: \n")
+                    append(BytesUtil.bytes2HexString(data))
+                    append("\n\n")
+                    append("Note: if any ATR(Answer to Reset) returns, then means ICC is powered on successfully.")
+                }
+                binding.spApdu.setSelection(apduCommandArray.indexOf(ApduCommand.SELECT_PSE))
+            }.onFailure {
+                binding.tvResult.text = it.message
+                it.printStackTrace()
+            }
+        }
+
+        override fun onDetectCardOut() {
+            onPowerOffButtonClicked()
+        }
+
+        override fun onTimeout() {
+            Toast.makeText(this@ICCardActivity, "Timeout=20s!", Toast.LENGTH_SHORT).show()
+            uiRefreshOnPowerOff()
+        }
     }
 }
 
