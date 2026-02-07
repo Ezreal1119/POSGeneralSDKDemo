@@ -1,9 +1,17 @@
 package com.example.posgeneralsdkdemo.others
 
+import android.app.AlarmManager
+import android.app.AlertDialog
 import android.app.admin.DevicePolicyManager
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.device.DeviceManager
 import android.os.Bundle
 import android.provider.Settings
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -15,6 +23,7 @@ import com.example.posgeneralsdkdemo.R
 import com.example.posgeneralsdkdemo.databinding.ActivitySettingsBinding
 import com.example.posgeneralsdkdemo.utils.PermissionUtil
 import com.google.android.material.slider.Slider
+import java.util.Locale
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -32,8 +41,41 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnDeleteApnByName.setOnClickListener { onDeleteApnByNameButtonClicked() }
         binding.btnSetLockPassword.setOnClickListener { onSetLockPasswordButtonClicked() }
         binding.btnClearLockPassword.setOnClickListener { onClearLockPasswordButtonClicked() }
+        binding.btnTtsTest.setOnClickListener { onTtsTestButtonClicked() }
+        binding.btnGetTimeSettings.setOnClickListener { onGetTimeSettingsButtonClicked() }
+        binding.btnSetTimeSettings.setOnClickListener { onSetTimeSettingsButtonClicked() }
     }
 
+
+    private fun onGetTimeSettingsButtonClicked() {
+        runCatching {
+            val ntpServer = DeviceManager().getSettingProperty("Global-ntp_server")
+            val timeZone = DeviceManager().getSettingProperty("persist-persist.sys.timezone")
+            return@runCatching Pair(ntpServer, timeZone)
+        }.onSuccess { (ntpServer, timeZone) ->
+            Toast.makeText(this, "ntpServer: $ntpServer\nTimeZone: $timeZone", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onSetTimeSettingsButtonClicked() {
+        runCatching {
+            AlertDialog.Builder(this)
+                .setTitle("Confirm")
+                .setMessage("The device will reboot to change TimeZone to 'America/Los_Angeles', are you sure?")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Confirm") { _, _ ->
+                    DeviceManager().setSettingProperty("persist-persist.sys.timezone", "America/Los_Angeles")
+                    DeviceManager().shutdown(true)
+                }
+                .show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
 
     private fun onGetBrightnessButtonClicked() {
         runCatching {
@@ -110,5 +152,39 @@ class SettingsActivity : AppCompatActivity() {
             it.printStackTrace()
         }
     }
+
+
+    private fun onTtsTestButtonClicked() {
+        lateinit var tts: TextToSpeech
+        runCatching {
+            tts = TextToSpeech(this) { status ->
+                if (status != TextToSpeech.SUCCESS) return@TextToSpeech
+                tts.language = Locale.JAPANESE
+                tts.setSpeechRate(0.95f)
+                tts.setPitch(1.05f)
+                tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onDone(utteranceId: String?) {
+                        runOnUiThread {
+                            Toast.makeText(this@SettingsActivity, "Finished TTS!", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onError(utteranceId: String?) {
+                    }
+
+                    override fun onStart(utteranceId: String?) {
+                    }
+                })
+
+                tts.speak(
+                    "真実はいつもひとつ！",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "conan_truth"
+                )
+            }
+        }
+    }
+
 
 }

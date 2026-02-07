@@ -71,7 +71,6 @@ import java.util.Hashtable
 import java.util.Locale
 
 private const val TAG = "EmvActivity_HomeFragment"
-const val PREFS_NAME = "emv_prefs"
 const val PIN_TRY_TIMES = "pinTryTimes"
 class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
@@ -105,7 +104,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     private lateinit var backCallback: OnBackPressedCallback
     private var amountEx: Float = 0F
     private lateinit var cardReadMode: CardReadMode
-    private lateinit var sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences
+        get() = (requireActivity() as EmvActivity).sharedPreferences
     private lateinit var mySoundTool: SoundTool
     private val sharedVm: SharedVm by activityViewModels()
     private val arrayOfAmount = arrayOf(
@@ -131,7 +131,6 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        sharedPreferences = requireContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         mySoundTool = SoundTool.getMySound(requireContext())
         backCallback = object : OnBackPressedCallback(false) {
             override fun handleOnBackPressed() {}

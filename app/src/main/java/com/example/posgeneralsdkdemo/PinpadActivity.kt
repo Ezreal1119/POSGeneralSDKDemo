@@ -320,6 +320,7 @@ class PinpadActivity : AppCompatActivity() {
             }
         }.onFailure {
             binding.tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -605,8 +606,8 @@ class PinpadActivity : AppCompatActivity() {
             if (ret != 0x00) throw Exception("Generated Session Key failed")
         }.onSuccess {
             binding.tvResult.text = buildString {
-                append("Session PIN_KEY has been generated to KeySlot_99\n\n")
-                append("KCV_CALCULATED: \n${calculateKcv(Constant.KeyType.PIN_KEY, INDEX_NINETY_NINE)}")
+                append("Session PIN_KEY has been generated to KeySlot_99 (Using current PIN_KEY at this slot as MasterKey)\n\n")
+                append("KCV_CALCULATED: \n${calculateKcv(Constant.KeyType.PIN_KEY, INDEX_NINETY_NINE)}\n")
                 append("Expected KCV of first SessionKey:\n8010CF\n\n")
                 append("Note:")
                 append(" - Only PIN_KEY is used in this case\n")

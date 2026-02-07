@@ -13,6 +13,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.Settings
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.telephony.SubscriptionManager
 import android.util.Log
 import android.widget.Button
@@ -28,11 +30,14 @@ import java.io.FileOutputStream
 import java.net.Socket
 import java.nio.charset.Charset
 import java.security.Permission
+import java.util.Locale
 
 private const val TAG = "Patrick"
 class ApiTestActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityApiTestBinding
+    lateinit var tts: TextToSpeech
+
 
     @SuppressLint("MissingPermission", "ServiceCast")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,19 +49,43 @@ class ApiTestActivity : AppCompatActivity() {
         binding.btnTest1.setOnClickListener {
             Log.e(TAG, "onCreate: btnTest1")
 
-            val pName = "com.urovo.appmarket"
 
-            val pm = this.packageManager
-            val intent = pm.getLaunchIntentForPackage(pName)
+            tts = TextToSpeech(this) { status ->
+                if (status == TextToSpeech.SUCCESS) {
+                    tts.language = Locale.ITALIAN
+                    tts.setSpeechRate(1F)
+                    tts.setPitch(1F)
+                    tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                        override fun onDone(utteranceId: String?) {
+                            Log.e(TAG, "onDone: ", )
+                        }
 
-            intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            this.startActivity(intent)
+                        override fun onError(utteranceId: String?) {
+                            Log.e(TAG, "onError: ", )
+                        }
+
+                        override fun onStart(utteranceId: String?) {
+                            Log.e(TAG, "onStart: ", )
+                        }
+                    })
+
+                    tts.speak(
+                        "Ciao, sono Patrick. Ciao Ciao?",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "speechId1"
+                    )
+                }
+            }
+
 
         }
         binding.btnTest2.setOnClickListener {
             Log.e(TAG, "btnTest2")
-            Log.e(TAG, "onCreate: ${DeviceManager().getAllowInstallApps(0)}", )
-            
+            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("Global-ntp_server")}", )
+            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("persist-persist.sys.timezone")}", )
+            Log.e(TAG, "onCreate: ${DeviceManager().getSettingProperty("persist-persist.sys.settimezone")}", )
+
         }
         binding.btnTest3.setOnClickListener {
             Log.e(TAG, "btnTest3")
@@ -103,4 +132,52 @@ class ApiTestActivity : AppCompatActivity() {
 
 
 
+
+    fun initTtsAndSpeak(context: Context) {
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+
+                // 设置西班牙语（西班牙）
+                val result = tts.setLanguage(Locale("es", "ES"))
+
+                if (result == TextToSpeech.LANG_MISSING_DATA ||
+                    result == TextToSpeech.LANG_NOT_SUPPORTED
+                ) {
+                    Log.e("TTS", "Spanish language not supported or missing data")
+                    return@TextToSpeech
+                }
+
+                // 可选：语速 & 音调
+                tts.setSpeechRate(1.0f)   // 1.0 = 正常
+                tts.setPitch(1.0f)        // 1.0 = 正常
+
+                // 监听播报状态（很重要，POS 常用）
+                tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String) {
+                        Log.d("TTS", "Speech started: $utteranceId")
+                    }
+
+                    override fun onDone(utteranceId: String) {
+                        Log.d("TTS", "Speech done: $utteranceId")
+                    }
+
+                    override fun onError(utteranceId: String) {
+                        Log.e("TTS", "Speech error: $utteranceId")
+                    }
+                })
+
+                // 西班牙语内容（一定要写西语）
+                val spanishText = "Hola, este es Patrick hablando. ¿Cómo estás?"
+
+                tts.speak(
+                    spanishText,
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "spanish_speech_001"
+                )
+            } else {
+                Log.e("TTS", "TTS init failed")
+            }
+        }
+    }
 }

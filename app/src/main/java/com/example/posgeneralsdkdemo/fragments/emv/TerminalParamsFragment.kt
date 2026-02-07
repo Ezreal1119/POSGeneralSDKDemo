@@ -127,7 +127,9 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
     private val mEmvKernelManager: EmvNfcKernelApi
         get() = (requireActivity() as EmvActivity).mEmvKernelManager
 
-    private lateinit var sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences
+        get() = (requireActivity() as EmvActivity).sharedPreferences
+
     private val sharedVm: SharedVm by activityViewModels()
     private lateinit var termCapBytes: ByteArray
 
@@ -152,7 +154,6 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
     )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        sharedPreferences = requireContext().getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
 
         val savedTerminalTypeCode = sharedPreferences.getString(KEY_TERMINAL_TYPE, DEFAULT_TERMINAL_TYPE)
         val savedTerminalTypeName = terminalTypeCodeMap[savedTerminalTypeCode] ?: "Unknown"

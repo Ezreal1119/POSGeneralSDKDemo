@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content"
                 android:text="POS SDK Demo"
                 android:textStyle="bold"
-                android:textSize="18sp"
+                android:textSize="25sp"
                 android:textColor="#111827"
                 android:gravity="center"/>
 
@@ -81,70 +81,117 @@
                 android:padding="16dp"
                 android:orientation="vertical">
 
-                <!-- Quick hint -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Select a module to start"
-                    android:textSize="14sp"
-                    android:textColor="#6B7280"
-                    android:layout_marginBottom="12dp"/>
 
                 <!-- Buttons -->
                 <Button
                     android:id="@+id/btnEMV"
                     style="@style/FancyActionButton"
-                    android:text="EMV"/>
+                    android:text="EMV"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/emv_icon"/>
 
                 <Button
                     android:id="@+id/btnPinpad"
                     style="@style/FancyActionButton"
-                    android:text="PinPad"/>
+                    android:text="PinPad"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/pinpad_icon"
+                    />
 
-                <Button
-                    android:id="@+id/btnBeeper"
-                    style="@style/FancyActionButton"
-                    android:text="Beeper"/>
-
-                <Button
-                    android:id="@+id/btnLed"
-                    style="@style/FancyActionButton"
-                    android:text="LED"/>
 
                 <Button
                     android:id="@+id/btnPrinter"
                     style="@style/FancyActionButton"
-                    android:text="Printer"/>
-
-                <Button
-                    android:id="@+id/btnNewSerialPort"
-                    style="@style/FancyActionButton"
-                    android:text="Serial Port"/>
-
-                <Button
-                    android:id="@+id/btnCameraScan"
-                    style="@style/FancyActionButton"
-                    android:text="Camera Scan"/>
+                    android:text="Printer"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/printer_icon"
+                    />
 
                 <Button
                     android:id="@+id/btnMagCardReader"
                     style="@style/FancyActionButton"
-                    android:text="MagCardReader"/>
+                    android:text="MagCardReader"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/mag_card_icon"
+                    />
 
                 <Button
                     android:id="@+id/btnICCardReader"
                     style="@style/FancyActionButton"
-                    android:text="ICCardReader"/>
+                    android:text="ICCardReader"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/iccard_icon"
+                    />
 
                 <Button
                     android:id="@+id/btnOthers"
                     style="@style/FancyActionButton"
-                    android:text="Others"/>
+                    android:text="Others"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/settings_icon"
+                    />
 
                 <Button
                     android:id="@+id/btnApiTest"
                     style="@style/FancyActionButton"
-                    android:text="API Test"/>
+                    android:text="API Test"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/api_icon"
+                    />
+
+                <Button
+                    android:id="@+id/btnCameraScan"
+                    style="@style/FancyActionButton"
+                    android:text="Camera Scan"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/camera_icon"
+                    />
+
+                <Button
+                    android:id="@+id/btnBeeper"
+                    style="@style/FancyActionButton"
+                    android:text="Beeper"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/beeper_icon"
+                    />
+
+                <Button
+                    android:id="@+id/btnLed"
+                    style="@style/FancyActionButton"
+                    android:text="LED"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/led_icon"
+                    />
+
+                <Button
+                    android:id="@+id/btnNewSerialPort"
+                    style="@style/FancyActionButton"
+                    android:text="Serial Port"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/serial_port_icon"
+                    />
 
                 <!-- Bottom spacing -->
                 <Space

@@ -247,14 +247,44 @@
                         android:padding="0dp"/>
 
                 </LinearLayout>
+                
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnGetTimeSettings"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Get Time Settings"
+                    android:textSize="13sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnSetTimeSettings"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set Time Settings"
+                    android:textSize="13sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+
+            </LinearLayout>
+            <Button
+                android:id="@+id/btnTtsTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TTS Testing (Need download for the first time)"/>
+
         </LinearLayout>
-
-
-
-
-
+        
     </ScrollView>
 
 </LinearLayout>
