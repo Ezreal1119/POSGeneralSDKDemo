@@ -13,7 +13,9 @@ import android.os.Handler
 import android.os.Looper
 import android.text.InputType
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -27,6 +29,7 @@ import androidx.fragment.app.activityViewModels
 import com.example.posgeneralsdkdemo.EmvActivity
 import com.example.posgeneralsdkdemo.PinpadActivity
 import com.example.posgeneralsdkdemo.R
+import com.example.posgeneralsdkdemo.databinding.FragmentEmvHomeBinding
 import com.example.posgeneralsdkdemo.enums.Amount
 import com.example.posgeneralsdkdemo.enums.CardReadMode
 import com.example.posgeneralsdkdemo.enums.Dukpt
@@ -72,50 +75,34 @@ import java.util.Locale
 
 private const val TAG = "EmvActivity_HomeFragment"
 const val PIN_TRY_TIMES = "pinTryTimes"
+private val arrayOfAmount = arrayOf(
+    Amount.UNDER_THRESHOLD,
+    Amount.MIDDLE_BETWEEN_THRESHOLD_AND_FLOOR,
+    Amount.ABOVE_FLOOR,
+    Amount.ENTER_AFTER_READ_RECORD)
+private val arrayOfIssuerResp = arrayOf(IssuerResp.APPROVAL, IssuerResp.DECLINE)
+private val arrayOfEmvOptions = arrayOf(EmvOptions.START, EmvOptions.START_WITH_FORCE_ONLINE)
+private val arrayOfFallbackSwitch = arrayOf(FallbackSwitch.DISABLED, FallbackSwitch.ENABLED)
 class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
-    private val blockingOverlay get() = requireView().findViewById<FrameLayout>(R.id.blockingOverlay)
-    private val tvOverlayMsg get() = requireView().findViewById<TextView>(R.id.tvOverlayMsg)
-    private val tvPinDukptReady get() = requireView().findViewById<TextView>(R.id.tvPinDukptReady)
-    private val tvPinKeyReady get() = requireView().findViewById<TextView>(R.id.tvPinKeyReady)
-    private val tvResult get() = requireView().findViewById<TextView>(R.id.tvResult)
-    private val tvAidIccStatus get() = requireView().findViewById<TextView>(R.id.tvAidIccStatus)
-    private val tvAidPiccStatus get() = requireView().findViewById<TextView>(R.id.tvAidPiccStatus)
-    private val spAmount get() = requireView().findViewById<Spinner>(R.id.spAmount)
-    private val spIssuerResp get() = requireView().findViewById<Spinner>(R.id.spIssuerResp)
-    private val spEmvOptions get() = requireView().findViewById<Spinner>(R.id.spEmvOptions)
-    private val spFallbackSwitch get() = requireView().findViewById<Spinner>(R.id.spFallbackSwitch)
-    private val btnStartEmv get() = requireView().findViewById<Button>(R.id.btnStartEmv)
-    private val btnStopEmv get() = requireView().findViewById<Button>(R.id.btnStopEmv)
-    private val btnEnableLogOut get() = requireView().findViewById<Button>(R.id.btnEnableLogOut)
-    private val btnDisableLogOut get() = requireView().findViewById<Button>(R.id.btnDisableLogOut)
-    private val btnExportEmvLog get() = requireView().findViewById<Button>(R.id.btnExportEmvLog)
-    private val btnDeleteEmvLog get() = requireView().findViewById<Button>(R.id.btnDeleteEmvLog)
-    private val btnClearCapk get() = requireView().findViewById<Button>(R.id.btnClearCapk)
-    private val btnReloadCapk get() = requireView().findViewById<Button>(R.id.btnReloadCapk)
+    private var _binding: FragmentEmvHomeBinding? = null
+    private val binding get() = _binding!!
 
     private val mEmvKernelManager: EmvNfcKernelApi
         get() = (requireActivity() as EmvActivity).mEmvKernelManager
-    private val mPinpadManager = PinPadProviderImpl.getInstance()
+    private val mPinpadManager: PinPadProviderImpl
+        get() = (requireActivity() as EmvActivity).mPinpadManager
+    private val sharedPreferences: SharedPreferences
+        get() = (requireActivity() as EmvActivity).sharedPreferences
+    private val sharedVm: SharedVm by activityViewModels()
 
     private val result = StringBuilder()
     private var enterAmountAfterReadRecordFlag: Boolean = false
-    var isKernelRunning: Boolean = false
+    private var isKernelRunning: Boolean = false
     private lateinit var backCallback: OnBackPressedCallback
     private var amountEx: Float = 0F
     private lateinit var cardReadMode: CardReadMode
-    private val sharedPreferences: SharedPreferences
-        get() = (requireActivity() as EmvActivity).sharedPreferences
     private lateinit var mySoundTool: SoundTool
-    private val sharedVm: SharedVm by activityViewModels()
-    private val arrayOfAmount = arrayOf(
-        Amount.UNDER_THRESHOLD,
-        Amount.MIDDLE_BETWEEN_THRESHOLD_AND_FLOOR,
-        Amount.ABOVE_FLOOR,
-        Amount.ENTER_AFTER_READ_RECORD)
-    private val arrayOfIssuerResp = arrayOf(IssuerResp.APPROVAL, IssuerResp.DECLINE)
-    private val arrayOfEmvOptions = arrayOf(EmvOptions.START, EmvOptions.START_WITH_FORCE_ONLINE)
-    private val arrayOfFallbackSwitch = arrayOf(FallbackSwitch.DISABLED, FallbackSwitch.ENABLED)
     private val cvmAddition = StringBuilder()
     private var tvrBeforeTrm = ""
     private var isUnionPayIccLoaded = false
@@ -129,6 +116,15 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     private var bypassPinPadFlag: Boolean = false
 
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentEmvHomeBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mySoundTool = SoundTool.getMySound(requireContext())
@@ -140,41 +136,43 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             backCallback
         )
 
-        btnStartEmv.setOnClickListener {
-            if (spAmount.selectedItem == Amount.ENTER_AFTER_READ_RECORD) { // Only ICC supports enter Read Record
-                onStartEmvButtonClicked(ContantPara.CheckCardMode.INSERT)
-            } else {
-                onStartEmvButtonClicked(ContantPara.CheckCardMode.SWIPE_OR_INSERT_OR_TAP)
+        binding.apply {
+            btnStartEmv.setOnClickListener {
+                if (spAmount.selectedItem == Amount.ENTER_AFTER_READ_RECORD) { // Only ICC supports enter Read Record
+                    onStartEmvButtonClicked(ContantPara.CheckCardMode.INSERT)
+                } else {
+                    onStartEmvButtonClicked(ContantPara.CheckCardMode.SWIPE_OR_INSERT_OR_TAP)
+                }
             }
-        }
-        btnStopEmv.setOnClickListener { onStopEmvButtonClicked() }
-        btnEnableLogOut.setOnClickListener { onEnableLogOutButtonClicked() }
-        btnDisableLogOut.setOnClickListener { onDisableLogOutButtonClicked() }
-        btnExportEmvLog.setOnClickListener { onExportEmvLogButtonClicked() }
-        btnDeleteEmvLog.setOnClickListener { onDeleteEmvLogButtonClicked() }
-        btnClearCapk.setOnClickListener { onClearCapkButtonClicked() }
-        btnReloadCapk.setOnClickListener { onReloadCapkButtonClicked() }
+            btnStopEmv.setOnClickListener { onStopEmvButtonClicked() }
+            btnEnableLogOut.setOnClickListener { onEnableLogOutButtonClicked() }
+            btnDisableLogOut.setOnClickListener { onDisableLogOutButtonClicked() }
+            btnExportEmvLog.setOnClickListener { onExportEmvLogButtonClicked() }
+            btnDeleteEmvLog.setOnClickListener { onDeleteEmvLogButtonClicked() }
+            btnClearCapk.setOnClickListener { onClearCapkButtonClicked() }
+            btnReloadCapk.setOnClickListener { onReloadCapkButtonClicked() }
 
-        tvPinDukptReady.setOnClickListener {
-            Toast.makeText(requireContext(), "Press DownloadDukpt to load Key", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(requireContext(), PinpadActivity::class.java))
-        }
-        tvPinKeyReady.setOnClickListener {
-            Toast.makeText(requireContext(), "Press MK->WK to load Key", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(requireContext(), PinpadActivity::class.java))
-        }
+            tvPinDukptReady.setOnClickListener {
+                Toast.makeText(requireContext(), "Press DownloadDukpt to load Key", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(requireContext(), PinpadActivity::class.java))
+            }
+            tvPinKeyReady.setOnClickListener {
+                Toast.makeText(requireContext(), "Press MK->WK to load Key", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(requireContext(), PinpadActivity::class.java))
+            }
 
-        spAmount.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfAmount).apply {
-            setDropDownViewResource(simple_spinner_dropdown_item)
-        }
-        spIssuerResp.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfIssuerResp).apply {
-            setDropDownViewResource(simple_spinner_dropdown_item)
-        }
-        spEmvOptions.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfEmvOptions).apply {
-            setDropDownViewResource(simple_spinner_dropdown_item)
-        }
-        spFallbackSwitch.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfFallbackSwitch).apply {
-            setDropDownViewResource(simple_spinner_dropdown_item)
+            spAmount.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfAmount).apply {
+                setDropDownViewResource(simple_spinner_dropdown_item)
+            }
+            spIssuerResp.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfIssuerResp).apply {
+                setDropDownViewResource(simple_spinner_dropdown_item)
+            }
+            spEmvOptions.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfEmvOptions).apply {
+                setDropDownViewResource(simple_spinner_dropdown_item)
+            }
+            spFallbackSwitch.adapter = ArrayAdapter(requireContext(), simple_spinner_item, arrayOfFallbackSwitch).apply {
+                setDropDownViewResource(simple_spinner_dropdown_item)
+            }
         }
 
         sharedVm.termParamsRefresh.observe(viewLifecycleOwner) { v ->
@@ -183,26 +181,26 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         sharedVm.appParamsLoadedRefresh.observe(viewLifecycleOwner) { value ->
             if (value != null) {
                 if (value in arrayOf(UNION_PAY_ICC, VISA_ICC, MASTER_CARD_ICC)) {
-                    if ("No" in tvAidIccStatus.text.toString()) {
-                        tvAidIccStatus.text = "AID_ICC loaded: $value; "
-                        tvAidIccStatus.setTextColor(Color.GREEN)
+                    if ("No" in binding.tvAidIccStatus.text.toString()) {
+                        binding.tvAidIccStatus.text = "AID_ICC loaded: $value; "
+                        binding.tvAidIccStatus.setTextColor(Color.GREEN)
                     } else {
                         when (value) {
                             UNION_PAY_ICC -> {
                                 if (!isUnionPayIccLoaded) {
-                                    tvAidIccStatus.append("$value; ")
+                                    binding.tvAidIccStatus.append("$value; ")
                                 }
                             }
 
                             VISA_ICC -> {
                                 if (!isVisaIccLoaded) {
-                                    tvAidIccStatus.append("$value; ")
+                                    binding.tvAidIccStatus.append("$value; ")
                                 }
                             }
 
                             MASTER_CARD_ICC -> {
                                 if (!isMasterCardIccLoaded) {
-                                    tvAidIccStatus.append("$value; ")
+                                    binding.tvAidIccStatus.append("$value; ")
                                 }
                             }
                         }
@@ -213,24 +211,24 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                         MASTER_CARD_ICC -> isMasterCardIccLoaded = true
                     }
                 } else {
-                    if ("No" in tvAidPiccStatus.text.toString()) {
-                        tvAidPiccStatus.text = "AID_PICC loaded: $value; "
-                        tvAidPiccStatus.setTextColor(Color.GREEN)
+                    if ("No" in binding.tvAidPiccStatus.text.toString()) {
+                        binding.tvAidPiccStatus.text = "AID_PICC loaded: $value; "
+                        binding.tvAidPiccStatus.setTextColor(Color.GREEN)
                     } else {
                         when (value) {
                             UNION_PAY_PICC -> {
                                 if (!isUnionPayPiccLoaded) {
-                                    tvAidPiccStatus.append("$value; ")
+                                    binding.tvAidPiccStatus.append("$value; ")
                                 }
                             }
                             VISA_PICC -> {
                                 if (!isVisaPiccLoaded) {
-                                    tvAidPiccStatus.append("$value; ")
+                                    binding.tvAidPiccStatus.append("$value; ")
                                 }
                             }
                             MASTER_CARD_PICC -> {
                                 if (!isMasterCardPiccLoaded) {
-                                    tvAidPiccStatus.append("$value; ")
+                                    binding.tvAidPiccStatus.append("$value; ")
                                 }
                             }
                         }
@@ -251,11 +249,11 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                 isVisaPiccLoaded = false
                 isMasterCardIccLoaded = false
                 isMasterCardPiccLoaded = false
-                tvAidIccStatus.apply {
+                binding.tvAidIccStatus.apply {
                     text = "No AID_ICC loaded yet!"
                     setTextColor(Color.RED)
                 }
-                tvAidPiccStatus.apply {
+                binding.tvAidPiccStatus.apply {
                     text = "No AID_PICC loaded yet!"
                     setTextColor(Color.RED)
                 }
@@ -272,7 +270,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             addCapkMasterCard(mEmvKernelManager)
         }.onSuccess {
             Toast.makeText(requireContext(), "Updated Terminal Params & Loaded CAPKs successfully", Toast.LENGTH_SHORT).show()
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("<=======Terminal Params updated=======>\n\n")
                 append("Terminal_Type:${sharedPreferences.getString(KEY_TERMINAL_TYPE, DEFAULT_TERMINAL_TYPE)}\n")
                 append("Country: ${sharedPreferences.getString(KEY_TERMINAL_COUNTRY_CODE, DEFAULT_TERMINAL_COUNTRY_CODE)}\n")
@@ -292,7 +290,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             }
         }.onFailure {
             Toast.makeText(requireContext(), "Updated Terminal Params failed", Toast.LENGTH_SHORT).show()
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
 
@@ -303,18 +301,18 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         isVisaPiccLoaded = false
         isMasterCardIccLoaded = false
         isMasterCardPiccLoaded = false
-        tvAidIccStatus.apply {
+        binding.tvAidIccStatus.apply {
             text = "No AID_ICC loaded yet!"
             setTextColor(Color.RED)
         }
-        tvAidPiccStatus.apply {
+        binding.tvAidPiccStatus.apply {
             text = "No AID_PICC loaded yet!"
             setTextColor(Color.RED)
         }
         mEmvKernelManager.LogOutEnable(0)
-        btnEnableLogOut.isEnabled = true
-        btnDisableLogOut.isEnabled = false
-        btnStopEmv.isEnabled = false
+        binding.btnEnableLogOut.isEnabled = true
+        binding.btnDisableLogOut.isEnabled = false
+        binding.btnStopEmv.isEnabled = false
         hideBlockingUi()
         isKernelRunning = false
     }
@@ -324,14 +322,14 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         val ksnBuffer = ByteArray(10)
         if (mPinpadManager.DukptGetKsn(3, ksnBuffer) == 0x00 &&
             !BytesUtil.bytes2HexString(ksnBuffer).all { it == '0' }) {
-            tvPinDukptReady.setBackgroundColor(Color.GREEN)
+            binding.tvPinDukptReady.setBackgroundColor(Color.GREEN)
         } else {
-            tvPinDukptReady.setBackgroundColor(Color.RED)
+            binding.tvPinDukptReady.setBackgroundColor(Color.RED)
         }
         if (mPinpadManager.isKeyExist(Constant.KeyType.PIN_KEY, 99)) {
-            tvPinKeyReady.setBackgroundColor(Color.GREEN)
+            binding.tvPinKeyReady.setBackgroundColor(Color.GREEN)
         } else {
-            tvPinKeyReady.setBackgroundColor(Color.RED)
+            binding.tvPinKeyReady.setBackgroundColor(Color.RED)
         }
     }
 
@@ -340,25 +338,30 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         mEmvKernelManager.abortKernel()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun onStartEmvButtonClicked(cardMode: ContantPara.CheckCardMode) {
-        enterAmountAfterReadRecordFlag = spAmount.selectedItem as Amount == Amount.ENTER_AFTER_READ_RECORD
+        enterAmountAfterReadRecordFlag = binding.spAmount.selectedItem as Amount == Amount.ENTER_AFTER_READ_RECORD
         val transParams = EmvUtil.generateTransactionParameters(
             enterAmountAfterReadRecordFlag,
-            (spAmount.selectedItem as Amount).amount,
+            (binding.spAmount.selectedItem as Amount).amount,
             cardMode,
-            (spEmvOptions.selectedItem as EmvOptions).value,
-            (spFallbackSwitch.selectedItem as FallbackSwitch).value
+            (binding.spEmvOptions.selectedItem as EmvOptions).value,
+            (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value
             )
-        if (spAmount.selectedItem == Amount.ENTER_AFTER_READ_RECORD) {
+        if (binding.spAmount.selectedItem == Amount.ENTER_AFTER_READ_RECORD) {
             Toast.makeText(requireContext(), "Please Insert Card", Toast.LENGTH_SHORT).show()
-        } else if (spFallbackSwitch.selectedItem == FallbackSwitch.DISABLED) {
+        } else if (binding.spFallbackSwitch.selectedItem == FallbackSwitch.DISABLED) {
             Toast.makeText(requireContext(), "Please Insert/Tap/Swipe Card", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(requireContext(), "Please Insert/Tap Card", Toast.LENGTH_SHORT).show()
         }
-        btnStartEmv.isEnabled = false
-        btnStopEmv.isEnabled = true
-        tvResult.text = ""
+        binding.btnStartEmv.isEnabled = false
+        binding.btnStopEmv.isEnabled = true
+        binding.tvResult.text = ""
         result.clear()
         cvmAddition.clear()
         tvrBeforeTrm = ""
@@ -378,8 +381,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             }.onFailure {
                 it.printStackTrace()
                 requireActivity().runOnUiThread {
-                    btnStartEmv.isEnabled = true
-                    btnStopEmv.isEnabled = false
+                    binding.btnStartEmv.isEnabled = true
+                    binding.btnStopEmv.isEnabled = false
                     hideBlockingUi()
                     isKernelRunning = false
                 }
@@ -392,12 +395,12 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             mEmvKernelManager.abortKernel()
         }.onSuccess {
             Toast.makeText(requireContext(), "Terminated", Toast.LENGTH_SHORT).show()
-            btnStartEmv.isEnabled = true
-            btnStopEmv.isEnabled = false
+            binding.btnStartEmv.isEnabled = true
+            binding.btnStopEmv.isEnabled = false
             hideBlockingUi()
             isKernelRunning = false
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -408,7 +411,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             mEmvKernelManager.LogOutEnable(1)
         }.onSuccess {
             Toast.makeText(requireContext(), "Turn on EmvLogOut&Logcat successfully", Toast.LENGTH_SHORT).show()
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("The EMV log will be save to \n")
                 append(" - \"/data/data/<package>/files/UROPE/\"\n\n")
                 append("If want to export the file to \n")
@@ -416,10 +419,10 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                 append("Please call: \n")
                 append(" - EmvNfcKernelApi.exportLogFilesToExternalStorage(this)\n\n")
             }
-            btnEnableLogOut.isEnabled = false
-            btnDisableLogOut.isEnabled = true
+            binding.btnEnableLogOut.isEnabled = false
+            binding.btnDisableLogOut.isEnabled = true
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -430,11 +433,11 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             logfile.setLogcatOut(false)
         }.onSuccess {
             Toast.makeText(requireContext(), "Turn off EmvLogOut&Logcat successfully", Toast.LENGTH_SHORT).show()
-            tvResult.text = "Please note: \nEven tho Emv log are still output when it's disabled, those files have no valid Emv data and file sizes are very small."
-            btnEnableLogOut.isEnabled = true
-            btnDisableLogOut.isEnabled = false
+            binding.tvResult.text = "Please note: \nEven tho Emv log are still output when it's disabled, those files have no valid Emv data and file sizes are very small."
+            binding.btnEnableLogOut.isEnabled = true
+            binding.btnDisableLogOut.isEnabled = false
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -449,12 +452,12 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             if (!ret) throw Exception("Export Emv Log failed")
         }.onSuccess {
             Toast.makeText(requireContext(), "Export EMV log to \"/sdcard/UROPE/\" successfully", Toast.LENGTH_SHORT).show()
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Please find the Emv Log in\n")
                 append(" - \"/sdcard/UROPE/\"")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -469,14 +472,14 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             if (!ret) throw Exception("Delete Emv Log failed")
         }.onSuccess {
             Toast.makeText(requireContext(), "Delete EMV log successfully", Toast.LENGTH_SHORT).show()
-            tvResult.text = buildString {
+            binding.tvResult.text = buildString {
                 append("Both EMV log files in:\n")
                 append(" - /sdcard/UROPE/\n")
                 append(" - /data/data/<package>/files/UROPE/\n")
                 append("were deleted")
             }
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -486,9 +489,9 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             mEmvKernelManager.updateCAPK(ContantPara.Operation.CLEAR, null)
         }.onSuccess {
             Toast.makeText(requireContext(), "Clear CAPKs successfully", Toast.LENGTH_SHORT).show()
-            tvResult.text = ""
+            binding.tvResult.text = ""
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -502,7 +505,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             Toast.makeText(requireContext(), "CAPKs loaded successfully", Toast.LENGTH_SHORT).show()
             uiRefreshOnCapkReloaded()
         }.onFailure {
-            tvResult.text = it.message
+            binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
@@ -541,7 +544,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
         val actualAmount = if (enterAmountAfterReadRecordFlag) {
             String.format(Locale.US, "%.2f", amountEx)
         } else {
-            (spAmount.selectedItem as Amount).amount
+            (binding.spAmount.selectedItem as Amount).amount
         }
         val message = when (emvBundle.getInt(PIN_TRY_TIMES)) {
             2 -> "Please enter PIN, $$actualAmount\nTwo last tries! Enter carefully!"
@@ -645,7 +648,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             .setCancelable(false)
             .setNegativeButton("Cancel") { _, _ ->
                 Toast.makeText(requireContext(), "Transaction Cancelled", Toast.LENGTH_SHORT).show()
-                tvResult.text = "<======Transaction Ends: No Amount Entered======>"
+                binding.tvResult.text = "<======Transaction Ends: No Amount Entered======>"
                 amountEnterTimeoutHandler.removeCallbacks(amountEnterTimeoutRunnable)
                 onCancel?.invoke()
             }
@@ -680,8 +683,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                         },
                         onCancel = {
                             mEmvKernelManager.abortKernel()
-                            btnStartEmv.isEnabled = true
-                            btnStopEmv.isEnabled = false
+                            binding.btnStartEmv.isEnabled = true
+                            binding.btnStopEmv.isEnabled = false
                             hideBlockingUi()
                             isKernelRunning = false
                         }
@@ -703,7 +706,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     val track1Info = EmvUtil.parseTrack1(stripeInfo.track1 ?: "")
                     val track2Info = EmvUtil.parseTrack2(stripeInfo.track2 ?: "")
                     requireActivity().runOnUiThread {
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("<=========Magnetic Stripe Card=========>\n\n")
                             append("CardNo: ${hashtable.get("CardNo")}\n\n")
                             append("TRACK_1: ${stripeInfo.track1}\n")
@@ -720,8 +723,8 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                             append("TRACK_3: ${stripeInfo.track3}\n")
                             append("(Please refer to Issuer for more Info)\n\n")
                             append("<==========Transaction Ends==========>")
-                            btnStartEmv.isEnabled = true
-                            btnStopEmv.isEnabled = false
+                            binding.btnStartEmv.isEnabled = true
+                            binding.btnStopEmv.isEnabled = false
                             hideBlockingUi()
                             isKernelRunning = false
                         }
@@ -756,10 +759,10 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     requireActivity().runOnUiThread {
                         val transParams = EmvUtil.generateTransactionParameters(
                             enterAmountAfterReadRecordFlag,
-                            (spAmount.selectedItem as Amount).amount,
+                            (binding.spAmount.selectedItem as Amount).amount,
                             ContantPara.CheckCardMode.SWIPE_OR_TAP,
-                            (spEmvOptions.selectedItem as EmvOptions).value,
-                            (spFallbackSwitch.selectedItem as FallbackSwitch).value
+                            (binding.spEmvOptions.selectedItem as EmvOptions).value,
+                            (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value
                         )
                         Thread {
                             requireActivity().runOnUiThread {
@@ -778,10 +781,10 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                         requireActivity().runOnUiThread {
                             val transParams = EmvUtil.generateTransactionParameters(
                                 enterAmountAfterReadRecordFlag,
-                                (spAmount.selectedItem as Amount).amount,
+                                (binding.spAmount.selectedItem as Amount).amount,
                                 ContantPara.CheckCardMode.INSERT,
-                                (spEmvOptions.selectedItem as EmvOptions).value,
-                                (spFallbackSwitch.selectedItem as FallbackSwitch).value)
+                                (binding.spEmvOptions.selectedItem as EmvOptions).value,
+                                (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value)
                             Thread {
                                 requireActivity().runOnUiThread {
                                     Toast.makeText(requireContext(), "Please insert Card (FALLBACK on)", Toast.LENGTH_SHORT).show()
@@ -796,11 +799,11 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     // This will end the Kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: BAD_SWIPE")
                     requireActivity().runOnUiThread {
-                        btnStartEmv.isEnabled = true
-                        btnStopEmv.isEnabled = false
+                        binding.btnStartEmv.isEnabled = true
+                        binding.btnStopEmv.isEnabled = false
                         hideBlockingUi()
                         isKernelRunning = false
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("<======Transaction Ends: BAD_SWIPE======>\n\n")
                             append("This can be triggered by a very bad SWIPE")
                         }
@@ -816,11 +819,11 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                         }
                     } while (!mEmvKernelManager.CheckCardIsOut(5000))
                     requireActivity().runOnUiThread {
-                        btnStartEmv.isEnabled = true
-                        btnStopEmv.isEnabled = false
+                        binding.btnStartEmv.isEnabled = true
+                        binding.btnStopEmv.isEnabled = false
                         hideBlockingUi()
                         isKernelRunning = false
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("<======Transaction Ends: NOT_ICC======>\n\n")
                             append("This can be triggered by present anything that triggers the Reader's sensor.\n")
                             append("e.g. SLE card; Name Card, and etc.\n\n")
@@ -835,11 +838,11 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     // This will end the Kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: TIMEOUT")
                     requireActivity().runOnUiThread {
-                        btnStartEmv.isEnabled = true
-                        btnStopEmv.isEnabled = false
+                        binding.btnStartEmv.isEnabled = true
+                        binding.btnStopEmv.isEnabled = false
                         hideBlockingUi()
                         isKernelRunning = false
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("<======Transaction Ends: TIMEOUT======>\n\n")
                             append("This can be triggered if didn't present any Card within the countdown")
                         }
@@ -850,11 +853,11 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     // This will end the Kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: CANCEL")
                     requireActivity().runOnUiThread {
-                        btnStartEmv.isEnabled = true
-                        btnStopEmv.isEnabled = false
+                        binding.btnStartEmv.isEnabled = true
+                        binding.btnStopEmv.isEnabled = false
                         hideBlockingUi()
                         isKernelRunning = false
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("<======Transaction Ends: CANCEL======>\n\n")
                             append("This can be triggered if abortKernel() is called")
                         }
@@ -864,11 +867,11 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
                     // This will end the Kernel (without calling abortKernel())
                     Log.e(TAG, "onReturnCheckCardResult: DEVICE_BUSY")
                     requireActivity().runOnUiThread {
-                        btnStartEmv.isEnabled = true
-                        btnStopEmv.isEnabled = false
+                        binding.btnStartEmv.isEnabled = true
+                        binding.btnStopEmv.isEnabled = false
                         hideBlockingUi()
                         isKernelRunning = false
-                        tvResult.text = buildString {
+                        binding.tvResult.text = buildString {
                             append("<======Transaction Ends: DEVICE_BUSY======>\n\n")
                             append("This can be triggered if Reading modules are in used")
                         }
@@ -904,7 +907,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             val actualAmount = if (enterAmountAfterReadRecordFlag) {
                 String.format(Locale.US, "%.2f", amountEx)
             } else {
-                (spAmount.selectedItem as Amount).amount
+                (binding.spAmount.selectedItem as Amount).amount
             }
             val pinpadBundle = Bundle().apply {
                 // 1. Best practice to set
@@ -1090,7 +1093,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             var authorizationResponseCode: String
             var authorizationCode: String
             result.append("<=========Got Issuer_Resp=========>\n\n")
-            if (spIssuerResp.selectedItem as IssuerResp == IssuerResp.APPROVAL) {
+            if (binding.spIssuerResp.selectedItem as IssuerResp == IssuerResp.APPROVAL) {
                 authorizationResponseCode = "8A023030" // ARC ["00"(3030): Approved; "05"(3035): Declined; "51"(3531): Insufficient balance]
                 authorizationCode = "8906${Funs.convertStringToHex("000001")}" // Approved Serial Number: "89" is the Prefix
                 result.apply {
@@ -1180,12 +1183,12 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             result.append("<===========Transaction End===========>")
 
             requireActivity().runOnUiThread {
-                btnStartEmv.isEnabled = true
-                btnStopEmv.isEnabled = false
+                binding.btnStartEmv.isEnabled = true
+                binding.btnStopEmv.isEnabled = false
                 hideBlockingUi()
                 isKernelRunning = false
                 result.insert(0, "<=======$transactionResult=======>\n\n")
-                tvResult.text = result
+                binding.tvResult.text = result
                 Toast.makeText(requireContext(), transactionResult.toString(), Toast.LENGTH_SHORT).show()
             }
             Log.e(TAG, "onReturnTransactionResult: $transactionResult")
@@ -1285,7 +1288,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             var authorizationResponseCode: String
             var authorizationCode: String
             result.append("<=========Got Issuer_Resp=========>\n\n")
-            if (spIssuerResp.selectedItem as IssuerResp == IssuerResp.APPROVAL) {
+            if (binding.spIssuerResp.selectedItem as IssuerResp == IssuerResp.APPROVAL) {
                 authorizationResponseCode = "8A023030" // ARC ["00"(3030): Approved; "05"(3035): Declined; "51"(3531): Insufficient balance]
                 authorizationCode = "8906${Funs.convertStringToHex("000001")}" // Approved Serial Number: "89" is the Prefix
                 result.apply {
@@ -1306,7 +1309,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
             val actualAmount = if (enterAmountAfterReadRecordFlag) {
                 String.format(Locale.US, "%.2f", amountEx)
             } else {
-                (spAmount.selectedItem as Amount).amount
+                (binding.spAmount.selectedItem as Amount).amount
             }
             val pinpadBundle = Bundle().apply {
                 // 1. Best practice to have
@@ -1367,11 +1370,11 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
 
             this@HomeFragment.result.insert(0, "<============$result============>\n\n")
             requireActivity().runOnUiThread {
-                btnStartEmv.isEnabled = true
-                btnStopEmv.isEnabled = false
+                binding.btnStartEmv.isEnabled = true
+                binding.btnStopEmv.isEnabled = false
                 hideBlockingUi()
                 isKernelRunning = false
-                tvResult.text = this@HomeFragment.result
+                binding.tvResult.text = this@HomeFragment.result
                 Toast.makeText(requireContext(), result.toString(), Toast.LENGTH_SHORT).show()
             }
         }
@@ -1465,7 +1468,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     // <---------------UI helper methods---------------> //
 
     private fun uiRefreshOnTermParamsUpdated() {
-        tvResult.text = buildString {
+        binding.tvResult.text = buildString {
             append("<=======Terminal Params updated=======>\n\n")
 //            append("IFD_SN_ASCII: 12345678\n")
 //            append("TID_ASCII: 87654321\n")
@@ -1483,7 +1486,7 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     }
 
     private fun uiRefreshOnCapkReloaded() {
-        tvResult.text = buildString {
+        binding.tvResult.text = buildString {
             append("<==========CAPKs loaded==========>\n\n")
             append("UPI_CAPK_INDEX:\n")
             append("[04, 08, 09, 0A, 0B]\n\n")
@@ -1496,13 +1499,13 @@ class HomeFragment : Fragment(R.layout.fragment_emv_home) {
     }
 
     private fun showBlockingUi(msg: String = "Processing...") {
-        tvOverlayMsg.text = msg
-        blockingOverlay.visibility = View.VISIBLE
+        binding.tvOverlayMsg.text = msg
+        binding.blockingOverlay.visibility = View.VISIBLE
         backCallback.isEnabled = true
     }
 
     private fun hideBlockingUi() {
-        blockingOverlay.visibility = View.GONE
+        binding.blockingOverlay.visibility = View.GONE
         backCallback.isEnabled = false
     }
 }

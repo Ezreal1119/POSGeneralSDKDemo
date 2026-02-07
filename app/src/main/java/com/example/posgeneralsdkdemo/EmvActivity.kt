@@ -14,6 +14,7 @@ import com.example.posgeneralsdkdemo.fragments.emv.TerminalParamsFragment
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.urovo.i9000s.api.emv.EmvNfcKernelApi
+import com.urovo.sdk.pinpad.PinPadProviderImpl
 
 // <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 
@@ -24,7 +25,7 @@ class EmvActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEmvBinding
 
     val mEmvKernelManager: EmvNfcKernelApi by lazy { EmvNfcKernelApi.getInstance(this) }
-
+    val mPinpadManager: PinPadProviderImpl by lazy { PinPadProviderImpl.getInstance() }
     val sharedPreferences: SharedPreferences by lazy { getSharedPreferences(PREFS_NAME, MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
