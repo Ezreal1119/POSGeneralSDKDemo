@@ -5,7 +5,9 @@ import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.NumberPicker
@@ -23,6 +25,7 @@ import com.example.posgeneralsdkdemo.utils.EmvUtil.hexToBinaryBytes
 import com.urovo.i9000s.api.emv.ContantPara
 import com.urovo.i9000s.api.emv.EmvNfcKernelApi
 import androidx.core.graphics.toColorInt
+import com.example.posgeneralsdkdemo.databinding.FragmentTerminalParamsBinding
 
 const val KEY_TERMINAL_TYPE = "terminal_type"
 const val KEY_TERMINAL_COUNTRY_CODE = "terminal_country_code"
@@ -109,124 +112,126 @@ val thresholdRandomSwitchMap = mapOf(
     "00" to "Disabled",
     "01" to "Enabled",
 )
+private val row1Spec = listOf(
+    BitSpec("Manual", 0), // B1b8
+    BitSpec("Mag", 1), // B1b7
+    BitSpec("ICC", 2) // B1b6
+)
+private val row2Spec = listOf(
+    BitSpec("P_Off PIN", 8), // B2b8
+    BitSpec("Online PIN", 9), // B2b7
+    BitSpec("Sign", 10), // B2b6
+    BitSpec("E_Off PIN", 11), // B2b5
+    BitSpec("No CVM", 12) // B2b4
+)
 
+private val row3Spec = listOf(
+    BitSpec("SDA", 16), // B3b8
+    BitSpec("DDA", 17), // B3b7
+    BitSpec("CDA", 20) // B3b4
+)
 class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
 
-    private val tvTerminalCap get() = requireView().findViewById<TextView>(R.id.tvTerminalCap)
-    private val tvInfo get() = requireView().findViewById<TextView>(R.id.tvInfo)
-    private val tvTerminalType get() = requireView().findViewById<TextView>(R.id.tvTerminalType)
-    private val tvTerminalCountry get() = requireView().findViewById<TextView>(R.id.tvTerminalCountry)
-    private val tvThresholdRandomSwitch get() = requireView().findViewById<TextView>(R.id.tvThresholdRandomSwitch)
-    private val llRow1 get() = requireView().findViewById<LinearLayout>(R.id.llRow1)
-    private val llRow2 get() = requireView().findViewById<LinearLayout>(R.id.llRow2)
-    private val llRow3 get() = requireView().findViewById<LinearLayout>(R.id.llRow3)
-
-    private val btnResetTermCap get() = requireView().findViewById<Button>(R.id.btnResetTermCap)
-    private val btnUpdateTerminalParameters get() = requireView().findViewById<Button>(R.id.btnUpdateTerminalParameters)
+    private var _binding: FragmentTerminalParamsBinding? = null
+    private val binding get() = _binding!!
 
     private val mEmvKernelManager: EmvNfcKernelApi
         get() = (requireActivity() as EmvActivity).mEmvKernelManager
 
     private val sharedPreferences: SharedPreferences
         get() = (requireActivity() as EmvActivity).sharedPreferences
-
     private val sharedVm: SharedVm by activityViewModels()
+
     private lateinit var termCapBytes: ByteArray
 
-    private val row1Spec = listOf(
-        BitSpec("Manual", 0), // B1b8
-        BitSpec("Mag", 1), // B1b7
-        BitSpec("ICC", 2) // B1b6
-    )
-
-    private val row2Spec = listOf(
-        BitSpec("P_Off PIN", 8), // B2b8
-        BitSpec("Online PIN", 9), // B2b7
-        BitSpec("Sign", 10), // B2b6
-        BitSpec("E_Off PIN", 11), // B2b5
-        BitSpec("No CVM", 12) // B2b4
-    )
-
-    private val row3Spec = listOf(
-        BitSpec("SDA", 16), // B3b8
-        BitSpec("DDA", 17), // B3b7
-        BitSpec("CDA", 20) // B3b4
-    )
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentTerminalParamsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         val savedTerminalTypeCode = sharedPreferences.getString(KEY_TERMINAL_TYPE, DEFAULT_TERMINAL_TYPE)
         val savedTerminalTypeName = terminalTypeCodeMap[savedTerminalTypeCode] ?: "Unknown"
-        tvTerminalType.text = "$savedTerminalTypeName - $savedTerminalTypeCode"
+        binding.tvTerminalType.text = "$savedTerminalTypeName - $savedTerminalTypeCode"
 
         val savedCountryCode = sharedPreferences.getString(KEY_TERMINAL_COUNTRY_CODE, DEFAULT_TERMINAL_COUNTRY_CODE)
         val savedCountryName = countryCodeMap[savedCountryCode] ?: "Unknown"
-        tvTerminalCountry.text = "$savedCountryName - $savedCountryCode"
+        binding.tvTerminalCountry.text = "$savedCountryName - $savedCountryCode"
 
         val savedThresholdRandomSwitchCode = sharedPreferences.getString(KEY_THRESHOLD_RANDOM_SWITCH, DEFAULT_THRESHOLD_RANDOM_SWITCH) ?: DEFAULT_THRESHOLD_RANDOM_SWITCH
         val savedThresholdRandomSwitchName = thresholdRandomSwitchMap[savedThresholdRandomSwitchCode] ?: "Unknown"
-        tvThresholdRandomSwitch.text = "$savedThresholdRandomSwitchName - $savedThresholdRandomSwitchCode"
+        binding.tvThresholdRandomSwitch.text = "$savedThresholdRandomSwitchName - $savedThresholdRandomSwitchCode"
 
         termCapBytes = EmvUtil.hex6To3Bytes(sharedPreferences.getString(KEY_TERMINAL_CAPABILITIES, DEFAULT_TERMINAL_CAPABILITIES) ?: DEFAULT_TERMINAL_CAPABILITIES)
-        inflateRow(llRow1, row1Spec)
-        inflateRow(llRow2, row2Spec)
-        inflateRow(llRow3, row3Spec)
+        inflateRow(binding.llRow1, row1Spec)
+        inflateRow(binding.llRow2, row2Spec)
+        inflateRow(binding.llRow3, row3Spec)
 
-        tvTerminalType.setOnClickListener {
+        binding.tvTerminalType.setOnClickListener {
             showWheelDialog(
                 context = requireContext(),
                 list = terminalTypeCodeMap.map { (code, name) -> "$name - $code" },
-                current = tvTerminalType.text?.toString()
+                current = binding.tvTerminalType.text?.toString()
             ) { selected ->
-                tvTerminalType.text = selected
+                binding.tvTerminalType.text = selected
                 uiRefreshOnSaveAndUpdate()
             }
         }
 
-        tvTerminalCountry.setOnClickListener {
+        binding.tvTerminalCountry.setOnClickListener {
             showWheelDialog(
                 context = requireContext(),
                 list = countryCodeMap.map { (code, name) -> "$name - $code" },
-                current = tvTerminalCountry.text?.toString()
+                current = binding.tvTerminalCountry.text?.toString()
             ) { selected ->
-                tvTerminalCountry.text = selected
+                binding.tvTerminalCountry.text = selected
                 uiRefreshOnSaveAndUpdate()
             }
         }
 
-        tvThresholdRandomSwitch.setOnClickListener {
+        binding.tvThresholdRandomSwitch.setOnClickListener {
             showWheelDialog(
                 context = requireContext(),
                 list = thresholdRandomSwitchMap.map { (code, name) -> "$name - $code" },
-                current = tvThresholdRandomSwitch.text?.toString()
+                current = binding.tvThresholdRandomSwitch.text?.toString()
             ) { selected ->
-                tvThresholdRandomSwitch.text = selected
+                binding.tvThresholdRandomSwitch.text = selected
                 uiRefreshOnSaveAndUpdate()
             }
         }
 
-        btnResetTermCap.setOnClickListener { onResetTermCapButtonClicked() }
-        btnUpdateTerminalParameters.setOnClickListener { onUpdateTerminalParametersButtonClicked() }
+        binding.btnResetTermCap.setOnClickListener { onResetTermCapButtonClicked() }
+        binding.btnUpdateTerminalParameters.setOnClickListener { onUpdateTerminalParametersButtonClicked() }
 
         uiRefreshOnSaveAndUpdate()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun onResetTermCapButtonClicked() {
 //        btnSaveAndUpdate.isEnabled = true
         termCapBytes = EmvUtil.hex6To3Bytes(DEFAULT_TERMINAL_CAPABILITIES)
-        inflateRow(llRow1, row1Spec)
-        inflateRow(llRow2, row2Spec)
-        inflateRow(llRow3, row3Spec)
+        inflateRow(binding.llRow1, row1Spec)
+        inflateRow(binding.llRow2, row2Spec)
+        inflateRow(binding.llRow3, row3Spec)
         uiRefreshOnSaveAndUpdate()
     }
 
     private fun onUpdateTerminalParametersButtonClicked() {
         sharedPreferences.edit {
-            putString(KEY_TERMINAL_TYPE, tvTerminalType.text.toString().takeLast(2))
-            putString(KEY_TERMINAL_COUNTRY_CODE, tvTerminalCountry.text.toString().takeLast(4))
-            putString(KEY_THRESHOLD_RANDOM_SWITCH, tvThresholdRandomSwitch.text.toString().takeLast(2))
+            putString(KEY_TERMINAL_TYPE, binding.tvTerminalType.text.toString().takeLast(2))
+            putString(KEY_TERMINAL_COUNTRY_CODE, binding.tvTerminalCountry.text.toString().takeLast(4))
+            putString(KEY_THRESHOLD_RANDOM_SWITCH, binding.tvThresholdRandomSwitch.text.toString().takeLast(2))
 
-            putString(KEY_TERMINAL_CAPABILITIES, tvTerminalCap.text.toString().trim().uppercase())
+            putString(KEY_TERMINAL_CAPABILITIES, binding.tvTerminalCap.text.toString().trim().uppercase())
         }
 
         val updatedTerminalParameters = buildString {
@@ -255,7 +260,7 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
             uiRefreshOnSaveAndUpdate()
             sharedVm.triggerTermParamsRefresh()
         }.onFailure {
-            tvInfo.text = it.message
+            binding.tvInfo.text = it.message
             it.printStackTrace()
         }
     }
@@ -333,24 +338,24 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
     }
 
     private fun isNothingChanged(): Boolean {
-        return tvTerminalCap.text == sharedPreferences.getString(KEY_TERMINAL_CAPABILITIES, DEFAULT_TERMINAL_CAPABILITIES)  &&
-                tvTerminalType.text.toString().takeLast(2) == sharedPreferences.getString(KEY_TERMINAL_TYPE, DEFAULT_TERMINAL_TYPE) &&
-                tvTerminalCountry.text.toString().takeLast(4) == sharedPreferences.getString(KEY_TERMINAL_COUNTRY_CODE, DEFAULT_TERMINAL_COUNTRY_CODE) &&
-                tvThresholdRandomSwitch.text.toString().takeLast(2) == sharedPreferences.getString(KEY_THRESHOLD_RANDOM_SWITCH, DEFAULT_THRESHOLD_RANDOM_SWITCH)
+        return binding.tvTerminalCap.text == sharedPreferences.getString(KEY_TERMINAL_CAPABILITIES, DEFAULT_TERMINAL_CAPABILITIES)  &&
+                binding.tvTerminalType.text.toString().takeLast(2) == sharedPreferences.getString(KEY_TERMINAL_TYPE, DEFAULT_TERMINAL_TYPE) &&
+                binding.tvTerminalCountry.text.toString().takeLast(4) == sharedPreferences.getString(KEY_TERMINAL_COUNTRY_CODE, DEFAULT_TERMINAL_COUNTRY_CODE) &&
+                binding.tvThresholdRandomSwitch.text.toString().takeLast(2) == sharedPreferences.getString(KEY_THRESHOLD_RANDOM_SWITCH, DEFAULT_THRESHOLD_RANDOM_SWITCH)
     }
 
     // <-----------------UI helper methods-----------------> //
 
     private fun uiRefreshOnSaveAndUpdate() {
-        tvTerminalCap.text = EmvUtil.bytesToHex6(termCapBytes)
-        btnUpdateTerminalParameters.isEnabled = !isNothingChanged()
-        if (tvTerminalCap.text.toString().trim().uppercase() == "E0F8C8") {
-            tvTerminalCap.setBackgroundColor(Color.GREEN)
+        binding.tvTerminalCap.text = EmvUtil.bytesToHex6(termCapBytes)
+        binding.btnUpdateTerminalParameters.isEnabled = !isNothingChanged()
+        if (binding.tvTerminalCap.text.toString().trim().uppercase() == "E0F8C8") {
+            binding.tvTerminalCap.setBackgroundColor(Color.GREEN)
         } else {
-            tvTerminalCap.setBackgroundColor(Color.RED)
+            binding.tvTerminalCap.setBackgroundColor(Color.RED)
         }
-        tvInfo.text = buildString {
-            append("${hexToBinaryBytes(tvTerminalCap.text.toString().trim().uppercase())} - Current\n")
+        binding.tvInfo.text = buildString {
+            append("${hexToBinaryBytes(binding.tvTerminalCap.text.toString().trim().uppercase())} - Current\n")
             append("11100000 11111000 11001000 - E0F8C8\n\n")
 
             append("<===========Terminal Cap Info===========>\n\n")
