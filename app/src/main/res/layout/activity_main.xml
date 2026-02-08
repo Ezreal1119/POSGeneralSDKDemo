@@ -144,9 +144,6 @@
                     android:drawableEnd="@drawable/settings_icon"
                     />
 
-
-
-
                 <Button
                     android:id="@+id/btnApiTest"
                     style="@style/FancyActionButton"
@@ -156,6 +153,14 @@
                     android:textStyle="italic"
                     android:drawableEnd="@drawable/api_icon"
                     />
+
+                <TextView
+                    android:id="@+id/tvAppVersion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="#888888"
+                    tools:text="VERSION: 1.0.xxxxxxxx"/>
 
             </LinearLayout>
         </ScrollView>

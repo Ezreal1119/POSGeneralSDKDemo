@@ -63,7 +63,6 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
                     "-------------------------------\n" +
                     "    THANK YOU FOR SHOPPING     \n" +
                     "       PLEASE VISIT AGAIN      \n"
-        private const val MQTT_URL = "39.101.193.145"
         private const val HTML_WEB_SOCKET_FILE_NAME = "web_socket_demo.html"
         private val textFormat = Bundle().apply {
             putInt(ContentFormat.FONT.value, 1)
@@ -168,7 +167,7 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
 
     override fun onStart() {
         super.onStart()
-        mqttSubscribeAndConnect(MQTT_URL)
+        mqttSubscribeAndConnect(BuildConfig.MQTT_HOST)
         if (WebSocketPrintService.isRunning) {
             WebSocketPrintService.bind(this, conn)
         }

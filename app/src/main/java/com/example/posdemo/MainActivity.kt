@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnUtilities.setOnClickListener { startActivity(Intent(this, UtilitiesActivity::class.java)) }
         binding.btnOthers.setOnClickListener { startActivity(Intent(this, OthersActivity::class.java)) }
         binding.btnApiTest.setOnClickListener { startActivity(Intent(this, ApiTestActivity::class.java)) }
+
+        binding.tvAppVersion.text = BuildConfig.VERSION_NAME
     }
-
-
 }
