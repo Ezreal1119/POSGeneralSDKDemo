@@ -17,29 +17,30 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-//    signingConfigs {
-//        create("release") {
-//            storeFile = file("/Users/patrickxu/keystores/release-key.jks")
-//            storePassword = "xxxxxxxxxx"
-//            keyAlias = "release"
-//            keyPassword = "xxxxxxxxxx"
-//        }
-//    }
+    signingConfigs {
+        create("release") {
+            storeFile = file(project.property("RELEASE_STORE_FILE") as String)
+            storePassword = project.property("RELEASE_STORE_PASSWORD") as String
+            keyAlias = project.property("RELEASE_KEY_ALIAS") as String
+            keyPassword = project.property("RELEASE_KEY_PASSWORD") as String
+        }
+    }
     buildTypes {
         debug {
             isMinifyEnabled = false
             isShrinkResources = false
             buildConfigField("String", "MQTT_HOST", "\"39.101.193.145\"")
         }
-//        release {
-//            isMinifyEnabled = true // Minify the naming of the codes
-//            isShrinkResources = false // Delete all the codes that are not in use
-//            signingConfig = signingConfigs.getByName("release")
-//            proguardFiles(
-//                getDefaultProguardFile("proguard-android-optimize.txt"),
-//                "proguard-rules.pro"
-//            )
-//        }
+        release {
+            isMinifyEnabled = false // Minify the naming of the codes
+            isShrinkResources = false // Delete all the codes that are not in use
+            signingConfig = signingConfigs.getByName("release")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            buildConfigField("String", "MQTT_HOST", "\"39.101.193.145\"")
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -75,7 +76,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation(files("libs/urovoSdkLibs_New_v1.0.23_release.aar"))
+    implementation(files("libs/urovoSdkLibs_New_v1.0.23_release.aar")) // UROVO POS SDK
     implementation("com.google.zxing:core:3.5.3") // For BarcodeFormat
     implementation("com.squareup.okhttp3:okhttp:4.12.0") // For upload log
     implementation("androidx.fragment:fragment-ktx:1.6.2") // sharedViewModel for EMV
