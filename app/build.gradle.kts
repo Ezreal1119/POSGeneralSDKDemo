@@ -20,9 +20,9 @@ android {
 //    signingConfigs {
 //        create("release") {
 //            storeFile = file("/Users/patrickxu/keystores/release-key.jks")
-//            storePassword = "Xujiansong520!"
+//            storePassword = "xxxxxxxxxx"
 //            keyAlias = "release"
-//            keyPassword = "Xujiansong520!"
+//            keyPassword = "xxxxxxxxxx"
 //        }
 //    }
     buildTypes {

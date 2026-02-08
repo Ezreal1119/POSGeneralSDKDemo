@@ -22,6 +22,9 @@ class MainActivity : AppCompatActivity() {
         binding.btnOthers.setOnClickListener { startActivity(Intent(this, OthersActivity::class.java)) }
         binding.btnApiTest.setOnClickListener { startActivity(Intent(this, ApiTestActivity::class.java)) }
 
-        binding.tvAppVersion.text = BuildConfig.VERSION_NAME
+        binding.tvAppVersion.text = buildString {
+            append("https://github.com/Ezreal1119/POSGeneralSDKDemo\n")
+            append("Version: ${BuildConfig.VERSION_NAME}")
+        }
     }
 }
