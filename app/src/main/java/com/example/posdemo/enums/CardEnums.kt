@@ -1,0 +1,35 @@
+package com.example.posdemo.enums
+
+enum class CardType(val slot: Byte) {
+    ICCard(0),
+    PSAM_1(1),
+    PSAM_2(2)
+}
+enum class ApduCommand(val apduStr: String) {
+    SELECT_PSE("00A404000E315041592E5359532E444446303100"),
+    SELECT_PPSE("00A404000E325041592E5359532E444446303100"),
+    // "00A40400"("00A4040C"): (SELECT_prefix + Select by DF Name)
+    // "0E": Lc = 14 Bytes -> PSE/PPSE
+    // "315041592E5359532E4444463031": SELECT_PSE(1PAY.SYS.DDF01); If "325041592E5359532E4444463031", then SELECT_PPSE(2PAY.SYS.DDF01)
+    READ_RECORD_SFI_1_R_1("00B2010C00"),
+    READ_RECORD_SFI_2_R_1("00B2011400"),
+    READ_RECORD_SFI_2_R_2("00B2021400"),
+    READ_RECORD_SFI_2_R_3("00B2031400"),
+    READ_RECORD_SFI_2_R_4("00B2041400"),
+    READ_RECORD_SFI_2_R_5("00B2051400"),
+    SELECT_AID("<SELECT_AID>"),
+    GPO("<GPO>"),
+    // "07": Lc = 7 Bytes -> AID(RID + AID_suffix)
+    // "A000000003101000": Visa Credit
+    GET_CHALLENGE("0084000004"),
+    APDU_IN_BOX("")
+}
+
+enum class MagCardTag(val value: String) {
+    PAN("PAN"),
+    TRACK1("TRACK1"),
+    TRACK2("TRACK2"),
+    TRACK3("TRACK3"),
+    SERVICE_CODE("SERVICE_CODE"),
+    EXPIRED_DATE("EXPIRED_DATE")
+}

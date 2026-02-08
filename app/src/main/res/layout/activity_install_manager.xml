@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:textSize="25dp"
-        android:text="Install Manager - Patrick"
+        android:text="Install Manager"
         android:gravity="center"
         android:textStyle="bold"
         android:layout_margin="7dp"

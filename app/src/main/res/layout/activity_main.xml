@@ -34,7 +34,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="POS SDK Demo"
+                android:text="POS Demo"
                 android:textStyle="bold"
                 android:textSize="25sp"
                 android:textColor="#111827"
@@ -102,6 +102,15 @@
                     android:drawableEnd="@drawable/pinpad_icon"
                     />
 
+                <Button
+                    android:id="@+id/btnCardReader"
+                    style="@style/FancyActionButton"
+                    android:text="Card Reader"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="italic"
+                    android:drawableEnd="@drawable/mag_card_icon"
+                    />
 
                 <Button
                     android:id="@+id/btnPrinter"
@@ -113,25 +122,17 @@
                     android:drawableEnd="@drawable/printer_icon"
                     />
 
-                <Button
-                    android:id="@+id/btnMagCardReader"
-                    style="@style/FancyActionButton"
-                    android:text="MagCardReader"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="italic"
-                    android:drawableEnd="@drawable/mag_card_icon"
-                    />
 
                 <Button
-                    android:id="@+id/btnICCardReader"
+                    android:id="@+id/btnUtilities"
                     style="@style/FancyActionButton"
-                    android:text="ICCardReader"
+                    android:text="Utilities"
                     android:textColor="#FFFFFF"
                     android:textSize="18sp"
                     android:textStyle="italic"
-                    android:drawableEnd="@drawable/iccard_icon"
+                    android:drawableEnd="@drawable/utilities_icon"
                     />
+
 
                 <Button
                     android:id="@+id/btnOthers"
@@ -144,45 +145,6 @@
                     />
 
 
-                <Button
-                    android:id="@+id/btnCameraScan"
-                    style="@style/FancyActionButton"
-                    android:text="Camera Scan"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="italic"
-                    android:drawableEnd="@drawable/camera_icon"
-                    />
-
-                <Button
-                    android:id="@+id/btnBeeper"
-                    style="@style/FancyActionButton"
-                    android:text="Beeper"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="italic"
-                    android:drawableEnd="@drawable/beeper_icon"
-                    />
-
-                <Button
-                    android:id="@+id/btnLed"
-                    style="@style/FancyActionButton"
-                    android:text="LED"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="italic"
-                    android:drawableEnd="@drawable/led_icon"
-                    />
-
-                <Button
-                    android:id="@+id/btnNewSerialPort"
-                    style="@style/FancyActionButton"
-                    android:text="Serial Port"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="italic"
-                    android:drawableEnd="@drawable/serial_port_icon"
-                    />
 
 
                 <Button
@@ -194,11 +156,6 @@
                     android:textStyle="italic"
                     android:drawableEnd="@drawable/api_icon"
                     />
-
-                <!-- Bottom spacing -->
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="6dp"/>
 
             </LinearLayout>
         </ScrollView>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="10dp"
+    android:orientation="vertical">
+
+
+    <Button
+        android:id="@+id/btnFrontScan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Front Scan"
+        android:textSize="20sp"
+        android:layout_margin="5dp"
+        android:padding="0dp"/>
+
+    <Button
+        android:id="@+id/btnBackScan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back Scan"
+        android:textSize="20sp"
+        android:layout_margin="5dp"
+        android:padding="0dp"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/border"
+        android:padding="10dp">
+
+
+        <TextView
+            android:id="@+id/tvResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="17sp"/>
+
+    </ScrollView>
+
+</LinearLayout>

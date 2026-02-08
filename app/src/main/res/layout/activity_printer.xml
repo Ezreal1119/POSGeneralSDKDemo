@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:textSize="25dp"
-            android:text="Printer Demo - Patrick"
+            android:text="Printer Demo"
             android:gravity="center"
             android:textStyle="bold"
             android:background="@drawable/border"
@@ -117,7 +117,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Print Text Left Right"
-                    android:textSize="10sp"
+                    android:textSize="12sp"
                     android:layout_margin="1dp"
                     android:padding="0dp"/>
 
@@ -127,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Print Text Left Middle Right"
-                    android:textSize="10sp"
+                    android:textSize="12sp"
                     android:layout_margin="1dp"
                     android:padding="0dp"/>
 

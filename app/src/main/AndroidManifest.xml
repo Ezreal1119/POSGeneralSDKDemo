@@ -14,9 +14,9 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
 
     <queries>
         <package android:name="com.google.android.gms" />
@@ -34,16 +34,24 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/shrug_jinx"
+        android:icon="@mipmap/pikachu"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.POSGeneralSDKDemo">
+        <activity
+            android:name=".CardReaderActivity"
+            android:exported="false" />
+        <activity
+            android:name=".UtilitiesActivity"
+            android:exported="false" />
+
         <service
             android:name=".services.WebSocketPrintService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync|connectedDevice"/>
+            android:foregroundServiceType="dataSync|connectedDevice" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -54,9 +62,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity
-            android:name=".printers.WebSocketPrinterActivity"
-            android:exported="false" />
         <activity
             android:name=".others.SettingsActivity"
             android:exported="false" />
@@ -96,7 +101,7 @@
             android:name=".ApiTestActivity"
             android:exported="false" />
         <activity
-            android:name=".NewSerialPortActivity"
+            android:name=".others.NewSerialPortActivity"
             android:exported="false" />
         <activity
             android:name=".EmvActivity"
@@ -117,25 +122,10 @@
             android:name=".OthersActivity"
             android:exported="false" />
         <activity
-            android:name=".ICCardActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MagCardReaderActivity"
-            android:exported="false" />
-        <activity
-            android:name=".CameraScanActivity"
-            android:exported="false" />
-        <activity
             android:name=".PrinterActivity"
             android:exported="false" />
         <activity
             android:name=".PinpadActivity"
-            android:exported="false" />
-        <activity
-            android:name=".LedActivity"
-            android:exported="false" />
-        <activity
-            android:name=".BeeperActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

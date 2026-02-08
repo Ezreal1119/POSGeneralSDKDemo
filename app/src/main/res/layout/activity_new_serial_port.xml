@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:textSize="25dp"
-        android:text="New Serial Port - Patrick"
+        android:text="New Serial Port"
         android:gravity="center"
         android:textStyle="bold"
         android:layout_margin="5dp"

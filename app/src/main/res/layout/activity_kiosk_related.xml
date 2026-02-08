@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:textSize="25dp"
-        android:text="Kiosk Demo - Patrick"
+        android:text="Kiosk Demo"
         android:gravity="center"
         android:textStyle="bold"
         android:layout_margin="5dp"
@@ -245,7 +245,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="2"
                         android:textSize="12sp"
-                        android:text="com.example.posgeneralsdkdemo" />
+                        android:text="com.example.posdemo" />
 
 
                 </LinearLayout>
