@@ -117,7 +117,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Print Text Left Right"
-                    android:textSize="13sp"
+                    android:textSize="10sp"
                     android:layout_margin="1dp"
                     android:padding="0dp"/>
 
@@ -127,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Print Text Left Middle Right"
-                    android:textSize="13sp"
+                    android:textSize="10sp"
                     android:layout_margin="1dp"
                     android:padding="0dp"/>
 
@@ -184,6 +184,44 @@
                 android:text="SPP Bluetooth Printer"
                 android:textSize="20sp"/>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnStartWebSocketPrinter"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Start WebSocket"
+                    android:textSize="12sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnOpenPrintWeb"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Open Print Web"
+                    android:textSize="12sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnStopWebSocketPrinter"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Stop WebSocket"
+                    android:textSize="12sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+
+            </LinearLayout>
+
             <Button
                 android:id="@+id/btnWifiPrinter"
                 android:layout_width="match_parent"
@@ -198,10 +236,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="15sp"/>
 
-
         </LinearLayout>
-
-
 
     </ScrollView>
     

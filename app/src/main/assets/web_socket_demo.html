@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebSocket Printer Client - Patrick</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 16px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+    input, textarea { width: 100%; padding: 10px; font-size: 14px; box-sizing: border-box; }
+    input[type="text"] { flex: 1; min-width: 320px; }
+    button { padding: 10px 16px; font-size: 14px; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status { padding: 10px; border-radius: 6px; margin-top: 8px; }
+    .ok { background: #e7f7ee; border: 1px solid #bde5c8; }
+    .bad { background: #fdeaea; border: 1px solid #f1b5b5; }
+    .log { white-space: pre-wrap; word-break: break-word; background: #f6f6f6; border: 1px solid #ddd; padding: 10px; border-radius: 6px; min-height: 140px; }
+    label { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h2>WebSocket Printer - Patrick</h2>
+
+  <div class="row">
+    <label for="wsUrl" style="min-width: 170px;">WebSocket URL:</label>
+    <input id="wsUrl" type="text" value="ws://127.0.0.1:8080/print" />
+  </div>
+
+  <div class="row">
+    <button id="btnConnect" onclick="connectWs()">Connect</button>
+    <button id="btnDisconnect" onclick="disconnectWs()" disabled>Disconnect</button>
+  </div>
+
+  <div id="status" class="status bad">Status: Disconnected</div>
+
+  <hr />
+
+  <div class="row">
+    <button id="btnPrint" onclick="printHexString()" disabled>Print Receipt (ESC/POS)</button>
+  </div>
+
+  <div class="row">
+    <label>Log:</label>
+  </div>
+  <div id="log" class="log">Ready.</div>
+
+<script>
+  let ws = null;
+
+  // Keep the data inside the file (not user-editable)
+  const PRINT_HEX_STRING = `1B401B61011B45012020202020202057414C4D41525420535550455243454E54455220202020200A2031323334204D41494E205354524545542C20414E59544F574E2C205553410A2020202020202054454C3A202835353529203132332D3435363720202020200A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A51545920204954454D2020202020202020205052494345202020544F54414C0A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A20312020204D494C4B20312047414C20202024332E343920202024332E34390A20322020204252454144204C4F414620202024312E393920202024332E39380A20312020204547475320444F5A454E20202024322E373920202024322E37390A20332020204150504C45532020202020202024302E393920202024322E39370A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A535542544F54414C20202020202020202020202020202020202431332E32330A5441582028382E3235252920202020202020202020202020202024312E30390A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A544F54414C20202020202020202020202020202020202020202431342E33320A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A434153482020202020202020202020202020202020202020202432302E30300A4348414E4745202020202020202020202020202020202020202024352E36380A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A202020205448414E4B20594F5520464F522053484F5050494E4720202020200A20202020202020504C4541534520564953495420414741494E2020202020200A1B45001B61005369676E61747572653A205061747269636B2058750A1B6102446174653A20323032362D30322D30370A0A0A`;
+
+  function setStatus(connected, extra = "") {
+    const s = document.getElementById("status");
+    const btnConnect = document.getElementById("btnConnect");
+    const btnDisconnect = document.getElementById("btnDisconnect");
+    const btnPrint = document.getElementById("btnPrint");
+
+    if (connected) {
+      s.className = "status ok";
+      s.textContent = "Status: Connected" + (extra ? (" — " + extra) : "");
+      btnConnect.disabled = true;
+      btnDisconnect.disabled = false;
+      btnPrint.disabled = false;
+    } else {
+      s.className = "status bad";
+      s.textContent = "Status: Disconnected" + (extra ? (" — " + extra) : "");
+      btnConnect.disabled = false;
+      btnDisconnect.disabled = true;
+      btnPrint.disabled = true;
+    }
+  }
+
+  function log(msg) {
+    const el = document.getElementById("log");
+    const ts = new Date().toLocaleTimeString();
+    el.textContent += `\n[${ts}] ${msg}`;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function connectWs() {
+    const url = document.getElementById("wsUrl").value.trim();
+    if (!url) return alert("Please input WebSocket URL");
+
+    try {
+      log("Connecting to: " + url);
+      ws = new WebSocket(url);
+
+      ws.onopen = () => {
+        setStatus(true);
+        log("Connected.");
+      };
+
+      ws.onclose = (e) => {
+        log(`Disconnected. code=${e.code}, reason=${e.reason || "(none)"}`);
+        setStatus(false);
+        ws = null;
+      };
+
+      ws.onerror = (e) => {
+        log("WebSocket error.");
+        setStatus(false, "error");
+      };
+
+      ws.onmessage = (e) => {
+        log("Received: " + e.data);
+      };
+    } catch (err) {
+      log("Connect failed: " + err.message);
+      setStatus(false, "connect failed");
+    }
+  }
+
+  function disconnectWs() {
+    if (!ws) return;
+    log("Closing connection...");
+    ws.close(1000, "client disconnect");
+  }
+
+  function printHexString() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      alert("WebSocket not connected");
+      return;
+    }
+
+    const hex = (PRINT_HEX_STRING || "").trim();
+    if (!hex) {
+      alert("PRINT_HEX_STRING is empty in the HTML file.");
+      return;
+    }
+
+    const payload = hex.replace(/\s+/g, "");
+    ws.send(payload);
+    log("Sent hex string (" + (payload.length / 2) + " bytes): " + payload);
+  }
+
+  setStatus(false);
+</script>
+</body>
+</html>

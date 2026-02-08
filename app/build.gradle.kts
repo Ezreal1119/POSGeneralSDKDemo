@@ -65,4 +65,5 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.6.2") // sharedViewModel for EMV
     implementation("com.hivemq:hivemq-mqtt-client:1.3.12") // For MQTT online Printer
     implementation("com.google.code.gson:gson:2.10.1") // For design of Blind PinPad
+    implementation("org.java-websocket:Java-WebSocket:1.5.4") // For WebSocket Printer
 }
