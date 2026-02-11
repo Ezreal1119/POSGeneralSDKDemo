@@ -7,30 +7,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_margin="7dp">
-
-        <TextView
-            android:id="@+id/tvPrinterTitle"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textSize="25dp"
-            android:text="Settings Demo"
-            android:gravity="center"
-            android:textStyle="bold"
-            android:background="@drawable/border"
-            android:visibility="visible"/>
-
-        <ProgressBar
-            android:id="@+id/pbWaiting"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#FF6666"
-            android:visibility="invisible"/>
-
-    </FrameLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -62,6 +38,7 @@
                         android:layout_weight="1"
                         android:text="Brightness:"
                         android:textSize="15sp"
+                        android:textStyle="bold"
                         android:gravity="center"/>
 
                     <com.google.android.material.slider.Slider
@@ -73,6 +50,7 @@
                         android:valueTo="255"
                         android:value="128"
                         android:stepSize="1"/>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -100,6 +78,71 @@
                         android:layout_margin="1dp"
                         android:padding="0dp"/>
 
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:background="@drawable/border"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="Font Size:"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:gravity="center" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderFontSize"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="3"
+                        android:valueFrom="0.5"
+                        android:valueTo="1.5"
+                        android:value="1"
+                        android:stepSize="0.1"/>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnSetFontSize"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Set Font Size"
+                        android:textSize="15sp"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnResetFontSize"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Reset Font Size"
+                        android:layout_margin="1dp"
+                        android:textSize="15sp"
+                        android:padding="0dp"/>
 
                 </LinearLayout>
 
@@ -188,6 +231,8 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -278,11 +323,42 @@
 
 
             </LinearLayout>
+
             <Button
                 android:id="@+id/btnTtsTest"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="TTS Testing (Need download for the first time)"/>
+                android:textSize="15sp"
+                android:text="TTS Test(Need Download)"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnWebViewTestUrovo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="WebView Test Urovo"
+                    android:textSize="12sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnWebViewTestLocal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="WebView Test Local"
+                    android:textSize="12sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+
+            </LinearLayout>
+
 
         </LinearLayout>
         

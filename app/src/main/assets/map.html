@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Offline Map</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0f14; color: #e8eef6; font-family: sans-serif; }
+    #wrap { position: relative; height: 100%; width: 100%; overflow: hidden; }
+    #hud {
+      position: absolute; left: 12px; top: 12px; right: 12px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      z-index: 10;
+      backdrop-filter: blur(6px);
+    }
+    #status { opacity: 0.9; }
+    #canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #hint {
+      position: absolute; left: 12px; bottom: 12px; right: 12px;
+      font-size: 12px; opacity: 0.7;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hud">
+    <div id="status">Page loaded. Waiting for showPoint(lat, lng)...</div>
+    <div id="coord"></div>
+  </div>
+  <canvas id="canvas"></canvas>
+  <div id="hint">Offline view (no tiles). It only visualizes a point + crosshair + grid.</div>
+</div>
+
+<script>
+  (function() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const statusEl = document.getElementById('status');
+    const coordEl = document.getElementById('coord');
+
+    let current = null;
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(canvas.clientWidth * dpr);
+      canvas.height = Math.floor(canvas.clientHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    }
+
+    function drawGrid(w, h) {
+      ctx.fillStyle = '#0b0f14';
+      ctx.fillRect(0, 0, w, h);
+
+      // subtle grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+
+      const step = 40;
+      for (let x = 0; x <= w; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0); ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= h; y += step) {
+        ctx.beginPath();
+        ctx.moveTo(0, y); ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      // center crosshair
+      ctx.strokeStyle = 'rgba(0,200,255,0.55)';
+      ctx.lineWidth = 2;
+      const cx = w / 2, cy = h / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 22, cy); ctx.lineTo(cx + 22, cy);
+      ctx.moveTo(cx, cy - 22); ctx.lineTo(cx, cy + 22);
+      ctx.stroke();
+
+      // center dot
+      ctx.fillStyle = 'rgba(0,200,255,0.9)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawPoint(w, h, lat, lng) {
+      // We don't have real map projection/tiles. Just visualize "a point exists".
+      // Put the point near center with a small deterministic offset from lat/lng
+      // so different coords look different but always visible.
+      const cx = w / 2, cy = h / 2;
+      const ox = ((lng % 1) - 0.5) * 200; // -100..100 px approx
+      const oy = ((lat % 1) - 0.5) * -200;
+
+      const x = Math.max(20, Math.min(w - 20, cx + ox));
+      const y = Math.max(20, Math.min(h - 20, cy + oy));
+
+      // red marker
+      ctx.fillStyle = 'rgba(255,80,80,0.95)';
+      ctx.strokeStyle = 'rgba(255,80,80,0.35)';
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fill();
+
+      // label
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(`Lat: ${lat.toFixed(6)}  Lng: ${lng.toFixed(6)}`, x + 16, y - 12);
+    }
+
+    function draw() {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (!w || !h) return;
+
+      drawGrid(w, h);
+
+      if (current) {
+        drawPoint(w, h, current.lat, current.lng);
+      }
+    }
+
+    window.showPoint = function(lat, lng) {
+      // Make it robust against "null"/"undefined" being injected
+      const nLat = Number(lat);
+      const nLng = Number(lng);
+
+      if (!Number.isFinite(nLat) || !Number.isFinite(nLng)) {
+        statusEl.textContent = `showPoint() got invalid coords: lat=${lat}, lng=${lng}`;
+        coordEl.textContent = '';
+        console.log(statusEl.textContent);
+        return;
+      }
+
+      current = { lat: nLat, lng: nLng };
+      statusEl.textContent = 'Point received from Android (evaluateJavascript).';
+      coordEl.textContent = `Lat=${nLat}  Lng=${nLng}`;
+      console.log('showPoint called:', nLat, nLng);
+      draw();
+    };
+
+    window.addEventListener('resize', resize);
+    // initial
+    resize();
+  })();
+</script>
+</body>
+</html>

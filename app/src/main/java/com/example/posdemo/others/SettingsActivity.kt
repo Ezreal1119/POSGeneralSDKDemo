@@ -1,6 +1,7 @@
 package com.example.posdemo.others
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.device.DeviceManager
 import android.os.Bundle
 import android.provider.Settings
@@ -10,6 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.databinding.ActivitySettingsBinding
 import com.example.posdemo.utils.PermissionUtil
+import com.example.posdemo.webview.WebViewActivity
 import java.util.Locale
 
 class SettingsActivity : AppCompatActivity() {
@@ -23,46 +25,44 @@ class SettingsActivity : AppCompatActivity() {
 
         binding.btnGetBrightness.setOnClickListener { onGetBrightnessButtonClicked() }
         binding.btnSetBrightness.setOnClickListener { onSetBrightnessButtonClicked() }
+        binding.btnSetFontSize.setOnClickListener { onSetFontSizeButtonClicked() }
+        binding.btnResetFontSize.setOnClickListener { onResetFontSizeButtonClicked() }
         binding.btnQueryApnByName.setOnClickListener { onQueryApnByNameButtonClicked() }
         binding.btnAddApn.setOnClickListener { onAddApnButtonClicked() }
         binding.btnDeleteApnByName.setOnClickListener { onDeleteApnByNameButtonClicked() }
         binding.btnSetLockPassword.setOnClickListener { onSetLockPasswordButtonClicked() }
         binding.btnClearLockPassword.setOnClickListener { onClearLockPasswordButtonClicked() }
-        binding.btnTtsTest.setOnClickListener { onTtsTestButtonClicked() }
         binding.btnGetTimeSettings.setOnClickListener { onGetTimeSettingsButtonClicked() }
         binding.btnSetTimeSettings.setOnClickListener { onSetTimeSettingsButtonClicked() }
+        binding.btnTtsTest.setOnClickListener { onTtsTestButtonClicked() }
+        binding.btnWebViewTestUrovo.setOnClickListener { onWebViewTestUrovoButtonClicked() }
+
+        binding.btnWebViewTestLocal.setOnClickListener { onWebViewTestLocalButtonClicked() }
     }
 
-
-    private fun onGetTimeSettingsButtonClicked() {
+    private fun onSetFontSizeButtonClicked() {
         runCatching {
-            val ntpServer = DeviceManager().getSettingProperty("Global-ntp_server")
-            val timeZone = DeviceManager().getSettingProperty("persist-persist.sys.timezone")
-            return@runCatching Pair(ntpServer, timeZone)
-        }.onSuccess { (ntpServer, timeZone) ->
-            Toast.makeText(this, "ntpServer: $ntpServer\nTimeZone: $timeZone", Toast.LENGTH_SHORT).show()
+            DeviceManager().setSettingProperty("System-font_scale", binding.sliderFontSize.value.toString());
+        }.onSuccess {
+            Toast.makeText(this, "Set Font Size to ${binding.sliderFontSize.value} successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Set Font Size failed", Toast.LENGTH_SHORT).show()
             it.printStackTrace()
         }
     }
 
-    private fun onSetTimeSettingsButtonClicked() {
+    private fun onResetFontSizeButtonClicked() {
         runCatching {
-            AlertDialog.Builder(this)
-                .setTitle("Confirm")
-                .setMessage("The device will reboot to change TimeZone to 'America/Los_Angeles', are you sure?")
-                .setNegativeButton("Cancel", null)
-                .setPositiveButton("Confirm") { _, _ ->
-                    DeviceManager().setSettingProperty("persist-persist.sys.timezone", "America/Los_Angeles")
-                    DeviceManager().shutdown(true)
-                }
-                .show()
+            DeviceManager().setSettingProperty("System-font_scale", "1")
+        }.onSuccess {
+            binding.sliderFontSize.value = 1F
+            Toast.makeText(this, "Reset Font Size successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
-            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Reset Font Size failed", Toast.LENGTH_SHORT).show()
             it.printStackTrace()
         }
     }
+
 
     private fun onGetBrightnessButtonClicked() {
         runCatching {
@@ -140,6 +140,37 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    private fun onGetTimeSettingsButtonClicked() {
+        runCatching {
+            val ntpServer = DeviceManager().getSettingProperty("Global-ntp_server")
+            val timeZone = DeviceManager().getSettingProperty("persist-persist.sys.timezone")
+            return@runCatching Pair(ntpServer, timeZone)
+        }.onSuccess { (ntpServer, timeZone) ->
+            Toast.makeText(this, "ntpServer: $ntpServer\nTimeZone: $timeZone", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onSetTimeSettingsButtonClicked() {
+        runCatching {
+            AlertDialog.Builder(this)
+                .setTitle("Confirm")
+                .setMessage("The device will reboot to change TimeZone to 'America/Los_Angeles', are you sure?")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Confirm") { _, _ ->
+                    DeviceManager().setSettingProperty("persist-persist.sys.timezone", "America/Los_Angeles")
+//                    DeviceManager().setSettingProperty("persist-persist.sys.timezone", "Asia/Shanghai")
+                    DeviceManager().shutdown(true)
+                }
+                .show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
 
     private fun onTtsTestButtonClicked() {
         lateinit var tts: TextToSpeech
@@ -171,6 +202,20 @@ class SettingsActivity : AppCompatActivity() {
                 )
             }
         }
+    }
+
+    private fun onWebViewTestUrovoButtonClicked() {
+        val intent = Intent(this, WebViewActivity::class.java).apply {
+            putExtra("url", "https://en.urovo.com/")
+        }
+        startActivity(intent)
+    }
+
+    private fun onWebViewTestLocalButtonClicked() {
+        val intent = Intent(this, WebViewActivity::class.java).apply {
+            putExtra("url", "file:///android_asset/web_socket_demo.html")
+        }
+        startActivity(intent)
     }
 
 

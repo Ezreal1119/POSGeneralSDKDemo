@@ -5,44 +5,29 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp"
     android:orientation="vertical">
 
-
-    <TextView
-        android:id="@+id/tvIntro"
+    <WebView
+        android:id="@+id/webViewLocation"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:textSize="25dp"
-        android:text="Device Info"
-        android:gravity="center"
-        android:textStyle="bold"
-        android:layout_margin="7dp"
-        android:background="@drawable/border"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
 
-
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="@drawable/border"
-        android:padding="10dp"
-        android:layout_margin="10dp">
-
+        android:layout_margin="10dp"
+        android:padding="5dp">
 
         <TextView
             android:id="@+id/tvResult"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="17sp"/>
+            android:textSize="15sp"/>
 
-    </ScrollView>
-
-    <Button
-        android:id="@+id/btnGetLocation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Get Location"/>
+    </LinearLayout>
 
 
 </LinearLayout>

@@ -41,6 +41,7 @@ import java.util.UUID
 class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
 
     companion object {
+        private const val PERMISSION_REQ_BT_NOTIFICATION = 1002
         private const val CONTENT =
             "       WALMART SUPERCENTER     \n" +
                     " 1234 MAIN STREET, ANYTOWN, USA\n" +
@@ -197,11 +198,21 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
         deviceId: Int
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults, deviceId)
-        if (requestCode == PERMISSION_REQ_BT) {
-            if (PermissionUtil.checkPermissions(this, PERMISSIONS_BT)) {
-                Toast.makeText(this, "Bluetooth permission granted. Please tap again to scan.", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Bluetooth permission denied.", Toast.LENGTH_SHORT).show()
+
+        when (requestCode) {
+            PERMISSION_REQ_BT -> {
+                if (PermissionUtil.checkPermissions(this, PERMISSIONS_BT)) {
+                    Toast.makeText(this, "Bluetooth permission granted. Please tap again to scan.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Bluetooth permission denied.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            PERMISSION_REQ_BT_NOTIFICATION -> {
+                if (PermissionUtil.checkPermissions(this, PERMISSIONS_BT)) {
+                    Toast.makeText(this, "BT&Notification permission granted. Please tap again.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "BT&Notification permission denied.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -505,7 +516,7 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
 
 
     private fun onStartWebSocketPrinterButtonClicked() {
-        if(!PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS) + PERMISSIONS_BT, 1001)) {
+        if(!PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS) + PERMISSIONS_BT, PERMISSION_REQ_BT_NOTIFICATION)) {
             Toast.makeText(this, "Please grant Permission first", Toast.LENGTH_SHORT).show()
             return
         }

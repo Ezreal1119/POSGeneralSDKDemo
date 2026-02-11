@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <queries>
         <package android:name="com.google.android.gms" />
@@ -31,6 +32,7 @@
     </queries>
 
     <application
+        android:name=".PatrickApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -39,6 +41,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.POSGeneralSDKDemo">
+        <activity
+            android:name=".maps.LocationActivity"
+            android:exported="false" />
+
+        <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="N0AnKIaZBda7MOQOdsTXR8HREhLFoNhk" />
+
+        <activity
+            android:name=".webview.WebViewActivity"
+            android:exported="false" />
         <activity
             android:name=".CardReaderActivity"
             android:exported="false" />

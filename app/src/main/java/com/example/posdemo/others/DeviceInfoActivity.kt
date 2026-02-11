@@ -1,5 +1,7 @@
 package com.example.posdemo.others
 
+import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.device.DeviceManager
 import android.location.LocationManager
@@ -11,9 +13,12 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.databinding.ActivityDeviceInfoBinding
+import com.example.posdemo.maps.LocationActivity
 import com.example.posdemo.utils.DeviceInfoUtil
+import com.example.posdemo.utils.PermissionUtil
 import com.urovo.sdk.utils.SystemProperties.getSystemProperty
 import java.nio.charset.StandardCharsets
 import java.security.KeyPairGenerator
@@ -29,10 +34,14 @@ import java.util.regex.Pattern
 // <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
 // <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
-private const val GOOGLE_ROOT_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xUFmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5jlRfdnJLmN0pTy/4lj4/7tv0Sk3iiKkypnEUtR6WfMgH0QZfKHM1+di+y9TFRtv6y//0rb+T+W8a9nsNL/ggjnar86461qO0rOs2cXjp3kOG1FEJ5MVmFmBGtnrKpa73XpXyTqRxB/M0n1n/W9nGqC4FSYa04T6N5RIZGBN2z2MT5IKGbFlbC8UrW0DxW7AYImQQcHtGl/m00QLVWutHQoVJYnFPlXTcHYvASLu+RhhsbDmxMgJJ0mcDpvsC4PjvB+TxywElgS70vE0XmLD+OJtvsBslHZvPBKCOdT0MS+tgSOIfga+z1Z1g7+DVagf7quvmag8jfPioyKvxnK/EgsTUVi2ghzq8wm27ud/mIM7AY2qEORR8Go3TVB4HzWQgpZrt3i5MIlCaY504LzSRiigHCzAPlHws+W0rB5N+er5/2pJKnfBSDiCiFAVtCLOZ7gLiMm0jhO2B6tUXHI/+MRPjy02i59lINMRRev56GKtcd9qO/0kUJWdZTdA2XoS82ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ=="
-private const val TAG = "Patrick_DeviceInfoActivity"
-const val PACKAGE_COMPONENT_INFO = "com.example.com.patrick.posdemo/com.example.com.patrick.posdemo.others.DeviceInfoActivity"
 class DeviceInfoActivity : AppCompatActivity() {
+
+    companion object {
+        private const val GOOGLE_ROOT_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xUFmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5jlRfdnJLmN0pTy/4lj4/7tv0Sk3iiKkypnEUtR6WfMgH0QZfKHM1+di+y9TFRtv6y//0rb+T+W8a9nsNL/ggjnar86461qO0rOs2cXjp3kOG1FEJ5MVmFmBGtnrKpa73XpXyTqRxB/M0n1n/W9nGqC4FSYa04T6N5RIZGBN2z2MT5IKGbFlbC8UrW0DxW7AYImQQcHtGl/m00QLVWutHQoVJYnFPlXTcHYvASLu+RhhsbDmxMgJJ0mcDpvsC4PjvB+TxywElgS70vE0XmLD+OJtvsBslHZvPBKCOdT0MS+tgSOIfga+z1Z1g7+DVagf7quvmag8jfPioyKvxnK/EgsTUVi2ghzq8wm27ud/mIM7AY2qEORR8Go3TVB4HzWQgpZrt3i5MIlCaY504LzSRiigHCzAPlHws+W0rB5N+er5/2pJKnfBSDiCiFAVtCLOZ7gLiMm0jhO2B6tUXHI/+MRPjy02i59lINMRRev56GKtcd9qO/0kUJWdZTdA2XoS82ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ=="
+        private const val TAG = "Patrick_DeviceInfoActivity"
+        private val PERMISSION_LOCATION = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+        private const val REQ_PERMISSION_LOCATION = 1001
+    }
 
     private lateinit var binding: ActivityDeviceInfoBinding
 
@@ -48,8 +57,14 @@ class DeviceInfoActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
+        binding.btnGetLocation.setOnClickListener {
+            if (!PermissionUtil.requestPermissions(this, PERMISSION_LOCATION,REQ_PERMISSION_LOCATION)) {
+                Toast.makeText(this, "Please grant Location Permission first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            startActivity(Intent(this, LocationActivity::class.java))
+        }
     }
-
 
 
     override fun onStart() {

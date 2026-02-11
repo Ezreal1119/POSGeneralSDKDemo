@@ -308,7 +308,7 @@ class KioskRelatedActivity : AppCompatActivity() {
 
 }
 
-private fun isOnScreenButtons(): Boolean {
+fun isOnScreenButtons(): Boolean {
     val model = Build.MODEL.uppercase()
     val projectName = DeviceManager().getSettingProperty("pwv.project").uppercase()
     return (model.startsWith("I5300")

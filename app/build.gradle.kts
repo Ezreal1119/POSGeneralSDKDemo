@@ -15,6 +15,9 @@ android {
         versionName = "1.0.26020902"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters += listOf("armeabi-v7a")
+        }
     }
 
     signingConfigs {
@@ -63,6 +66,7 @@ android {
         viewBinding = true
         buildConfig = true
     }
+
 }
 
 dependencies {
@@ -76,11 +80,13 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation(files("libs/urovoSdkLibs_New_v1.0.23_release.aar")) // UROVO POS SDK
+    implementation(files("libs/urovoSdkLibs_New_v1.0.23_release.aar")) // Urovo POS SDK
     implementation("com.google.zxing:core:3.5.3") // For BarcodeFormat
     implementation("com.squareup.okhttp3:okhttp:4.12.0") // For upload log
     implementation("androidx.fragment:fragment-ktx:1.6.2") // sharedViewModel for EMV
     implementation("com.hivemq:hivemq-mqtt-client:1.3.12") // For MQTT online Printer
     implementation("com.google.code.gson:gson:2.10.1") // For design of Blind PinPad
     implementation("org.java-websocket:Java-WebSocket:1.5.4") // For WebSocket Printer
+    implementation("com.google.android.gms:play-services-location:21.0.1") // For google location
+    implementation("com.baidu.lbsyun:BaiduMapSDK_Location:9.6.0") // For Baidu Location
 }
