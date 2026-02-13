@@ -6,23 +6,28 @@ import android.content.ComponentName
 import android.device.DeviceManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.R
 import androidx.core.content.edit
+import com.example.posdemo.MainActivity
 import com.example.posdemo.databinding.ActivityKioskRelatedBinding
 import com.example.posdemo.utils.PermissionUtil
 import com.example.posdemo.utils.PermissionUtil.ensureCanWriteSettings
 
-private const val PREF_KIOSK = "pref_kiosk"
-private const val KEY_HOME_ENABLED = "home_enabled"
-private const val KEY_RECENT_ENABLED = "recent_enabled"
-private const val STATUS_BAR_ENABLED = "status_bar_enabled"
-private const val KIOSK_PASSWORD = "123456"
-const val PACKAGE_COMPONENT_MAIN = "com.example.com.patrick.posdemo/com.example.com.patrick.posdemo.MainActivity"
-
 class KioskRelatedActivity : AppCompatActivity() {
+
+    companion object {
+        private const val PREF_KIOSK = "pref_kiosk"
+        private const val KEY_HOME_ENABLED = "home_enabled"
+        private const val KEY_RECENT_ENABLED = "recent_enabled"
+        private const val STATUS_BAR_ENABLED = "status_bar_enabled"
+        private const val KIOSK_PASSWORD = "123456"
+        const val PACKAGE_COMPONENT_MAIN = "com.example.posdemo/com.example.posdemo.MainActivity"
+        const val PACKAGE_UMS_APP_MARKET = "com.urovo.uhome"
+    }
 
     private lateinit var binding: ActivityKioskRelatedBinding
 
@@ -51,56 +56,19 @@ class KioskRelatedActivity : AppCompatActivity() {
         binding.btnSetDefaultLauncher.setOnClickListener { onSetDefaultLauncherButtonClicked() }
         binding.btnCancelDefaultLauncher.setOnClickListener { onCancelDefaultLauncherButtonClicked() }
         binding.btnSetForceLockScreen.setOnClickListener { onSetForceLockScreenButtonClicked() }
-        binding.btnAddAppToWhitelist.setOnClickListener { onAddAppToWhitelistButtonClicked() }
         binding.btnGetAppWhitelist.setOnClickListener { onGetAppWhitelistButtonClicked() }
+        binding.btnAddAppToWhitelist.setOnClickListener { onAddAppToWhitelistButtonClicked() }
         binding.btnRemoveAppFromWhitelist.setOnClickListener { onRemoveAppFromWhitelistButtonClicked() }
+        binding.btnClearAppWhitelist.setOnClickListener { onClearAppWhitelistButtonClicked() }
+        binding.btnGetPackageInstaller.setOnClickListener { onGetPackageInstallerButtonClicked() }
+        binding.btnAddPackageInstaller.setOnClickListener { onAddPackageInstallerButtonClicked() }
+        binding.btnRemovePackageInstaller.setOnClickListener { onRemovePackageInstallerButtonClicked() }
+        binding.btnClearPackageInstaller.setOnClickListener { onClearPackageInstallerButtonClicked() }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
         }
     }
-
-    private fun onAddAppToWhitelistButtonClicked() {
-        if (!ensureCanWriteSettings(this)) {
-            Toast.makeText(this, "Please grant permission first", Toast.LENGTH_SHORT).show()
-            return
-        }
-        runCatching {
-            DeviceManager().setAllowInstallApps(etPackageForWhitelist.text.toString(), 0, 1)
-        }.onSuccess {
-            Toast.makeText(this, "Add App to Whitelist successfully", Toast.LENGTH_SHORT).show()
-        }.onFailure {
-            Toast.makeText(this, "Add App to Whitelist failed", Toast.LENGTH_SHORT).show()
-            it.printStackTrace()
-        }
-    }
-
-
-    private fun onGetAppWhitelistButtonClicked() {
-        runCatching {
-            Toast.makeText(this, DeviceManager().getAllowInstallApps(0).toString(), Toast.LENGTH_SHORT).show()
-        }.onFailure {
-            Toast.makeText(this, "Get App Whitelist failed", Toast.LENGTH_SHORT).show()
-            it.printStackTrace()
-        }
-    }
-
-
-    private fun onRemoveAppFromWhitelistButtonClicked() {
-        if (!ensureCanWriteSettings(this)) {
-            Toast.makeText(this, "Please grant permission first", Toast.LENGTH_SHORT).show()
-            return
-        }
-        runCatching {
-            DeviceManager().setAllowInstallApps(etPackageForWhitelist.text.toString(), 0, 2)
-        }.onSuccess {
-            Toast.makeText(this, "Remove App from Whitelist successfully", Toast.LENGTH_SHORT).show()
-        }.onFailure {
-            Toast.makeText(this, "Remove App from Whitelist failed", Toast.LENGTH_SHORT).show()
-            it.printStackTrace()
-        }
-    }
-
 
     override fun onStart() {
         super.onStart()
@@ -245,7 +213,7 @@ class KioskRelatedActivity : AppCompatActivity() {
 
     private fun onSetKioskPwd123456ButtonClicked() {
         runCatching {
-            DeviceManager().setLockTaskModePassword(KIOSK_PASSWORD);
+            DeviceManager().setLockTaskModePassword(KIOSK_PASSWORD)
         }.onFailure {
             it.printStackTrace()
         }
@@ -253,7 +221,7 @@ class KioskRelatedActivity : AppCompatActivity() {
 
     private fun onSetAutoStartButtonClicked() {
         runCatching {
-            DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN), 1)
+            DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString("${this.packageName}/${MainActivity::class.java.name}"), 1)
         }.onSuccess {
             Toast.makeText(this, "Set AutoStart successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
@@ -264,7 +232,7 @@ class KioskRelatedActivity : AppCompatActivity() {
 
     private fun onCancelAutoStartButtonClicked() {
         runCatching {
-            DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN), 0)
+            DeviceManager().setAutoRunningApp(ComponentName.unflattenFromString("${this.packageName}/${MainActivity::class.java.name}"), 0)
         }.onSuccess {
             Toast.makeText(this, "Cancel AutoStart successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
@@ -275,7 +243,7 @@ class KioskRelatedActivity : AppCompatActivity() {
 
     private fun onSetDefaultLauncherButtonClicked() {
         runCatching {
-            DeviceManager().setDefaultLauncher(ComponentName.unflattenFromString(PACKAGE_COMPONENT_MAIN))
+            DeviceManager().setDefaultLauncher(ComponentName.unflattenFromString("${this.packageName}/${MainActivity::class.java.name}"))
         }.onSuccess {
             Toast.makeText(this, "Set Default Launcher successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
@@ -304,7 +272,105 @@ class KioskRelatedActivity : AppCompatActivity() {
         }
     }
 
+    private fun onAddAppToWhitelistButtonClicked() {
+        if (!ensureCanWriteSettings(this)) {
+            Toast.makeText(this, "Please grant permission first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        runCatching {
+            DeviceManager().setAllowInstallApps(etPackageForWhitelist.text.toString(), 0, 1)
+        }.onSuccess {
+            Toast.makeText(this, "Add App to Whitelist successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Add App to Whitelist failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
 
+
+    private fun onGetAppWhitelistButtonClicked() {
+        runCatching {
+            Toast.makeText(this, DeviceManager().getAllowInstallApps(0).toString(), Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Get App Whitelist failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onRemoveAppFromWhitelistButtonClicked() {
+        if (!ensureCanWriteSettings(this)) {
+            Toast.makeText(this, "Please grant permission first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        runCatching {
+            DeviceManager().setAllowInstallApps(etPackageForWhitelist.text.toString(), 0, 2)
+        }.onSuccess {
+            Toast.makeText(this, "Remove App from Whitelist successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Remove App from Whitelist failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onClearAppWhitelistButtonClicked() {
+        if (!ensureCanWriteSettings(this)) {
+            Toast.makeText(this, "Please grant permission first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        runCatching {
+            DeviceManager().setAllowInstallApps(etPackageForWhitelist.text.toString(), 0, 0)
+        }.onSuccess {
+            Toast.makeText(this, "Clear App Whitelist successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Clear App Whitelist failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onGetPackageInstallerButtonClicked() {
+        runCatching {
+            Toast.makeText(this, DeviceManager().packageInstaller?.toString() ?: "Not Set yet", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onAddPackageInstallerButtonClicked() {
+        runCatching {
+            DeviceManager().setPackageInstaller(binding.etPackageInstaller.text.toString(), 1)
+        }.onSuccess {
+            Toast.makeText(this, "Add PackageInstaller Successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onRemovePackageInstallerButtonClicked() {
+        runCatching {
+            DeviceManager().setPackageInstaller(binding.etPackageInstaller.text.toString(), 2)
+        }.onSuccess {
+            Toast.makeText(this, "Remove PackageInstaller Successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onClearPackageInstallerButtonClicked() {
+        runCatching {
+            DeviceManager().setPackageInstaller(binding.etPackageInstaller.text.toString(), 0)
+        }.onSuccess {
+            Toast.makeText(this, "Clear PackageInstaller List Successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
 
 }
 
