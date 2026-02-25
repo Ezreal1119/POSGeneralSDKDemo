@@ -44,7 +44,7 @@ class ApiTestActivity : AppCompatActivity() {
         super.onStart()
         binding.apply {
             btnTest1.visibility = VISIBLE
-            btnTest2.visibility = GONE
+            btnTest2.visibility = VISIBLE
             btnTest3.visibility = GONE
             btnTest4.visibility = GONE
             btnTest5.visibility = GONE

@@ -19,6 +19,9 @@ import com.example.posdemo.databinding.ActivityDeviceInfoBinding
 import com.example.posdemo.maps.LocationActivity
 import com.example.posdemo.utils.DeviceInfoUtil
 import com.example.posdemo.utils.PermissionUtil
+import com.google.android.play.core.integrity.IntegrityManager
+import com.google.android.play.core.integrity.IntegrityManagerFactory
+import com.google.android.play.core.integrity.IntegrityTokenRequest
 import com.urovo.sdk.utils.SystemProperties.getSystemProperty
 import java.nio.charset.StandardCharsets
 import java.security.KeyPairGenerator
@@ -27,8 +30,10 @@ import java.security.cert.X509Certificate
 import java.security.spec.ECGenParameterSpec
 import java.util.Arrays
 import java.util.Date
+import java.util.UUID
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import kotlin.math.log
 
 // <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 // <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
@@ -41,11 +46,13 @@ class DeviceInfoActivity : AppCompatActivity() {
         private const val TAG = "Patrick_DeviceInfoActivity"
         private val PERMISSION_LOCATION = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
         private const val REQ_PERMISSION_LOCATION = 1001
+
+        private const val ANDROID_KEY_STORE = "AndroidKeyStore"
+        private const val KEY_ALIAS = "attestation_key_alias"
     }
 
     private lateinit var binding: ActivityDeviceInfoBinding
 
-    private val googleKey: ByteArray? = Base64.decode(GOOGLE_ROOT_PUBLIC_KEY, Base64.DEFAULT)
 
     private lateinit var wifiManager: WifiManager
 
@@ -55,6 +62,8 @@ class DeviceInfoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.btnRunAttestation.setOnClickListener { onRunAttestationButtonClicked() }
+        binding.btnRunPlayIntegrity.setOnClickListener { onRunPlayIntegrityButtonClicked() }
 
         wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
         binding.btnGetLocation.setOnClickListener {
@@ -64,11 +73,7 @@ class DeviceInfoActivity : AppCompatActivity() {
             }
             startActivity(Intent(this, LocationActivity::class.java))
         }
-    }
 
-
-    override fun onStart() {
-        super.onStart()
         runCatching {
             binding.tvResult.text = buildString {
                 append("SN: ${deviceManager.deviceId}\n")
@@ -77,7 +82,6 @@ class DeviceInfoActivity : AppCompatActivity() {
                 append(" - UFS: ${deviceManager.getSettingProperty("ro.ufs.custom")}-${deviceManager.getSettingProperty("ro.ufs.build.version")}\n")
                 append(" - SE: ${deviceManager.getSettingProperty("persist-urv.se.version")}\n\n")
 
-                append("Attestation Key: ${keyAttestationTest()}\n")
                 append("GMS: ${isPackageInstalled("com.google.android.gms")}\n")
                 append("GSF: ${isPackageInstalled("com.google.android.gsf")}\n")
                 append("Chrome: ${isPackageInstalled("com.android.chrome")}\n")
@@ -114,13 +118,122 @@ class DeviceInfoActivity : AppCompatActivity() {
                 append("UTMS: ${isPackageInstalled("com.urovo.utms")}\n")
                 append("AppMarket_UTMS: ${isPackageInstalled("com.urovo.utms.appmarket")}\n\n")
 
-                append("Location Providers: \n${getLocationProviders()}\n")
+                append("Location Providers: \n${getLocationProviders()}\n\n")
+                append("Attestation Status:\n")
+                append(DeviceInfoUtil.checkDeviceAttestation(KEY_ALIAS))
             }
         }.onFailure {
             binding.tvResult.text = it.message
             it.printStackTrace()
         }
     }
+
+    /*
+        1. Attestation process:
+         - Google Backend sends a Challenge(Random Number / Nonce)
+         - Terminal generates a new temporary EC KeyPair inside the AndroidKeyStore
+         - Terminal requests Attestation with that Challenge (using AndroidKeyStore API)
+         - TEE/SE uses Device's AttestationKey to Sign a Certificate for that new Key(using Challenge)
+         - Terminals sends that Certificate to Google Backend for verification
+            a. Validity of Certificate Chain (e.g. Expiry Date; Verify Signature...)
+            b. Google Root Certificate (Google Self-signed)
+            c. Challenge
+         - Terminal invalidate that temporary EC KeyPair
+
+        2. Understanding AndroidKeyStore:
+         - AndroidKeyStore is a set of APIs provided by Android Native SDK
+         - It's used by APP to communicate with TEE/SE
+         - It could be TEE or SE under the hood up to the actual implementation
+         - APP <---using APIs---> AndroidKeyStore <------> TEE/SE
+     */
+    private fun onRunAttestationButtonClicked() {
+        runCatching {
+            // 1. Generate a Random Number. In practice, this will be generate by Google and send to Terminal for Play Integrity
+            val challenge = UUID.randomUUID().toString()
+
+            // 2. Create an new Temporary EC KeyPair in KeyStore.
+            val spec = KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_SIGN)
+                // This new Temporary could be used for signing in the future.
+                .setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
+                // This EC Key is used for EC Encryption in the future
+                .setDigests(KeyProperties.DIGEST_SHA256)
+                // Hashing Algorithm of this EC key when signing
+                .setAttestationChallenge(challenge.toByteArray(Charsets.UTF_8))
+                // The Challenge to be put in the Certificate of this EC KeyPair
+                .build()
+
+            // 3. Generate the Key Pair specified above, and sign its Certificate using AttestationKey of the Terminal.
+            KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_EC, ANDROID_KEY_STORE).apply {
+                initialize(spec)
+                generateKeyPair()
+            }
+
+            // 4. Get CertificateChain(w/ Challenge in the Cert Extension) of that EC KeyPair just generated
+            val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE)
+            keyStore.load(null)
+            val certificateChain = keyStore.getCertificateChain(KEY_ALIAS)
+            if (certificateChain.isNullOrEmpty()) {
+                Toast.makeText(this, "No Certificate Chain found", Toast.LENGTH_SHORT).show()
+            }
+
+            // 5. Check if the Root Cert is GOOGLE_ROOT_PUBLIC_KEY or not
+            for (i in certificateChain.indices.reversed()) {
+                val x509Certificate = certificateChain[i] as X509Certificate
+                val publicKeyEncoded = x509Certificate.publicKey.encoded
+                if (publicKeyEncoded.contentEquals(Base64.decode(GOOGLE_ROOT_PUBLIC_KEY, Base64.DEFAULT))) {
+                    Toast.makeText(this, "Attestation success(Google Root Found)", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+            Toast.makeText(this, "Attestation failed!(No Google Root)", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "onRunAttestationButtonClicked: ${it.message}")
+        }
+    }
+
+
+    private fun onRunPlayIntegrityButtonClicked() {
+        runCatching {
+            Toast.makeText(this, "Checking Play Integrity, please wait...", Toast.LENGTH_SHORT).show()
+            // 0. Check if have Google(Attestation) Key, if no have, then Play Store will throw Integrity Exception
+            if ("HAVE ATTESTATION(GOOGLE) KEY" !in DeviceInfoUtil.checkDeviceAttestation(KEY_ALIAS)) {
+                throw Exception("Play Integrity FAIL: No have Google Key")
+            }
+
+            // 1. Create request to be sent to Google Server
+            val integrityManager = IntegrityManagerFactory.create(this)
+            val nonce = UUID.randomUUID().toString() // The Nonce is generated on the APP side
+            val request = IntegrityTokenRequest.builder().setNonce(nonce).build()
+
+            // 2. Send the request(including Nonce & other Terminal Info)
+            integrityManager.requestIntegrityToken(request)
+                .addOnSuccessListener { resp ->
+                    val token = resp.token()
+                    runOnUiThread {
+                        Toast.makeText(this, "Play Integrity SUCCESS: len=${token.length}]", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "onRunPlayIntegrityButtonClicked: ${e.message.toString()}")
+                    if ("Play Store" in e.message.toString()) {
+                        Toast.makeText(this, "Play Integrity FAIL: No Play Store / GMS", Toast.LENGTH_LONG).show()
+                    } else if ("Network error" in e.message.toString()) {
+                        Toast.makeText(this, "Play Integrity FAIL: No Network", Toast.LENGTH_LONG).show()
+                    } else if("cloud project" in e.message.toString()) {
+                        Toast.makeText(this, "Play Integrity FAIL: No Cloud Project", Toast.LENGTH_LONG).show()
+                    } else if ("-12" in e.message.toString()){
+                        Toast.makeText(this, "Play Integrity FAIL: Google ERROR. Make sure PlayStore&GMS are up-to-date.", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this, e.message.toString(), Toast.LENGTH_LONG).show()
+                    }
+                }
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "onRunPlayIntegrityButtonClicked: ${it.message}")
+        }
+    }
+
 
 
     private fun getDevType(): String {
@@ -264,54 +377,7 @@ class DeviceInfoActivity : AppCompatActivity() {
         return if (getSystemProperty("pwv.custom.sign", "false") == "true") "SEFW-S" else "SEFW-N"
     }
 
-    private fun keyAttestationTest(): Boolean {
-        try {
-            // 1. Generate an EC attestation key in AndroidKeyStore
-            val keyPairGenerator =
-                KeyPairGenerator.getInstance("EC", "AndroidKeyStore")
 
-            val now = Date()
-
-            val spec = KeyGenParameterSpec.Builder("Key1", KeyProperties.PURPOSE_SIGN)
-                .setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
-                .setDigests(
-                    KeyProperties.DIGEST_SHA256,
-                    KeyProperties.DIGEST_SHA384,
-                    KeyProperties.DIGEST_SHA512
-                )
-                .setKeyValidityStart(now)
-                .setAttestationChallenge("hello world".toByteArray(StandardCharsets.UTF_8))
-                .build()
-
-            keyPairGenerator.initialize(spec)
-            keyPairGenerator.generateKeyPair()
-
-            // 2. Get attestation Cert Chain from AndroidKeyStore
-            val keyStore = KeyStore.getInstance("AndroidKeyStore")
-            keyStore.load(null)
-            val certificateChain = keyStore.getCertificateChain("Key1")
-
-            if (certificateChain == null || certificateChain.size == 0) {
-                return false
-            }
-
-            Log.d(TAG, "Key Attestion CODE_SUPPORT, chain length=" + certificateChain.size)
-
-            // 3. Find if there's any Certificate that its publicKey == GOOGLE_ROOT_PUBLIC_KEY
-            for (i in certificateChain.indices.reversed()) {
-                val x509Certificate: X509Certificate = certificateChain[i] as X509Certificate
-                val pubEncoded: ByteArray? = x509Certificate.getPublicKey().getEncoded()
-                if (Arrays.equals(pubEncoded, googleKey)) {
-                    Log.d(TAG, "cert[" + i + "] matches GOOGLE_ROOT_PUBLIC_KEY")
-                    return true
-                }
-            }
-            return false
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return false
-        }
-    }
 
     private fun covertInt(str: String?): Int {
         return str?.toInt() ?: 0

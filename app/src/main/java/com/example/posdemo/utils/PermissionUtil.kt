@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
@@ -58,6 +59,23 @@ object PermissionUtil {
                 data = "package:${context.packageName}".toUri()
             }
             context.startActivity(intent)
+            return false
+        }
+        return true
+    }
+
+    fun ensureCanRequestPackageInstallsAutoToast(activity: Activity): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val pm = activity.packageManager
+            if (pm.canRequestPackageInstalls()) return true
+            activity.runOnUiThread {
+                Toast.makeText(activity, "Please grant permission first", Toast.LENGTH_SHORT).show()
+            }
+            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                data = Uri.parse("package:${activity.packageName}")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(intent)
             return false
         }
         return true

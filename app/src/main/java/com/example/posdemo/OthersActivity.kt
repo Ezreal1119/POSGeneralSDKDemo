@@ -28,6 +28,7 @@ import androidx.core.net.toUri
 import com.example.posdemo.databinding.ActivityOthersBinding
 import com.example.posdemo.others.NewSerialPortActivity
 import com.example.posdemo.others.SettingsActivity
+import com.example.posdemo.others.UmsActivity
 import com.example.posdemo.others.WifiActivity
 import okhttp3.Call
 import okhttp3.Callback
@@ -90,6 +91,7 @@ class OthersActivity : AppCompatActivity() {
         binding.btnWifi.setOnClickListener { startActivity(Intent(this, WifiActivity::class.java)) }
         binding.btnSwitches.setOnClickListener { startActivity(Intent(this, SwitchesActivity::class.java)) }
         binding.btnNewSerialPort.setOnClickListener { startActivity(Intent(this, NewSerialPortActivity::class.java)) }
+        binding.btnUms.setOnClickListener { startActivity(Intent(this, UmsActivity::class.java)) }
         binding.btnFactoryMenu.setOnClickListener { onFactoryMenuButtonClicked() }
         binding.btnOtherSettings.setOnClickListener { startActivity((Intent(this, SettingsActivity::class.java))) }
         binding.btnLoadGMS.setOnClickListener { onLoadGMSButtonClicked() }

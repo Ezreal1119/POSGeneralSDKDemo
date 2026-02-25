@@ -22,6 +22,8 @@ import java.util.zip.ZipInputStream
 import kotlin.getValue
 import androidx.core.net.toUri
 import com.example.posdemo.databinding.ActivityInstallManagerBinding
+import com.example.posdemo.utils.PackageUtil
+import com.example.posdemo.utils.PermissionUtil
 
 // <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 
@@ -54,14 +56,14 @@ class InstallManager : AppCompatActivity() {
                     append(" - Return Code: \n$returnCode\n\n")
                     append(" - Return Message: \n$returnMsg\n\n")
                 }
-                if (isPackageInstalled(UMS_PACKAGE)) {
+                if (PackageUtil.isPackageInstalled(this@InstallManager, UMS_PACKAGE)) {
                     binding.btnInstallUMS.isEnabled = false
                     binding.btnUninstallUMS.isEnabled = true
                 } else {
                     binding.btnInstallUMS.isEnabled = true
                     binding.btnUninstallUMS.isEnabled = false
                 }
-                if (isPackageInstalled(APPMARKET_UMS_PACKAGE)) {
+                if (PackageUtil.isPackageInstalled(this@InstallManager, APPMARKET_UMS_PACKAGE)) {
                     binding.btnInstallAppMarketUMS.isEnabled = false
                     binding.btnUninstallAppMarketUMS.isEnabled = true
                 } else {
@@ -83,14 +85,14 @@ class InstallManager : AppCompatActivity() {
                     append(" - Return Code: \n$returnCode\n\n")
                     append(" - Return Message: \n$returnMsg\n\n")
                 }
-                if (isPackageInstalled(UMS_PACKAGE)) {
+                if (PackageUtil.isPackageInstalled(this@InstallManager, UMS_PACKAGE)) {
                     binding.btnInstallUMS.isEnabled = false
                     binding.btnUninstallUMS.isEnabled = true
                 } else {
                     binding.btnInstallUMS.isEnabled = true
                     binding.btnUninstallUMS.isEnabled = false
                 }
-                if (isPackageInstalled(APPMARKET_UMS_PACKAGE)) {
+                if (PackageUtil.isPackageInstalled(this@InstallManager, APPMARKET_UMS_PACKAGE)) {
                     binding.btnInstallAppMarketUMS.isEnabled = false
                     binding.btnUninstallAppMarketUMS.isEnabled = true
                 } else {
@@ -168,14 +170,14 @@ class InstallManager : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 //        PermissionUtil.ensureAllFilesAccess(this)
-        if (isPackageInstalled(UMS_PACKAGE)) {
+        if (PackageUtil.isPackageInstalled(this@InstallManager, UMS_PACKAGE)) {
             binding.btnInstallUMS.isEnabled = false
             binding.btnUninstallUMS.isEnabled = true
         } else {
             binding.btnInstallUMS.isEnabled = true
             binding.btnUninstallUMS.isEnabled = false
         }
-        if (isPackageInstalled(APPMARKET_UMS_PACKAGE)) {
+        if (PackageUtil.isPackageInstalled(this@InstallManager, APPMARKET_UMS_PACKAGE)) {
             binding.btnInstallAppMarketUMS.isEnabled = false
             binding.btnUninstallAppMarketUMS.isEnabled = true
         } else {
@@ -301,15 +303,6 @@ class InstallManager : AppCompatActivity() {
             return null
         }
         return if (activeNetworkInfo.type == 1) "Wifi" else "4G"
-    }
-
-    private fun isPackageInstalled(packageName: String): Boolean {
-        return try {
-            this.packageManager.getPackageInfo(packageName, 0)
-            true
-        } catch (_: PackageManager.NameNotFoundException) {
-            false
-        }
     }
 
 }

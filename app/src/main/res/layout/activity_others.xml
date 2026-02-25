@@ -89,6 +89,14 @@
                 android:padding="0dp"/>
 
             <Button
+                android:id="@+id/btnUms"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="UMS"
+                android:textSize="20sp"
+                android:padding="0dp"/>
+
+            <Button
                 android:id="@+id/btnFactoryMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

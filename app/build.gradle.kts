@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.posdemo"
         minSdk = 30
         targetSdk = 33
-        versionCode = 2
-        versionName = "1.0.26020902"
+        versionCode = 3
+        versionName = "1.0.26022401"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -65,6 +65,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        aidl = true
     }
 
 }
@@ -89,4 +90,7 @@ dependencies {
     implementation("org.java-websocket:Java-WebSocket:1.5.4") // For WebSocket Printer
     implementation("com.google.android.gms:play-services-location:21.0.1") // For google location
     implementation("com.baidu.lbsyun:BaiduMapSDK_Location:9.6.0") // For Baidu Location
+    implementation("com.google.android.play:integrity:1.6.0") // For Test of Google Integrity API
+    implementation("org.bouncycastle:bcprov-jdk15to18:1.78.1") // For getting Device Info
+    implementation("com.google.code.gson:gson:2.10.1") // For parsing JSON
 }

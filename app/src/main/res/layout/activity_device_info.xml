@@ -38,6 +38,29 @@
 
     </ScrollView>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnRunAttestation"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Run Attestation"
+            android:layout_margin="1dp"/>
+
+        <Button
+            android:id="@+id/btnRunPlayIntegrity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Run Play Integrity"
+            android:layout_margin="1dp"/>
+
+    </LinearLayout>
+
     <Button
         android:id="@+id/btnGetLocation"
         android:layout_width="match_parent"
