@@ -1,6 +1,7 @@
 package com.example.posdemo.others
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.device.DeviceManager
@@ -14,11 +15,20 @@ import android.security.keystore.KeyProperties
 import android.util.Base64
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.databinding.ActivityDeviceInfoBinding
 import com.example.posdemo.maps.LocationActivity
 import com.example.posdemo.utils.DeviceInfoUtil
 import com.example.posdemo.utils.PermissionUtil
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.play.core.integrity.IntegrityManager
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.IntegrityTokenRequest
@@ -58,6 +68,7 @@ class DeviceInfoActivity : AppCompatActivity() {
 
     private val deviceManager = DeviceManager()
 
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceInfoBinding.inflate(layoutInflater)
@@ -66,26 +77,28 @@ class DeviceInfoActivity : AppCompatActivity() {
         binding.btnRunPlayIntegrity.setOnClickListener { onRunPlayIntegrityButtonClicked() }
 
         wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
-        binding.btnGetLocation.setOnClickListener {
+        binding.btnGetLocationBaidu.setOnClickListener {
             if (!PermissionUtil.requestPermissions(this, PERMISSION_LOCATION,REQ_PERMISSION_LOCATION)) {
                 Toast.makeText(this, "Please grant Location Permission first", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             startActivity(Intent(this, LocationActivity::class.java))
         }
+        binding.btnGetLocationGoogle.setOnClickListener { onGetLocationGoogleButtonClicked() }
 
         runCatching {
             binding.tvResult.text = buildString {
                 append("SN: ${deviceManager.deviceId}\n")
+                append("Model(Ext): ${DeviceManager().getSettingProperty("ro.product.vendor.model")}\n")
                 append("Model: ${getDevType()}\n")
                 append("Firmware: \n - OS: ${Build.ID}\n")
                 append(" - UFS: ${deviceManager.getSettingProperty("ro.ufs.custom")}-${deviceManager.getSettingProperty("ro.ufs.build.version")}\n")
                 append(" - SE: ${deviceManager.getSettingProperty("persist-urv.se.version")}\n\n")
 
-                append("GMS: ${isPackageInstalled("com.google.android.gms")}\n")
                 append("GSF: ${isPackageInstalled("com.google.android.gsf")}\n")
-                append("Chrome: ${isPackageInstalled("com.android.chrome")}\n")
+                append("GMS: ${isPackageInstalled("com.google.android.gms")} (available: ${GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this@DeviceInfoActivity) == ConnectionResult.SUCCESS}\n)")
                 append("PlayStore: ${isPackageInstalled("com.android.vending")}\n")
+                append("Chrome: ${isPackageInstalled("com.android.chrome")}\n")
                 append("Maps: ${isPackageInstalled("com.google.android.apps.maps")}\n\n")
 
                 append("OTA Firmware version:\n")
@@ -118,7 +131,9 @@ class DeviceInfoActivity : AppCompatActivity() {
                 append("UTMS: ${isPackageInstalled("com.urovo.utms")}\n")
                 append("AppMarket_UTMS: ${isPackageInstalled("com.urovo.utms.appmarket")}\n\n")
 
-                append("Location Providers: \n${getLocationProviders()}\n\n")
+                append("Location Providers: \n${getLocationProviders()}\n")
+                append("GPS enabled = ${(getSystemService(LOCATION_SERVICE) as LocationManager).isProviderEnabled(LocationManager.GPS_PROVIDER)}\n")
+                append("Network enabled = ${(getSystemService(LOCATION_SERVICE) as LocationManager).isProviderEnabled(LocationManager.NETWORK_PROVIDER)}\n\n")
                 append("Attestation Status:\n")
                 append(DeviceInfoUtil.checkDeviceAttestation(KEY_ALIAS))
             }
@@ -127,6 +142,41 @@ class DeviceInfoActivity : AppCompatActivity() {
             it.printStackTrace()
         }
     }
+
+
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+    private fun onGetLocationGoogleButtonClicked() {
+        if (!PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION), 1001)) {
+            Toast.makeText(this, "Please grant permission first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this) != ConnectionResult.SUCCESS) {
+            Toast.makeText(this, "GMS not available", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val lm = getSystemService(LOCATION_SERVICE) as LocationManager
+        val msg = buildString {
+            append("GPS enabled = ${lm.isProviderEnabled(LocationManager.GPS_PROVIDER)}\n")
+            append("High Accuracy = ${lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)}\n")
+        }
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+
+        val client = LocationServices.getFusedLocationProviderClient(this)
+        val tokenSource = CancellationTokenSource()
+        client.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            tokenSource.token
+        ).addOnSuccessListener { loc ->
+            if (loc != null) {
+                binding.tvResult.text = "Lat=${loc.latitude}, Lng=${loc.longitude}, acc=${loc.accuracy}"
+            }
+        }.addOnFailureListener {
+            binding.tvResult.text = "Failed: ${it.message}"
+        }
+    }
+
 
     /*
         1. Attestation process:

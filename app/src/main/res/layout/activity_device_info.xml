@@ -61,11 +61,33 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnGetLocation"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Get Location"/>
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnGetLocationBaidu"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="12sp"
+            android:text="Get Location(Baidu)"
+            android:layout_margin="1dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/btnGetLocationGoogle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="12sp"
+            android:text="Get Location(Google)"
+            android:layout_margin="1dp"
+            android:padding="0dp"/>
+
+    </LinearLayout>
+
 
 
 </LinearLayout>
