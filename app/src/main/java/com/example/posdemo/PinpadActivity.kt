@@ -1,17 +1,22 @@
 package com.example.posdemo
 
 import android.content.Intent
+import android.device.DeviceManager
 import android.device.SEManager
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posdemo.data.Pinpad
+import com.example.posdemo.data.Translations
 import com.example.posdemo.databinding.ActivityPinpadBinding
 import com.example.posdemo.enums.Dukpt
 import com.example.posdemo.enums.PinParams
@@ -22,12 +27,14 @@ import com.example.posdemo.utils.PinpadUtil
 import com.example.posdemo.utils.PinpadUtil.toHexString
 import com.example.posdemo.utils.ScreenUtil
 import com.example.posdemo.utils.Tr34Type
+import com.google.gson.Gson
 import com.urovo.sdk.pinpad.PinPadProviderImpl
 import com.urovo.sdk.pinpad.listener.PinInputListener
 import com.urovo.sdk.pinpad.utils.Constant
 import com.urovo.sdk.utils.BytesUtil
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.text.Charsets.UTF_8
 
 /**
@@ -91,6 +98,9 @@ class PinpadActivity : AppCompatActivity() {
         private const val CENTER = "CENTER"
         private const val SUPPORT_PIN_LENGTH = "4,6,12"
         private const val TIMEOUT_MS = 30 * 1000L
+
+        private const val BLIND_KEYBOARD_TYPE = 8
+        private const val TIMEOUT_BLIND_KEYBOARD = 180 * 1000L
     }
 
     private lateinit var binding: ActivityPinpadBinding
@@ -1061,28 +1071,35 @@ class PinpadActivity : AppCompatActivity() {
     }
 
     private fun onPinBlockDukptBlindButtonClicked() {
-        Toast.makeText(this, "Not yet implemented", Toast.LENGTH_SHORT).show()
-        return
+        var strJson = PinpadUtil.getJson("json_custom_blind_720x1280.json", this@PinpadActivity)
 
-        var strJson: String
-        strJson = PinpadUtil.getJson("json_custom_blind_720x1280.json", this@PinpadActivity)
-//        val jsonPinpad = Gson()
-        /*
-         public static final int SECURITY_KEYBOARD_TITLE = 0;
-         public static final int SECURITY_KEYBOARD_INFO = 1;
-         public static final int SECURITY_KEYBOARD_PASSWORD = 2;
-         public static final int SECURITY_KEYBOARD_KEY_NUMBER = 3;
-         public static final int SECURITY_KEYBOARD_KEY_CANCEL = 4;
-         public static final int SECURITY_KEYBOARD_KEY_DELETE = 5;
-         public static final int SECURITY_KEYBOARD_KEY_OK = 6;
-         public static final int SECURITY_KEYBOARD_HEAD = 7;
-         public static final int SECURITY_KEYBOARD_MONEY = 8;
-         public static final int SECURITY_KEYBOARD_VIEW = 9;
-         public static final int SECURITY_KEYBOARD_KEY_BLANK = 10;
-         public static final int SECURITY_KEYBOARD_KEY = 11;
-         public static final int SECURITY_KEYBOARD_BODY = 12;
-         public static final int SECURITY_KEYBOARD_BACKSPACE = 13;
-      */
+        val jsonPinpad = Gson().fromJson(strJson, Pinpad::class.java)
+        DeviceManager().setSettingProperty("Secure-tts_default_locale", "com.google.android.tts:it_IT")
+        jsonPinpad.key_cancel?.text = "ANNULLA"
+        jsonPinpad.key_del?.text = "CANCELLA"
+        jsonPinpad.key_ok?.text = "CONFERMA"
+        Translations(
+            pinpad_below = "La tastiera è sotto",
+            pinpad_blank_click_tip = "Nessun numero o tasto funzione selezionato",
+            pinpad_input_less = "Spiacente, PIN troppo corto",
+            pinpad_input_more = "Spiacente, PIN troppo lungo",
+            password_confirm = "Conferma PIN",
+            password_cancel = "Esci dalla tastiera",
+            has_selected_one = "Inserita una cifra",
+            has_selected_two = "Inserite due cifre",
+            has_selected_three = "Inserite tre cifre",
+            has_selected_four = "Inserite quattro cifre",
+            has_selected_five = "Inserite cinque cifre",
+            has_selected_six = "Inserite sei cifre",
+            has_selected_seven = "Inserite sette cifre",
+            has_selected_eight = "Inserite otto cifre",
+            has_selected_nine = "Inserite nove cifre",
+            has_selected_ten = "Inserite dieci cifre",
+            has_selected_eleven = "Inserite undici cifre",
+            has_selected_twelve = "Inserite dodici cifre"
+        ).run { jsonPinpad.translations = this }
+        strJson = Gson().toJson(jsonPinpad)
+
         val textColor = intArrayOf(Color.BLACK, Color.BLACK, Color.BLACK, Color.WHITE, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK, Color.BLACK)
 
         val pinpadBundle = Bundle().apply {
@@ -1095,7 +1112,7 @@ class PinpadActivity : AppCompatActivity() {
             putBoolean(PinParams.BYPASS.tag, false) // Support 0 PIN or not. false by default.
             putString(PinParams.SUPPORT_PIN_LEN.tag, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
             putBoolean(PinParams.FULL_SCREEN.tag, true) // true by default. Won't have Cancel button when half screen
-            putLong(PinParams.TIMEOUT_MS.tag, TIMEOUT_MS) // Time out since opening the Pad. 0 by default, must set!
+            putLong(PinParams.TIMEOUT_MS.tag, TIMEOUT_BLIND_KEYBOARD) // Time out since opening the Pad. 0 by default, must set!
             putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
             putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.tag, false)
             putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.tag, false) // false by default. Only by this, Custom UI can take place
@@ -1104,9 +1121,28 @@ class PinpadActivity : AppCompatActivity() {
             putBoolean(PinParams.CUSTOMIZATION.tag, true)
             putString(PinParams.STR_JSON.tag, strJson)
             putIntArray(PinParams.TEXT_COLOR.tag, textColor)
+
+            putInt(PinParams.CUSTOM_KEYBOARD_DIALOG.tag, BLIND_KEYBOARD_TYPE) // For Blind KeyBoard
         }
+
+        lateinit var tts: TextToSpeech
         runCatching {
-            mPinpadManager.GetDukptPinBlock(pinpadBundle, mPinInputListener)
+            tts = TextToSpeech(this) { status ->
+                if (status != TextToSpeech.SUCCESS) return@TextToSpeech
+                tts.speak(
+                    "Inserisci la prima cifra del PIN utilizzando il tastierino numerico.\n" +
+                            "Il PIN Pad si trova nei due terzi inferiori dello schermo.\n" +
+                            "La tastiera è nel layout telefonico standard, con uno, due e tre nella riga superiore e annulla, 0, cancella e conferma nella riga inferiore.",
+                    TextToSpeech.QUEUE_FLUSH,
+                    null,
+                    "italy_payment"
+                )
+            }
+            mPinpadManager.GetDukptPinBlock(pinpadBundle, object : PinInputListener by mPinInputListener {
+                override fun onCancel() {
+                    tts.shutdown()
+                }
+            })
         }.onFailure {
             binding.tvResult.text = it.message
             it.printStackTrace()

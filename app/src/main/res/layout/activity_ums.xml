@@ -43,47 +43,88 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginStart="5dp"
-        android:layout_marginEnd="5dp">
+        android:orientation="vertical"
+        android:layout_margin="5dp"
+        android:background="@drawable/border">
 
-        <Button
-            android:id="@+id/btnUmsStatus"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_margin="1dp"
-            android:textSize="15sp"
-            android:padding="0dp"/>
+            android:orientation="horizontal"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp">
 
-    </LinearLayout>
+            <Button
+                android:id="@+id/btnUmsStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="1dp"
+                android:textSize="15sp"
+                android:padding="0dp"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginStart="5dp"
-        android:layout_marginEnd="5dp">
+        </LinearLayout>
 
-        <Button
-            android:id="@+id/btnGetUnfinishedOrder"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Unfinished Order"
-            android:textSize="15sp"
-            android:layout_margin="1dp"
-            android:padding="0dp"/>
+            android:orientation="horizontal"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp">
 
-        <Button
-            android:id="@+id/btnGetConfig"
-            android:layout_width="0dp"
+            <Button
+                android:id="@+id/btnGetUnfinishedOrder"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Unfinished Order"
+                android:textSize="15sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnGetConfig"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Get Config List"
+                android:textSize="15sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Get Config List"
-            android:textSize="15sp"
-            android:layout_margin="1dp"
-            android:padding="0dp"/>
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvConfigDetail"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="0dp"
+                android:gravity="center"
+                android:text="Select Config"
+                android:textSize="15sp"
+                android:layout_margin="6dp"
+                android:background="#CCCCCC" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCheckConfigDetail"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:padding="0dp"
+                android:text="Check Config Detail"
+                android:textSize="15sp"
+                android:layout_margin="3dp"
+                android:enabled="false"
+                app:cornerRadius="0dp"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 

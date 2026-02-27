@@ -8,29 +8,43 @@ import android.device.DeviceManager
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
+import android.widget.NumberPicker
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.example.posdemo.R
 import com.example.posdemo.databinding.ActivityUmsBinding
 import com.example.posdemo.helpers.UmsHelper
 import com.example.posdemo.utils.PackageUtil
-import com.urovo.sdk.install.InstallManagerImpl
-import com.urovo.sdk.install.listener.InstallApkListener
-import com.urovo.uhome.IUmsCallback
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.urovo.uhome.IUmsFunction
-import kotlin.math.PI
 
 class UmsActivity : AppCompatActivity() {
+
+    companion object {
+        private val LIST_OF_CONFIG = listOf(
+            "device_config",
+            "device_fence_config",
+            "function_config",
+            "wifi_whitelist_config",
+            "silent_app_config",
+            "occupy_screen_app_config",
+            "desktop_config",
+            "wifi_config",
+            "apn_config",
+            "send_script_config",
+            "app_whitelist_config",
+            "app_deploy_config",
+            "boot_animation_config",
+            "strategy_config"
+        )
+    }
 
     private lateinit var binding: ActivityUmsBinding
 
     private val umsHelper by lazy { UmsHelper(this) }
     private var ums: IUmsFunction? = null // This is an AIDL API
     private var isBound = false
+    private val mapOfConfigCode = mutableMapOf<String, String>()
     private val conn = object : ServiceConnection {
         override fun onServiceConnected(
             name: ComponentName?,
@@ -61,6 +75,8 @@ class UmsActivity : AppCompatActivity() {
         binding.btnUmsStatus.setOnClickListener { onUmsStatusButtonClicked() }
         binding.btnGetUnfinishedOrder.setOnClickListener { onGetUnfinishedOrderButtonClicked() }
         binding.btnGetConfig.setOnClickListener { onGetConfigButtonClicked() }
+        binding.tvConfigDetail.setOnClickListener { onConfigDetailTextViewClicked() }
+        binding.btnCheckConfigDetail.setOnClickListener { onCheckConfigDetailButtonClicked() }
 
         binding.etSerialNumber.setText(DeviceManager().deviceId.toString())
 
@@ -70,6 +86,7 @@ class UmsActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         bindUmsServiceOnce()
+        binding.etSerialNumber.setText(umsHelper.sn)
         if (ums != null) {
             binding.btnUmsStatus.text = "Check UMS Status"
             binding.btnUmsStatus.isEnabled = true
@@ -82,12 +99,14 @@ class UmsActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         unbindUmsServiceOnce()
+        binding.btnCheckConfigDetail.isEnabled = false
     }
 
 
     private fun onSetSnButtonClicked() {
         Toast.makeText(this, "Set SN successfully", Toast.LENGTH_SHORT).show()
         umsHelper.sn = binding.etSerialNumber.text.toString()
+        binding.btnCheckConfigDetail.isEnabled = false
     }
 
     private fun onCheckPackageButtonClicked() {
@@ -105,7 +124,6 @@ class UmsActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private fun onCheckAppListButtonClicked() {
         binding.tvResult.text = ""
@@ -229,7 +247,7 @@ class UmsActivity : AppCompatActivity() {
         binding.btnGetConfig.isEnabled = false
         Thread {
             runCatching {
-                return@runCatching umsHelper.getConfig()
+                return@runCatching umsHelper.getAllConfig()
             }.onSuccess { ret ->
                 runOnUiThread {
                     binding.tvResult.text = buildString {
@@ -239,12 +257,11 @@ class UmsActivity : AppCompatActivity() {
                         append(" - UploadResult:\n")
                         append("https://uhomeov.urovo.com/api/v1/configRule/configRuleFeedback\n\n")
                         append("Further:\n" +
-                                "Won't trigger when save but must have:\n" +
-                                " - device_fence_config: Will trigger on Backend\n" +
+                                "Won't trigger MQTT when save but must have:\n" +
                                 " - device_config(Default: e.g. MQTT_PWD, PollingTime)\n" +
+                                " - device_fence_config: Will trigger on Backend\n" +
                                 "\n" +
                                 "Will examine if Config is right when polling:\n" +
-                                " - silent_app_config: DM.setAutoRunningApp()\n" +
                                 " - function_config: \n" +
                                 "   - DM.enableHomeKey() \n" +
                                 "   - DM.enableStatusBar() \n" +
@@ -256,6 +273,7 @@ class UmsActivity : AppCompatActivity() {
                                 "   - DM.controlWifi() \n" +
                                 "   - DM.setSettingProperty(UROVO_FORBIDDEN_UNINSTALL, t/f) \n" +
                                 " - wifi_whitelist_config: DM.insertToWifiWhiteList()/removeFromWifiWhiteList()\n" +
+                                " - silent_app_config: DM.setAutoRunningApp()\n" +
                                 " - occupy_screen_app_config: DM.setLockTaskMode() + DM.saveLockPassword(PWD)\n" +
                                 " - desktop_config: DM.setDefaultLauncher()/DM.removeDefaultLauncher()\n" +
                                 "\n" +
@@ -287,6 +305,56 @@ class UmsActivity : AppCompatActivity() {
     }
 
 
+    private fun onConfigDetailTextViewClicked() {
+        binding.btnCheckConfigDetail.isEnabled = false
+        showWheelDialog(
+            context = this,
+            title = "Select Config",
+            list = LIST_OF_CONFIG,
+            current = binding.tvConfigDetail.text.toString()
+        ) { selected ->
+            Thread {
+                runCatching {
+                    val configCode = umsHelper.checkSpecificConfig(selected)
+                    if (configCode == null) {
+                        runOnUiThread {
+                            Toast.makeText(this, "No have config: $selected", Toast.LENGTH_SHORT).show()
+                            binding.btnCheckConfigDetail.isEnabled = false
+                        }
+                        error("")
+                    }
+                    return@runCatching configCode
+                }.onSuccess { configCode ->
+                    runOnUiThread {
+                        mapOfConfigCode[selected] = configCode
+                        binding.btnCheckConfigDetail.isEnabled = true
+                        binding.tvConfigDetail.text = selected
+                    }
+                }.onFailure {
+                    it.printStackTrace()
+                }
+            }.start()
+        }
+    }
+
+
+    private fun onCheckConfigDetailButtonClicked() {
+        Thread {
+            runCatching {
+                return@runCatching umsHelper.getSpecificConfig(binding.tvConfigDetail.text.toString(), mapOfConfigCode[binding.tvConfigDetail.text.toString()]!!)
+            }.onSuccess { ret ->
+                runOnUiThread {
+                    binding.tvResult.text = ret
+                }
+            }.onFailure {
+                runOnUiThread {
+                    binding.tvResult.text = it.message
+                }
+                it.printStackTrace()
+            }
+        }.start()
+    }
+
     // <------------------ Helper methods ------------------> //
 
     private fun bindUmsServiceOnce() {
@@ -314,6 +382,31 @@ class UmsActivity : AppCompatActivity() {
         runCatching { unbindService(conn) }
         isBound = false
         ums = null
+    }
+
+    private fun showWheelDialog(
+        context: Context,
+        title: String,
+        list: List<String>,
+        current: String? = null,
+        onSelected: (String) -> Unit
+    ) {
+        val picker = NumberPicker(context).apply {
+            minValue = 0
+            maxValue = list.size - 1
+            displayedValues = list.toTypedArray()
+            wrapSelectorWheel = false
+
+            value = current?.let { list.indexOf(it) } ?: return@apply
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(title)
+            .setView(picker)
+            .setPositiveButton("Select") { _, _ ->
+                onSelected(list[picker.value])
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
 }

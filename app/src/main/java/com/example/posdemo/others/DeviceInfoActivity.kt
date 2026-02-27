@@ -96,7 +96,7 @@ class DeviceInfoActivity : AppCompatActivity() {
                 append(" - SE: ${deviceManager.getSettingProperty("persist-urv.se.version")}\n\n")
 
                 append("GSF: ${isPackageInstalled("com.google.android.gsf")}\n")
-                append("GMS: ${isPackageInstalled("com.google.android.gms")} (available: ${GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this@DeviceInfoActivity) == ConnectionResult.SUCCESS}\n)")
+                append("GMS: ${isPackageInstalled("com.google.android.gms")} (available: ${GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this@DeviceInfoActivity) == ConnectionResult.SUCCESS})\n")
                 append("PlayStore: ${isPackageInstalled("com.android.vending")}\n")
                 append("Chrome: ${isPackageInstalled("com.android.chrome")}\n")
                 append("Maps: ${isPackageInstalled("com.google.android.apps.maps")}\n\n")

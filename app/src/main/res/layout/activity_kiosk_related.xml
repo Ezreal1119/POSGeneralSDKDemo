@@ -395,18 +395,6 @@
 
                 </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="For POS: APPs in Whitelist can be installed without signature verification(i.e. More flexible)"
-                    android:textSize="12sp"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="For PDA(i.e. More Strict): \n - APPs NOT in Whitelist CAN'T be installed without signature\n - APPs NOT in Whitelist will be deleted(not hid) once reboot"
-                    android:textSize="12sp"/>
-
 
             </LinearLayout>
 

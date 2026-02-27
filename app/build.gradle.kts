@@ -93,4 +93,5 @@ dependencies {
     implementation("com.google.android.play:integrity:1.6.0") // For Test of Google Integrity API
     implementation("org.bouncycastle:bcprov-jdk15to18:1.78.1") // For getting Device Info
     implementation("com.google.code.gson:gson:2.10.1") // For parsing JSON
+
 }

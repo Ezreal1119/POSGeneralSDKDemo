@@ -173,6 +173,7 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
         binding.tvTerminalType.setOnClickListener {
             showWheelDialog(
                 context = requireContext(),
+                title = "Select Type",
                 list = terminalTypeCodeMap.map { (code, name) -> "$name - $code" },
                 current = binding.tvTerminalType.text?.toString()
             ) { selected ->
@@ -184,6 +185,7 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
         binding.tvTerminalCountry.setOnClickListener {
             showWheelDialog(
                 context = requireContext(),
+                title = "Select Country",
                 list = countryCodeMap.map { (code, name) -> "$name - $code" },
                 current = binding.tvTerminalCountry.text?.toString()
             ) { selected ->
@@ -195,6 +197,7 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
         binding.tvThresholdRandomSwitch.setOnClickListener {
             showWheelDialog(
                 context = requireContext(),
+                title = "Select Threshold Switch",
                 list = thresholdRandomSwitchMap.map { (code, name) -> "$name - $code" },
                 current = binding.tvThresholdRandomSwitch.text?.toString()
             ) { selected ->
@@ -265,6 +268,7 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
 
     private fun showWheelDialog(
         context: Context,
+        title: String,
         list: List<String>,
         current: String? = null,
         onSelected: (String) -> Unit
@@ -280,7 +284,7 @@ class TerminalParamsFragment : Fragment(R.layout.fragment_terminal_params) {
         }
 
         MaterialAlertDialogBuilder(context)
-            .setTitle("Select Country")
+            .setTitle(title)
             .setView(picker)
             .setNegativeButton("Cancel", null)
             .setPositiveButton("OK") { _, _ ->

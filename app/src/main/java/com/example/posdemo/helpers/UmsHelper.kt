@@ -8,10 +8,26 @@ import android.device.DeviceManager
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import com.example.posdemo.data.ApnConfigDetail
+import com.example.posdemo.data.AppDeployConfigDetail
 import com.example.posdemo.data.AppListResp
+import com.example.posdemo.data.AppWhitelistConfigDetail
+import com.example.posdemo.data.BootAnimationConfigDetail
+import com.example.posdemo.data.ConfigDetailResp
+import com.example.posdemo.data.ConfigItem
 import com.example.posdemo.data.ConfigResp
+import com.example.posdemo.data.DesktopConfigDetail
+import com.example.posdemo.data.DeviceConfigDetail
+import com.example.posdemo.data.DeviceFenceConfigDetail
+import com.example.posdemo.data.FunctionConfigDetail
+import com.example.posdemo.data.OccupyScreenAppConfigDetail
 import com.example.posdemo.data.QueryLogRecordResp
+import com.example.posdemo.data.SendScriptConfigDetail
+import com.example.posdemo.data.SilentAppConfigDetail
+import com.example.posdemo.data.StrategyConfigDetail
 import com.example.posdemo.data.UnfinishedOrderResp
+import com.example.posdemo.data.WifiConfigDetail
+import com.example.posdemo.data.WifiWhitelistConfigDetail
 import com.example.posdemo.utils.PackageUtil
 import com.example.posdemo.utils.PermissionUtil
 import com.google.gson.Gson
@@ -20,6 +36,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.jvm.java
+
 
 class UmsHelper(private val activity: Activity) {
 
@@ -28,7 +46,8 @@ class UmsHelper(private val activity: Activity) {
         private const val APP_LIST_URL = "https://uhomeov.urovo.com/api/v1/app/list"
         private const val UNFINISHED_ORDER_URL = "https://uhomeov.urovo.com/api/v1/order/unfinish"
         private const val UPLOAD_RESULT_URL = "https://uhomeov.urovo.com/api/v1/monitor/uploadGeneral"
-        private const val CONFIG_URL = "https://uhomeov.urovo.com/api/v2/get/all/config"
+        private const val ALL_CONFIG_URL = "https://uhomeov.urovo.com/api/v2/get/all/config"
+        private const val CONFIG_DETAIL_URL = "https://uhomeov.urovo.com/api/v2/get/config/detail"
         private const val QUERY_DEVICE_LOG_RECORD = "https://uhomeov.urovo.com/api/v1/query/device/log/record"
     }
 
@@ -173,8 +192,8 @@ class UmsHelper(private val activity: Activity) {
         }
     }
 
-    fun getConfig(): String {
-        val url = "$CONFIG_URL?dvcid=$sn"
+    fun getAllConfig(): String {
+        val url = "$ALL_CONFIG_URL?dvcid=$sn"
         val request = Request.Builder().url(url).get().build()
         val obj = client.newCall(request).execute().use { resp ->
             if (!resp.isSuccessful) error("HTTP ${resp.code}")
@@ -191,6 +210,237 @@ class UmsHelper(private val activity: Activity) {
                 append("($index). configType: ${config.configType}\n")
                 append(" - pushTime: ${config.pushTime}\n")
                 index++
+            }
+        }
+    }
+
+    fun checkSpecificConfig(config: String): String? {
+        val url = "$ALL_CONFIG_URL?dvcid=$sn"
+        val request = Request.Builder().url(url).get().build()
+        val obj = client.newCall(request).execute().use { resp ->
+            if (!resp.isSuccessful) error("HTTP ${resp.code}")
+            val body = resp.body?.string() ?: error("Empty bodY")
+            return@use gson.fromJson(body, ConfigResp::class.java)
+        }
+        val item = obj.data?.firstOrNull {
+            it.configType == config
+        }
+        return item?.configCode
+
+
+    }
+
+    fun getSpecificConfig(config: String, code: String): String {
+        val url = "$CONFIG_DETAIL_URL?dvcid=$sn&configCode=${code}&configType=$config"
+        val request = Request.Builder().url(url).get().build()
+        val obj = client.newCall(request).execute().use { resp ->
+            if (!resp.isSuccessful) error("HTTP ${resp.code}")
+            val body = resp.body?.string() ?: error("Empty body")
+            return@use gson.fromJson(body, ConfigDetailResp::class.java)
+        }
+
+        val envelope = obj.data ?: return "Error"
+
+        when (envelope.configType) {
+            "device_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, DeviceConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNotes:\n")
+                    append(" - This is a MUST have Config for a device\n")
+                    append(" - This config won't trigger MQTT when save")
+                }
+            }
+            "device_fence_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, DeviceFenceConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNotes:\n")
+                    append(" - This is a MUST have Config for a device\n")
+                    append(" - This config won't trigger MQTT when save")
+                }
+            }
+            "function_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, FunctionConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Will examine if Config is right even the code is the same when polling. Will correct the Config if not same.")
+                    append("\nAll APIs related:\n")
+                    append(" - DM.enableHomeKey() \n" +
+                            " - DM.enableStatusBar() \n" +
+                            " - DM.setSettingProperty(Global-disable_pop_softinput, t/f) \n" +
+                            " - DM.setPackageInstaller() \n" +
+                            " - DM.controlUSB() \n" +
+                            " - DM.controlAdb() \n" +
+                            " - DM.controlBT() \n" +
+                            " - DM.controlWifi() \n" +
+                            " - DM.setSettingProperty(UROVO_FORBIDDEN_UNINSTALL, t/f)")
+                }
+            }
+            "wifi_whitelist_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, WifiWhitelistConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Will examine if Config is right even the code is the same when polling. Will correct the Config if not same.")
+                    append("\nAll APIs related:\n")
+                    append(" - DM.insertToWifiWhiteList() \n" +
+                            " - DM.removeFromWifiWhiteList()")
+                }
+            }
+            "silent_app_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, SilentAppConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Will examine if Config is right even the code is the same when polling. Will correct the Config if not same.")
+                    append("\nAll APIs related:\n")
+                    append(" - DM.setAutoRunningApp()")
+                }
+            }
+            "occupy_screen_app_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, OccupyScreenAppConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Will examine if Config is right even the code is the same when polling. Will correct the Config if not same.")
+                    append("\nAll APIs related:\n")
+                    append(" - DM.setLockTaskMode()\n")
+                    append(" - DM.saveLockPassword(PWD)")
+                }
+            }
+            "desktop_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, DesktopConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Will examine if Config is right even the code is the same when polling. Will correct the Config if not same.")
+                    append("\nAll APIs related:\n")
+                    append(" - DM.setDefaultLauncher()\n")
+                    append(" - DM.removeDefaultLauncher()")
+                }
+            }
+            "wifi_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, WifiConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Won't examine if Config Code is the same when polling.")
+                    append("\nAll APIs related:\n")
+                    append(" - DM.connectWifi()")
+                }
+            }
+            "apn_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, ApnConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Won't examine if Config Code is the same when polling.")
+                    append("\nAll APIs related:\n")
+                    append(" - DM.setAPN()\n")
+                    append(" - DM.deleteAPN()")
+                }
+            }
+            "send_script_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, SendScriptConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Won't examine if Config Code is the same when polling.")
+                    append("\nAll APIs related:\n")
+                    append(" - Intent(Act, Serv, Broadcast)")
+                }
+            }
+            "app_whitelist_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, AppWhitelistConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Won't examine if Config Code is the same when polling.\n")
+                    append("For POS: APPs in Whitelist can be installed without signature verification(i.e. More flexible)\n")
+                    append("For PDA(i.e. More Strict): \\n - APPs NOT in Whitelist CAN'T be installed without signature\\n - APPs NOT in Whitelist will be deleted(not hid) once reboot\n")
+                    append("\nAll APIs related:\n")
+                    append(" - DM.setAllowInstallApps()")
+                }
+            }
+            "app_deploy_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, AppDeployConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Won't examine if Config Code is the same when polling.")
+                    append("\nAll APIs related:\n")
+                    append(" - Download(OSS) + DM.installApplication()")
+                }
+            }
+            "boot_animation_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, BootAnimationConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Won't examine if Config Code is the same when polling.")
+                    append("\nAll APIs related:\n")
+                    append(" - Download(OSS) + ???")
+                }
+            }
+            "strategy_config" -> {
+                val detail = gson.fromJson(envelope.configDetail, StrategyConfigDetail::class.java)
+                return buildString {
+                    val jsonObject = gson.toJsonTree(detail).asJsonObject
+                    append("${envelope.configType}:\n")
+                    for ((key, value) in jsonObject.entrySet()) {
+                        append(" - $key: $value\n")
+                    }
+                    append("\nNote: Won't examine if Config Code is the same when polling.")
+                    append("\nAll APIs related:\n")
+                    append(" - UMS.startActivity(UStage, Config) + UStage.sendBroadcast/AIDL")
+                }
+            }
+            else -> {
+                // 未知类型：你可以保留 JsonElement 或记录日志
+                return ""
             }
         }
     }

@@ -42,7 +42,8 @@ enum class PinParams(val tag: String) {
     OK_BITMAP("okBitmap"),
     BACKSPACE_BITMAP("backspaceBitmap"),
     VIEW_BITMAP("viewBitmap"),
-    BODY_BITMAP("bodyBitmap")
+    BODY_BITMAP("bodyBitmap"),
+    CUSTOM_KEYBOARD_DIALOG("customKeyboardDialog")
 }
 
 enum class Tr31Params(val tag: String) {
