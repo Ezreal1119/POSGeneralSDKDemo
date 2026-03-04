@@ -21,7 +21,7 @@ import com.urovo.uhome.IUmsFunction
 class UmsActivity : AppCompatActivity() {
 
     companion object {
-        private val LIST_OF_CONFIG = listOf(
+        private val listOfConfig = listOf(
             "device_config",
             "device_fence_config",
             "function_config",
@@ -310,7 +310,7 @@ class UmsActivity : AppCompatActivity() {
         showWheelDialog(
             context = this,
             title = "Select Config",
-            list = LIST_OF_CONFIG,
+            list = listOfConfig,
             current = binding.tvConfigDetail.text.toString()
         ) { selected ->
             Thread {

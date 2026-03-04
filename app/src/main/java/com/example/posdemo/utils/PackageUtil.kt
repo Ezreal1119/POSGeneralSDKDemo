@@ -25,7 +25,7 @@ object PackageUtil {
                 pm.getPackageInfo(packageName, 0)
             }
 
-            val versionCode = if (android.os.Build.VERSION.SDK_INT >= 28) {
+            val versionCode = if (Build.VERSION.SDK_INT >= 28) {
                 info.longVersionCode
             } else {
                 info.versionCode.toLong()

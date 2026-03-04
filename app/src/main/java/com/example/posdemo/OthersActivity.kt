@@ -14,7 +14,10 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
+import android.text.format.DateFormat
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -28,6 +31,7 @@ import androidx.core.net.toUri
 import com.example.posdemo.databinding.ActivityOthersBinding
 import com.example.posdemo.others.NewSerialPortActivity
 import com.example.posdemo.others.SettingsActivity
+import com.example.posdemo.others.UeeIntentActivity
 import com.example.posdemo.others.UmsActivity
 import com.example.posdemo.others.WifiActivity
 import okhttp3.Call
@@ -41,6 +45,7 @@ import okhttp3.Response
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.Date
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -92,15 +97,24 @@ class OthersActivity : AppCompatActivity() {
         binding.btnSwitches.setOnClickListener { startActivity(Intent(this, SwitchesActivity::class.java)) }
         binding.btnNewSerialPort.setOnClickListener { startActivity(Intent(this, NewSerialPortActivity::class.java)) }
         binding.btnUms.setOnClickListener { startActivity(Intent(this, UmsActivity::class.java)) }
+        binding.btnUeeIntent.setOnClickListener {
+            if (getDevType() !in BuildConfig.LIST_OF_PDA) {
+                Toast.makeText(this, "This Model doesn't support this feature", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            startActivity(Intent(this, UeeIntentActivity::class.java))
+        }
         binding.btnFactoryMenu.setOnClickListener { onFactoryMenuButtonClicked() }
         binding.btnOtherSettings.setOnClickListener { startActivity((Intent(this, SettingsActivity::class.java))) }
         binding.btnLoadGMS.setOnClickListener { onLoadGMSButtonClicked() }
         binding.btnDebuglogger.setOnClickListener { onDebugloggerButtonClicked() }
         binding.btnUploadLog.setOnClickListener { onUploadLogButtonClicked() }
+        binding.btnRecordLogcat.setOnClickListener { onRecordLogcatButtonClicked() }
         binding.btnShutDown.setOnClickListener { onShutDownButtonClicked() }
         binding.btnReboot.setOnClickListener { onRebootButtonClicked() }
         binding.btnReset.setOnClickListener { onResetButtonClicked() }
     }
+
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onStart() {
@@ -215,6 +229,39 @@ class OthersActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+
+    private fun onRecordLogcatButtonClicked() {
+        fun startLog() {
+            val intent = Intent("action.LOG_CONTROL_SERVICE").apply {
+                putExtra("option", 1)
+                putExtra("android", true)
+                putExtra("kernel", false)
+                putExtra("androidFile", "SystemLog_${DateFormat.format("yyyy-MM-dd_HH_mm_ss", Date().time)}")
+                putExtra("fileMaxSize", 5)
+            }
+            sendBroadcast(intent)
+        }
+
+        fun stopLog() {
+            val intent = Intent("action.LOG_CONTROL_SERVICE").apply {
+                putExtra("option", 0)
+                putExtra("android", true)
+                putExtra("kernel", true)
+            }
+            sendBroadcast(intent)
+        }
+
+        startLog()
+        Toast.makeText(this, "Started recording Logcat for 30s\nlogPath: /sdcard/ULog/logs/adb", Toast.LENGTH_SHORT).show()
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            stopLog()
+            runOnUiThread {
+                Toast.makeText(this, "Finished recording Logcat", Toast.LENGTH_SHORT).show()
+            }
+        }, 30000L)
     }
 
     private fun onShutDownButtonClicked() {

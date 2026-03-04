@@ -33,6 +33,8 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
             buildConfigField("String", "MQTT_HOST", "\"39.101.193.145\"")
+            buildConfigField("String", "LIST_OF_POS", "\"SQ68,SQ29M,SQ29MB,SQ29WR,SQ65A,SQ65B,\"")
+            buildConfigField("String", "LIST_OF_PDA", "\"SQ53,SQ53ST,SQ66,SQ58C,SQ58CU,\"")
         }
         release {
             isMinifyEnabled = false // Minify the naming of the codes
@@ -43,6 +45,8 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("String", "MQTT_HOST", "\"39.101.193.145\"")
+            buildConfigField("String", "LIST_OF_POS", "SQ68,SQ29M,SQ29MB,SQ29WR,SQ65A,SQ65B,")
+            buildConfigField("String", "LIST_OF_PDA", "SQ53,SQ53ST,SQ66,SQ58C,SQ58CU,")
         }
     }
     compileOptions {

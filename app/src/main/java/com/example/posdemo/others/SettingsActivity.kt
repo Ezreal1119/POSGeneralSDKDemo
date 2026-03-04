@@ -3,13 +3,17 @@ package com.example.posdemo.others
 import android.app.AlertDialog
 import android.content.Intent
 import android.device.DeviceManager
+import android.device.UFSManager
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.posdemo.R
 import com.example.posdemo.databinding.ActivitySettingsBinding
+import com.example.posdemo.utils.ImageUtil
 import com.example.posdemo.utils.PermissionUtil
 import com.example.posdemo.webview.WebViewActivity
 import java.util.Locale
@@ -32,8 +36,12 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnDeleteApnByName.setOnClickListener { onDeleteApnByNameButtonClicked() }
         binding.btnSetLockPassword.setOnClickListener { onSetLockPasswordButtonClicked() }
         binding.btnClearLockPassword.setOnClickListener { onClearLockPasswordButtonClicked() }
+        binding.btnSetSettingsPassword.setOnClickListener { onSetSettingsPasswordButtonClicked() }
+        binding.btnClearSettingsPassword.setOnClickListener { onClearSettingsPasswordButtonClicked() }
         binding.btnGetTimeSettings.setOnClickListener { onGetTimeSettingsButtonClicked() }
         binding.btnSetTimeSettings.setOnClickListener { onSetTimeSettingsButtonClicked() }
+        binding.btnSetCustomWallpaper.setOnClickListener { onSetCustomWallpaperButtonClicked() }
+        binding.btnSetDefaultWallpaper.setOnClickListener { onSetDefaultWallpaperButtonClicked() }
         binding.btnTtsTest.setOnClickListener { onTtsTestButtonClicked() }
         binding.btnWebViewTestUrovo.setOnClickListener { onWebViewTestUrovoButtonClicked() }
 
@@ -78,7 +86,13 @@ class SettingsActivity : AppCompatActivity() {
             if (!PermissionUtil.ensureCanWriteSettings(this)) {
                 return
             }
-            Settings.System.putInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS, binding.sliderBrightness.value.toInt())
+             Settings.System.putInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS, binding.sliderBrightness.value.toInt())
+//            DeviceManager().setSettingProperty("System-screen_brightness", binding.sliderBrightness.value.toString())
+        }.onSuccess {
+            Toast.makeText(this, "Set Brightness to ${binding.sliderBrightness.value} successfully\n Use setSettings to bypass permission check", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
         }
     }
 
@@ -120,7 +134,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun onSetLockPasswordButtonClicked() {
         runCatching {
-            DeviceManager().saveLockPassword(binding.etLockPassword.text.toString(), 1)
+            DeviceManager().saveLockPassword(binding.etPassword.text.toString(), 1)
         }.onSuccess {
             Toast.makeText(this, "Set Lock Screen Password successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
@@ -134,6 +148,29 @@ class SettingsActivity : AppCompatActivity() {
             DeviceManager().clearLock()
         }.onSuccess {
             Toast.makeText(this, "Clear Lock Screen Password successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onSetSettingsPasswordButtonClicked() {
+        runCatching {
+            DeviceManager().setSettingProperty("persist-persist.sys.urv.all.settings.password", binding.etPassword.text.toString())
+        }.onSuccess {
+            Toast.makeText(this, "Set Password ${binding.etPassword.text} successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onClearSettingsPasswordButtonClicked() {
+        runCatching {
+            DeviceManager().setSettingProperty("persist-persist.sys.urv.all.settings.password", "")
+        }.onSuccess {
+            Toast.makeText(this, "Set Password ${binding.etPassword.text} successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
             Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
             it.printStackTrace()
@@ -165,6 +202,32 @@ class SettingsActivity : AppCompatActivity() {
                     DeviceManager().shutdown(true)
                 }
                 .show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onSetCustomWallpaperButtonClicked() {
+        runCatching {
+            val clazz = Class.forName("android.device.UFSManager")
+            val method = clazz.getMethod("setWallpaper", Bitmap::class.java, Int::class.java)
+            method.invoke(UFSManager(), ImageUtil.pngToBitmap(resources, R.drawable.wallpaper), 1)
+        }.onSuccess {
+            Toast.makeText(this, "Set Custom Wallpaper successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onSetDefaultWallpaperButtonClicked() {
+        runCatching {
+            val clazz = Class.forName("android.device.UFSManager")
+            val method = clazz.getMethod("setWallpaper", Bitmap::class.java, Int::class.java)
+            method.invoke(UFSManager(), null, 1)
+        }.onSuccess {
+            Toast.makeText(this, "Set Default Wallpaper successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
             Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
             it.printStackTrace()

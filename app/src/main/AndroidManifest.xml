@@ -18,8 +18,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
     <queries>
         <package android:name="com.google.android.gms" />
@@ -31,6 +31,9 @@
         <package android:name="com.urovo.utms" />
         <package android:name="com.urovo.utms.appmarket" />
         <package android:name="com.google.android.apps.maps" />
+        <package android:name="com.urovo.browser.u" />
+        <package android:name="com.ubx.keyremap" />
+        <package android:name="com.urovo.enterprisemodeldesktop" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>
@@ -46,6 +49,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.POSGeneralSDKDemo">
+        <activity
+            android:name=".others.UeeIntentActivity"
+            android:exported="false" />
         <activity
             android:name=".others.UmsActivity"
             android:exported="false" />

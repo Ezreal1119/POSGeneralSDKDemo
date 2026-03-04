@@ -257,7 +257,7 @@
                         android:gravity="center" />
 
                     <EditText
-                        android:id="@+id/etLockPassword"
+                        android:id="@+id/etPassword"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="2"
@@ -278,7 +278,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Set Lock Password"
-                        android:textSize="15sp"
                         android:layout_margin="1dp"
                         android:padding="0dp"/>
 
@@ -289,7 +288,31 @@
                         android:layout_weight="1"
                         android:text="Clear Lock Password"
                         android:layout_margin="1dp"
-                        android:textSize="15sp"
+                        android:padding="0dp"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnSetSettingsPassword"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Set Settings Password"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnClearSettingsPassword"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Clear Settings Password"
+                        android:layout_margin="1dp"
                         android:padding="0dp"/>
 
                 </LinearLayout>
@@ -321,6 +344,32 @@
                     android:layout_margin="1dp"
                     android:padding="0dp"/>
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnSetCustomWallpaper"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set Custom Wallpaper"
+                    android:textSize="13sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnSetDefaultWallpaper"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Set Default Wallpaper"
+                    android:textSize="13sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
 
             </LinearLayout>
 

@@ -88,13 +88,32 @@
                 android:textSize="20sp"
                 android:padding="0dp"/>
 
-            <Button
-                android:id="@+id/btnUms"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="UMS"
-                android:textSize="20sp"
-                android:padding="0dp"/>
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnUms"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="UMS"
+                    android:textSize="18sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnUeeIntent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="UEE Intent"
+                    android:textSize="18sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btnFactoryMenu"
@@ -139,6 +158,13 @@
                     android:padding="0dp"/>
 
             </LinearLayout>
+
+            <Button
+                android:id="@+id/btnRecordLogcat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Record Logcat(30 seconds)"
+                android:padding="0dp"/>
 
             <LinearLayout
                 android:layout_width="match_parent"

@@ -60,10 +60,10 @@ class CameraScanFragment : Fragment() {
                 override fun onSuccess(data: String?, byteData: ByteArray?) {
                     requireActivity().runOnUiThread {
                         binding.tvResult.text = buildString {
-                            append("data in String:\n\n")
-                            append(" - $data\n\n")
-                            append("data in Bytes:\n\n")
-                            append(" - ${BytesUtil.bytes2HexString(byteData)}")
+                            append("data in String:\n")
+                            append("$data\n\n")
+                            append("data in Bytes:\n")
+                            append("${BytesUtil.bytes2HexString(byteData)}")
                         }
                     }
                 }
