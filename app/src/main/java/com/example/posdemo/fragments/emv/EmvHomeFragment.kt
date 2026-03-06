@@ -64,6 +64,7 @@ import com.urovo.i9000s.api.emv.ContantPara
 import com.urovo.i9000s.api.emv.EmvListener
 import com.urovo.i9000s.api.emv.EmvNfcKernelApi
 import com.urovo.i9000s.api.emv.Funs
+import com.urovo.sdk.beeper.BeeperImpl
 import com.urovo.sdk.pinpad.PinPadProviderImpl
 import com.urovo.sdk.pinpad.listener.OfflinePinInputListener
 import com.urovo.sdk.pinpad.listener.PinInputListener
@@ -748,6 +749,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
                 }
                 ContantPara.CheckCardResult.INSERTED_CARD -> { // ICC(Contact)
                     cardReadMode = CardReadMode.CONTACT
+                    BeeperImpl.getInstance().startBeep(1, 100)
                     result.apply {
                         append("<===========Card Detected===========>\n\n")
                         append("Card Type: ICCard(EMV_Contact)\n\n")
@@ -756,6 +758,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
                 }
                 ContantPara.CheckCardResult.TAP_CARD_DETECTED -> { // PICC(Contactless)
                     cardReadMode = CardReadMode.CONTACTLESS
+                    BeeperImpl.getInstance().startBeep(1, 200)
                     result.apply {
                         append("<===========Card Detected===========>\n\n")
                         append("Card Type: PICCard(EMV_Contactless)\n\n")
@@ -970,7 +973,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
         }
 
         override fun onRequestConfirmCardno() {
-            // After GPO, before PR
+            // After GPO, before ODA
             Log.e(TAG, "onRequestConfirmCardno: After GPO, before ODA")
             val tagList = listOf("5A", "57")
             val ret = mEmvKernelManager.getTlvByTagLists(tagList)
@@ -1275,10 +1278,10 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
             }
             when (msgID) {
                 ContantPara.NfcTipMessageID.CARD_READ_OK -> { // Play this sound if Read Card successfully
-                    SoundTool.getMySound(requireContext()).playSound(SOUND_TYPE_SUCCESS)
+//                    SoundTool.getMySound(requireContext()).playSound(SOUND_TYPE_SUCCESS)
                 }
                 ContantPara.NfcTipMessageID.END_APPLICATION -> { // Play this sound if Read Card failed
-                    SoundTool.getMySound(requireContext()).playSound(SOUND_TYPE_ERROR)
+//                    SoundTool.getMySound(requireContext()).playSound(SOUND_TYPE_ERROR)
                 }
                 else -> null
             }
@@ -1296,7 +1299,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
         }
 
         override fun onNFCrequestOnline() {
-            Log.e(TAG, "onNFCrequestOnline: ")
+            Log.e(TAG, "onNFCrequestOnline: PAN:${mEmvKernelManager.getValByTag(0x50)}")
             result.apply {
                 append("<===========ISO8583===========>\n\n")
                 append("Preparing for other fields of ISO8583...\n\n")

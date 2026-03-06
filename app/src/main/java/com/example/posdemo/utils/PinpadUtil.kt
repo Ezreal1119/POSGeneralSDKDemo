@@ -169,7 +169,7 @@ object PinpadUtil {
 enum class Tr34Type(val type: Int) {
     // KMS CA's private key is in Security Room
     TYPE_KMS_CA(0xF2), // The place that stores KMS CA, pre-embedded during production. Used to verify the KMS backend.
-    TYPE_PED_CRT(0xF3), // RKI from KMS by CSR requesting to KMS server. Signed by KMS CA. Used to showcase the legit identity
+    TYPE_PED_CRT(0xF3), // RKI from KMS by CSR requesting to KMS server. Signed by KSM_CA. Used to showcase the legit identity
     TYPE_KDH_CRT(0xF4), // Key Distribution Host (e.g. KLD). Also signed by KMS CA
     TYPE_PED_PRIVATE_KEY(0xF5)
 }

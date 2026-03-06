@@ -6,8 +6,10 @@ import android.bluetooth.BluetoothClass
 import android.content.Intent
 import android.device.DeviceManager
 import android.device.IccManager
+import android.device.SEManager
 import android.device.UFSManager
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -170,7 +172,10 @@ class ApiTestActivity : AppCompatActivity() {
     private fun onTest4ButtonClicked() {
         Log.e(TAG, "onTest4ButtonClicked")
 
-        UFSManager().setBootanimation("/sdcard/Download/bootanimation_720_1440.zip")
+//        UFSManager().setBootanimation("/sdcard/Download/bootanimation_720_1440.zip")
+        Log.e(TAG, "onTest4ButtonClicked: ${Build.VERSION.RELEASE}", )
+        Log.e(TAG, "onTest4ButtonClicked: ${DeviceManager().getSettingProperty("persist-ro.ufs.build.version")}", )
+        Log.e(TAG, "onTest4ButtonClicked: ${Build.VERSION.SDK_INT}", )
     }
 
     private fun onTest5ButtonClicked() {
@@ -188,7 +193,30 @@ class ApiTestActivity : AppCompatActivity() {
 //            it.printStackTrace()
 //        }
 
+        //3082032230820284A00302010202073D7E3FFD138B8C300A06082A8648CE3D0403043032310C300A0603550406130343484E310E300C060355040A130555726F766F311230100603550403130943414B444820454343301E170D3234313130363037333830385A170D3239313130353037333830385A304E3110300E06035504030C07524B49204B4448311D301B060355040B0C1447656E6572616C2055726F766F20726F6F744341310E300C060355040A0C0555726F766F310B300906035504061302434E30819B301006072A8648CE3D020106052B81040023038186000400459CB10A8507FB155228A81DC745D35D5ED3E78A3CB69EB441557F87E12D2617CF241343E9D4C42E460F207E53B62573C30427D9C54E9AFA7DFFD9DF64E0B3D98300979B4EF77B9FD6FF735D02CA1279BF0B586AAA713BB96D57D47E9DD0E2E71C0C1D3452C6865B5B117019D88F915D981656F4653A8A9440579A1C0EC9138AE32A49A38201243082012030600603551D2304593057801448461AB836718EE2FBC3FA509B81099EE4FFA733A136A4343032310C300A0603550406130343484E310E300C060355040A130555726F766F3112301006035504031309524B4943412045434382073D7E3F965EAFDA301D0603551D0E0416041421B6F5D9A2A6612B669D25BF04CE7320699FDAC230120603551D130101FF040830060101FF020100300E0603551D0F0101FF0404030205A030160603551D250101FF040C300A06082B06010505070301302E0603551D1F042730253023A021A01F861D68747470733A2F2F63726C2E746573742E636F6D2F746573742E63726C303106082B0601050507010104253023302106082B06010505073001861568747470733A2F2F6F6373702E746573742E636F6D300A06082A8648CE3D04030403818B0030818702413CFF22D951C07F40A1A2EB3E298ECE1E632AEB30BEDCA6A05FC1B9808059CA2EE1D848D15D4351CB535FD6C81BBF56114433F715F17E7E2D585452203AD4D3B0DA024201725FC1D02DED8BD62C7FBF8A89C48158A5CF5040B63F4F1546B0290A0E0B787C5BFF13697B28404D6EA20D77D48AEF4FDE96719AD9E76B5D0824AD1853227B630E
 
+        "Download KMS_CA_Cert & PED_Cert:\n" +
+                " - Generate KeyPair (RSA / ECC)\n" +
+                " - Generate CSR(SN + PublicKey + Self-Signature)\n" +
+                " - Retrieve KMS_CA_Cert & PED_Cert(instance issued) from KMS server\n" +
+                "\n" +
+                "Download KEY(KMS_IP + KMS_Port):\n" +
+                "(1). mTLS:\n" +
+                " - ClientHello(randonNumber1) - ServerHello(randonNumber2)\n" +
+                " - ClientUploadCert(PED_Cert) - ServerUploadCert(KDH_Cert recovered using KMS_CA_Cert)\n" +
+                " - ClientKeyExchange(signed_transcript) - ServerKeyExchange(signed_transcript) [Mutual Prove]\n" +
+                " - FIN [Make sure same sharedKey - KBPK]\n" +
+                "(2). Key Download:\n" +
+                " - Client checks PED_Cert & KMS_CA_Cert exist or not.\n" +
+                " - Server uses the KBPK to encapsulate the KEY into TR31[Header+Encrypted_KEY+MAC].\n" +
+                " - Server signs the TR31 using it's own KDH private key\n" +
+                " - Transmit in HTTP\n" +
+                " - Client verify the signature using KDH's Cert. Make sure it's from KDH and TR31 not modified\n" +
+                " - Recover the Actual Key using the KBPK"
+
+        Log.e(TAG, "onTest5ButtonClicked: ${BytesUtil.bytes2HexString(DeviceManager().readKMSCA())}", )
+        Log.e(TAG, "onTest5ButtonClicked: ${BytesUtil.bytes2HexString(DeviceManager().kdhCrt)}", )
+        Log.e(TAG, "onTest5ButtonClicked: ${BytesUtil.bytes2HexString(DeviceManager().pedCrt)}", )
 
 //        val clazz = Class.forName("android.device.UFSManager")
 //        val method = clazz.getMethod("setWallpaper", Bitmap::class.java, Int::class.java)

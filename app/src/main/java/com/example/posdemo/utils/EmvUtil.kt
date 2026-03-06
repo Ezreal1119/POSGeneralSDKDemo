@@ -39,7 +39,7 @@ object EmvUtil {
             } else {
                 put(TransactionTag.AMOUNT.tag, amount) // 50.00(Under Threshold) by default
             }
-            put(TransactionTag.CURRENCY_CODE.tag, "978") // EURO
+            put(TransactionTag.CURRENCY_CODE.tag, "0978") // EURO
 
             // 2. Optional
             put(TransactionTag.CHECK_CARD_TIMEOUT.tag, "30") // Default: 30 second; TIME before reading card TIMEOUT
@@ -50,7 +50,7 @@ object EmvUtil {
             // 3. Rarely used
 //            put(TransactionTag.CASHBACK_AMOUNT.tag, "") // 0 cashback
 //            put(TransactionTag.SUPPORT_DRL.tag, true) // Support Visa's Dynamic Reading Limit
-//            put(TransactionTag.ENABLE_BEEPER.tag, true) // Enable the beeper when reading Card successfully
+//            put(TransactionTag.ENABLE_BEEPER.tag, false) // true by default. Enable the beeper when reading Card successfully(Only effective for PICC)
 //            put(TransactionTag.ENABLE_TAP_SWIPE_COLLISION.tag, false) // Use the first payment method detected when encounter a collision within a short period of time.
 //            put(TransactionTag.PRIORITIZED_CANDIDATE_APP.tag, "A0000000031010") // Prioritize Visa Credit
 //            put(TransactionTag.DISABLE_CHECK_MSR_FORMAT.tag, true) // Disable checking the validity of the format of the Magnetic Strip Card's Track Data's Format

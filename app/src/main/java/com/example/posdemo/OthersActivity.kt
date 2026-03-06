@@ -30,6 +30,7 @@ import java.io.File
 import androidx.core.net.toUri
 import com.example.posdemo.databinding.ActivityOthersBinding
 import com.example.posdemo.others.NewSerialPortActivity
+import com.example.posdemo.others.RkiActivity
 import com.example.posdemo.others.SettingsActivity
 import com.example.posdemo.others.UeeIntentActivity
 import com.example.posdemo.others.UmsActivity
@@ -91,6 +92,7 @@ class OthersActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnGetDeviceInfo.setOnClickListener { startActivity(Intent(this, DeviceInfoActivity::class.java)) }
+        binding.btnOtherSettings.setOnClickListener { startActivity((Intent(this, SettingsActivity::class.java))) }
         binding.btnInstallManager.setOnClickListener { startActivity(Intent(this, InstallManager::class.java)) }
         binding.btnKioskRelated.setOnClickListener { startActivity(Intent(this, KioskRelatedActivity::class.java)) }
         binding.btnWifi.setOnClickListener { startActivity(Intent(this, WifiActivity::class.java)) }
@@ -105,7 +107,7 @@ class OthersActivity : AppCompatActivity() {
             startActivity(Intent(this, UeeIntentActivity::class.java))
         }
         binding.btnFactoryMenu.setOnClickListener { onFactoryMenuButtonClicked() }
-        binding.btnOtherSettings.setOnClickListener { startActivity((Intent(this, SettingsActivity::class.java))) }
+        binding.btnRki.setOnClickListener { startActivity(Intent(this, RkiActivity::class.java)) }
         binding.btnLoadGMS.setOnClickListener { onLoadGMSButtonClicked() }
         binding.btnDebuglogger.setOnClickListener { onDebugloggerButtonClicked() }
         binding.btnUploadLog.setOnClickListener { onUploadLogButtonClicked() }

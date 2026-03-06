@@ -49,6 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Run Attestation"
+            android:textSize="12sp"
             android:layout_margin="1dp"/>
 
         <Button
@@ -57,6 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Run Play Integrity"
+            android:textSize="12sp"
             android:layout_margin="1dp"/>
 
     </LinearLayout>
