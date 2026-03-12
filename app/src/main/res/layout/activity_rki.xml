@@ -60,17 +60,39 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="KMS_Port： "
+                android:text="KDH_Port： "
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:gravity="center" />
 
             <EditText
-                android:id="@+id/etKmsPort"
+                android:id="@+id/etKdhPort"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:text="9060" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="KMS_CA_Port： "
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <EditText
+                android:id="@+id/etKmsCaPort"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="28081" />
 
         </LinearLayout>
 
@@ -79,14 +101,41 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Download Key (DUKPT)"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:padding="0dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+            <Button
+                android:id="@+id/btnRkiDownloadCert"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Download Cert(KMS_CA+PED)"
+                android:textSize="10sp"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+            <Button
+                android:id="@+id/btnJumpToKmsApp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Jump to KMS APP"
+                android:layout_margin="1dp"
+                android:padding="0dp"/>
+
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="12sp"
-            android:text="Can re-set IP and Port if privately deploy UROVO_KMS"/>
+            android:text="Can re-set IP and Port if privately deploy UROVO_KMS\nKMS_CA and KDH servers are using the same IP"/>
 
     </LinearLayout>
 

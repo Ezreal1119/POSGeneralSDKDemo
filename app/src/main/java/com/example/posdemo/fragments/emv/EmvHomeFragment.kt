@@ -749,7 +749,6 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
                 }
                 ContantPara.CheckCardResult.INSERTED_CARD -> { // ICC(Contact)
                     cardReadMode = CardReadMode.CONTACT
-                    BeeperImpl.getInstance().startBeep(1, 100)
                     result.apply {
                         append("<===========Card Detected===========>\n\n")
                         append("Card Type: ICCard(EMV_Contact)\n\n")
@@ -758,7 +757,6 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
                 }
                 ContantPara.CheckCardResult.TAP_CARD_DETECTED -> { // PICC(Contactless)
                     cardReadMode = CardReadMode.CONTACTLESS
-                    BeeperImpl.getInstance().startBeep(1, 200)
                     result.apply {
                         append("<===========Card Detected===========>\n\n")
                         append("Card Type: PICCard(EMV_Contactless)\n\n")
@@ -1062,6 +1060,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
             // Form ISO8583(DE55_PINBlock_MAC) and send to Issuer, then forward the ARPC in GAC-2 to ICC
             // This is a simulation of the Issuer returning the Approval Data
             Log.e(TAG, "onRequestOnlineProcess: Sending ISO8583 and get ARPC from Issuer")
+//            BeeperImpl.getInstance().startBeep(1, 100)
             result.apply {
                 append("<============TRM Started============>\n\n")
                 append("$tvrBeforeTrm -> ${mEmvKernelManager.getValByTag(0x95)}\n\n")
@@ -1300,6 +1299,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
 
         override fun onNFCrequestOnline() {
             Log.e(TAG, "onNFCrequestOnline: PAN:${mEmvKernelManager.getValByTag(0x50)}")
+//            BeeperImpl.getInstance().startBeep(1, 100)
             result.apply {
                 append("<===========ISO8583===========>\n\n")
                 append("Preparing for other fields of ISO8583...\n\n")
@@ -1366,11 +1366,11 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
             when (result) {
                 ContantPara.NfcTransResult.ONLINE_APPROVAL,
                 ContantPara.NfcTransResult.OFFLINE_APPROVAL -> {
-                    mySoundTool.playSound(SOUND_TYPE_SUCCESS)
+//                    mySoundTool.playSound(SOUND_TYPE_SUCCESS)
                 }
                 ContantPara.NfcTransResult.TERMINATE,
                 ContantPara.NfcTransResult.CARD_REMOVED -> {
-                    mySoundTool.playSound(SOUND_TYPE_ERROR)
+//                    mySoundTool.playSound(SOUND_TYPE_ERROR)
                     
                 }
                 ContantPara.NfcTransResult.RETRY -> {

@@ -30,6 +30,11 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.urovo.utils.BytesUtil
+import java.io.OutputStream
+import java.net.Socket
+import java.nio.charset.Charset
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
@@ -68,13 +73,51 @@ class ApiTestActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
+
     private fun onTest1ButtonClicked() {
         Log.e(TAG, "onTest1ButtonClicked")
-        getLocationOnce()
+        fun printWithCPCL(printerIp: String = "192.168.1.100", printerPort: Int = 9100) {
+            // 1. 配置打印参数
+            val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            val russianText = "Станова про накладання адміністративного стягнення" // 俄语文本
+            val charset = Charset.forName("Windows-1251") // 匹配WPC1251编码
 
+            // 2. 构建CPCL指令（核心：指定编码+字体编号）
+            val cpclCommand = """
+SIZE 50 mm, 30 mm
+GAP 0 mm, 0 mm
+CLS
+TEXT 50, 120, "1", 0, 1, 1, "123 中文测试" 
+PRINT 1
+        
+    """.trimIndent()
 
+            // 3. 发送指令到打印机
+            var socket: Socket? = null
+            var os: OutputStream? = null
+            try {
+                socket = Socket(printerIp, printerPort)
+                os = socket.getOutputStream()
 
+                // 关键：将CPCL指令转为WPC1251编码的字节流（匹配打印机解码方式）
+                val cpclBytes = cpclCommand.toByteArray(Charsets.UTF_8)
+                os.write(cpclBytes)
+                os.flush()
+
+                println("CPCL指令发送成功！")
+            } catch (e: Exception) {
+                println("打印失败：${e.message}")
+                e.printStackTrace()
+            } finally {
+                // 4. 关闭资源
+                os?.close()
+                socket?.close()
+            }
+        }
+
+        Thread {
+            printWithCPCL(printerIp = "10.10.10.235")
+        }.start()
 
     }
 
@@ -130,10 +173,36 @@ class ApiTestActivity : AppCompatActivity() {
     private fun onTest2ButtonClicked() {
         Log.e(TAG, "onTest2ButtonClicked")
 
-        val list = UStageCrypto.decryptAndUnzipMulti("DBV3Naf+O0h8kCF5YzlDphil7RAbGEExegGxWWFECD525EAp+CwbaWOKUSurhQ5JDwycyTnGI8y9hhFA8oOKc+wSi1TXJTL+FlmDy1FV99GMjA1CFB5IKTd\\/AngFtsBYm\\/bK6PHhis1O5Tl\\/e1QlLiEDCqbCilC4bIpjg6DsiO4SwyzHOs9T87\\/hO8XdUxVNVhuA7gWfDTPzV1KlsBwh+u6clrYN8u2FuokXhmNilVucVoMc6Ls+KatMUr4KB2rWnvRGnBse06ezfV0qB1hMQ09a9fU+rOqFHmR+WEa7uVn4tUSSH0xDZfaOLDCrtiOcJ8QOEQAGpg1h9ntWbod83184zLdT+bJzwhC8xR5NUbEGGVuhW81rPQrVENd2xDepLvjoQ0kn5DA6b0\\/jNfiiqY2e1JesBAC38zO0M3+LXOFuYqQOspiCgNuvO10tLHXjIpXEXKX5lg6sd0CGVfRoI1ORuif2Y5Pl2sPW1PUan5Yo58Ab8ZhPlzuWneA7GKNs")
-        list.forEachIndexed { i, plain ->
-            Log.e("USTAGE", plain)
+        // 辅助函数：Hex字符串转字节数组（核心工具）
+        fun hexStringToByteArray(hexStr: String): ByteArray {
+            require(hexStr.length % 2 == 0) { "Hex字符串长度必须是偶数" }
+            val byteArray = ByteArray(hexStr.length / 2)
+            for (i in byteArray.indices) {
+                val start = i * 2
+                val hexByte = hexStr.substring(start, start + 2)
+                byteArray[i] = hexByte.toInt(16).toByte()
+            }
+            return byteArray
         }
+
+
+        fun main() {
+            // 你的原始Hex字符串
+            val hexStr =
+                "D09FD0BED181D182D0B0D0BDD0BED0B2D0B020D0BFD180D0BE20D0BDD0B0D0BAD0BBD0B0D0B4D0B0D0BDD0BDD18F20D0B0D0B4D0BCD196D0BDD196D181D182D180D0B0D182D0B8D0B2D0BDD0BED0B3D0BE20D181D182D18FD0B3D0BDD0B5D0BDD0BDD18F20D0BFD0BE20D181D0BFD180D0B0D0B2D19620D0BFD180D0BE20D0B0D0B4D0BCD196D0BDD196D181D182D180D0B0D182D0B8D0B2D0BDD0B520D0BFD180D0B0D0B2D0BED0BFD0BED180D183D188D0B5D0BDD0BDD18F20D18320D181D184D0B5D180D19620D0B7D0B0D0B1D0B5D0B7D0BFD0B5D187D0B5D0BDD0BDD18F20D0B1D0B5D0B7D0BFD0B5D0BAD0B820D0B4D0BED180D0BED0B6D0BDD18CD0BED0B3D0BE20D180D183D185D18320D0B7D0B0D184D196D0BAD181D0BED0B2D0B0D0BDD0B520D0BDD0B520D0B220D0B0D0B2D182D0BED0BCD0B0D182D0B8D187D0BDD0BED0BCD18320D180D0B5D0B6D0B8D0BCD196200AE4B8ADE69687E6B58BE8AF95202020202020"
+
+            // 1. Hex字符串转字节数组
+            val bytes = hexStringToByteArray(hexStr)
+
+            // 2. 用GB18030解码字节数组
+            val result = String(bytes, Charset.forName("GB18030"))
+
+            // 3. 输出解析结果
+            println("GB18030解析结果：\n$result")
+        }
+
+        main()
+
     }
 
     private fun onTest3ButtonClicked() {

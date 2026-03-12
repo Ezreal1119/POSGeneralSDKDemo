@@ -43,6 +43,8 @@ class RkiActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.btnRkiDownloadKey.setOnClickListener { onRkiDownloadKeyButtonClicked() }
+        binding.btnRkiDownloadCert.setOnClickListener { onRkiDownloadCertButtonClicked() }
+        binding.btnJumpToKmsApp.setOnClickListener { onJumpToKmsAppButtonClicked() }
         binding.btnCheckCaCert.setOnClickListener { onCheckCaCertButtonClicked() }
         binding.btnCheckPedCert.setOnClickListener { onCheckPedCertButtonClicked() }
         binding.btnCheckKdhCert.setOnClickListener { onCheckKdhCertButtonClicked() }
@@ -67,16 +69,34 @@ class RkiActivity : AppCompatActivity() {
                 " - Recover the Actual Key using the KBPK"
     }
 
+
     private fun onRkiDownloadKeyButtonClicked() {
         runCatching {
             val intent = Intent().apply {
                 setClassName("com.ubx.dukpt", "com.ubx.dupktdownload.ui.remote.ExternalRemoteActivity")
                 putExtra("IP_RKI", binding.etKmsIp.text.toString())
-                putExtra("PORT_RKI", binding.etKmsPort.text.toString())
+                putExtra("PORT_RKI", binding.etKdhPort.text.toString())
             }
             rkiLauncher.launch(intent)
         }.onSuccess {
-            Toast.makeText(this, "Downloading...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Downloading Key...", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            binding.tvResult.text = it.message
+            it.printStackTrace()
+        }
+    }
+
+    private fun onRkiDownloadCertButtonClicked() {
+        runCatching {
+            val intent = Intent().apply {
+                setClassName("com.ubx.dukpt", "com.ubx.dupktdownload.ui.remote.ExternalRemoteActivity")
+                putExtra("IP_RKI", binding.etKmsIp.text.toString())
+                putExtra("PORT_CA_RKI", binding.etKmsCaPort.text.toString())
+                putExtra("customer", 3)
+            }
+            rkiLauncher.launch(intent)
+        }.onSuccess {
+            Toast.makeText(this, "Downloading Certs...", Toast.LENGTH_SHORT).show()
         }.onFailure {
             binding.tvResult.text = it.message
             it.printStackTrace()
@@ -84,10 +104,14 @@ class RkiActivity : AppCompatActivity() {
     }
 
 
+    private fun onJumpToKmsAppButtonClicked() {
+        startActivity(Intent("android.intent.action.UBX_DOWNLOAD_KEY_REMOTE"))
+    }
+
     private fun onCheckCaCertButtonClicked() {
         runCatching {
-            val cert = DeviceManager().readKMSCA()
-            if (cert.size == 0) error("KMS_CA_CERT not Found! Please download first!")
+            val cert = DeviceManager().readKMSCA() ?: error("KMS_CA_CERT not Found! Please download first!")
+            if (cert.isEmpty()) error("KMS_CA_CERT not Found! Please download first!")
             return@runCatching cert
         }.onSuccess { cert ->
             binding.tvResult.text = buildString {
@@ -103,8 +127,8 @@ class RkiActivity : AppCompatActivity() {
 
     private fun onCheckPedCertButtonClicked() {
         runCatching {
-            val cert = DeviceManager().pedCrt
-            if (cert.size == 0) error("KMS_CA_CERT not Found! Please download first!")
+            val cert = DeviceManager().pedCrt ?: error("PED_CERT not Found! Please download first!")
+            if (cert.isEmpty()) error("PED_CERT not Found! Please download first!")
             return@runCatching cert
         }.onSuccess { cert ->
             binding.tvResult.text = buildString {
@@ -120,8 +144,8 @@ class RkiActivity : AppCompatActivity() {
 
     private fun onCheckKdhCertButtonClicked() {
         runCatching {
-            val cert = DeviceManager().kdhCrt
-            if (cert.size == 0) error("KMS_CA_CERT not Found! Please download first!")
+            val cert = DeviceManager().kdhCrt ?: error("KDH_CERT not Found! Please download first!")
+            if (cert.isEmpty()) error("KDH_CERT not Found! Please download first!")
             return@runCatching cert
         }.onSuccess { cert ->
             binding.tvResult.text = buildString {

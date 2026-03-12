@@ -14,6 +14,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
@@ -24,6 +25,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
 import com.example.posdemo.databinding.ActivitySppBluetoothPrinterBinding
 import com.example.posdemo.utils.PermissionUtil
+import com.urovo.utils.BytesUtil
+import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -45,6 +48,7 @@ val PERMISSIONS_BT = arrayOf(
 const val PERMISSION_REQ_BT = 1001
 
 const val CONTENT_2_INCH =
+            "1234567890123456789012345678901\n" +
             "       WALMART SUPERCENTER     \n" +
             " 1234 MAIN STREET, ANYTOWN, USA\n" +
             "       TEL: (555) 123-4567     \n" +
@@ -66,8 +70,13 @@ const val CONTENT_2_INCH =
             "-------------------------------\n" +
             "    THANK YOU FOR SHOPPING     \n" +
             "       PLEASE VISIT AGAIN      "
+
+//const val CONTENT_2_INCH =
+//    "Постанова про накладання адміністративного стягнення по справі про адміністративне правопорушення у 中文测试сфері забезпечення безпеки дорожнього руху зафіксоване не в автоматичному режимі \n中文测试      "
+
 const val CONTENT_3_INCH =
-    "              WALMART SUPERCENTER              \n" +
+            "12345678901234567890123456789012345678901234567\n" +
+            "              WALMART SUPERCENTER              \n" +
             "        1234 MAIN STREET, ANYTOWN, USA         \n" +
             "              TEL: (555) 123-4567              \n" +
             "------------------------------------------------\n" +
@@ -89,7 +98,8 @@ const val CONTENT_3_INCH =
             "               THANK YOU FOR SHOPPING            \n" +
             "                  PLEASE VISIT AGAIN             "
 const val CONTENT_4_INCH =
-    "                        WALMART SUPERCENTER                        \n" +
+            "1234567890123456789012345678901234567890123456789012345678901234567\n" +
+            "                        WALMART SUPERCENTER                        \n" +
             "                  1234 MAIN STREET, ANYTOWN, USA                   \n" +
             "                        TEL: (555) 123-4567                        \n" +
             "----------------------------------------------------------------\n" +
@@ -158,7 +168,9 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
             btnScanBluetooth.setOnClickListener { onScanBluetoothButtonClicked() }
             btnConnectBluetooth.setOnClickListener { onConnectBluetoothButtonClicked() }
             btnDisconnectBluetooth.setOnClickListener { onDisconnectBluetoothButtonClicked() }
-            btnPrintText.setOnClickListener { onPrintTextButtonClicked() }
+            btnPrintTextRaw.setOnClickListener { onPrintTextRawButtonClicked() }
+            btnPrintTextEsc.setOnClickListener { onPrintTextEscButtonClicked() }
+            btnPrintTextCpcl.setOnClickListener { onPrintTextCpclButtonClicked() }
         }
 
         binding.etBluetoothMac.doOnTextChanged { text, _, _, _ ->
@@ -175,7 +187,9 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
         if(!PermissionUtil.requestPermissions(this, PERMISSIONS_BT, PERMISSION_REQ_BT)) return
         binding.btnConnectBluetooth.isEnabled = isValidMacAddress(binding.etBluetoothMac.text.toString())
         binding.btnDisconnectBluetooth.isEnabled = false
-        binding.btnPrintText.isEnabled = false
+        binding.btnPrintTextRaw.isEnabled = false
+        binding.btnPrintTextEsc.isEnabled = false
+        binding.btnPrintTextCpcl.isEnabled = false
         val filter = IntentFilter().apply {
             addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
             addAction(BluetoothDevice.ACTION_FOUND)
@@ -193,7 +207,9 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
         socket = null // Clean up the handle, release the memory
         isValidMacAddress(binding.etBluetoothMac.text.toString())
         binding.btnDisconnectBluetooth.isEnabled = false
-        binding.btnPrintText.isEnabled = false
+        binding.btnPrintTextRaw.isEnabled = false
+        binding.btnPrintTextEsc.isEnabled = false
+        binding.btnPrintTextCpcl.isEnabled = false
     }
 
     private fun onSelfMacButtonClicked() {
@@ -258,7 +274,9 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
                 runOnUiThread {
                     binding.btnConnectBluetooth.isEnabled = false
                     binding.btnDisconnectBluetooth.isEnabled = true
-                    binding.btnPrintText.isEnabled = true
+                    binding.btnPrintTextRaw.isEnabled = true
+                    binding.btnPrintTextEsc.isEnabled = true
+                    binding.btnPrintTextCpcl.isEnabled = true
                 }
             }.onFailure {
                 runOnUiThread {
@@ -281,7 +299,9 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
             binding.tvResult.text = ""
             binding.btnConnectBluetooth.isEnabled = isValidMacAddress(binding.etBluetoothMac.text.toString())
             binding.btnDisconnectBluetooth.isEnabled = false
-            binding.btnPrintText.isEnabled = false
+            binding.btnPrintTextRaw.isEnabled = false
+            binding.btnPrintTextEsc.isEnabled = false
+            binding.btnPrintTextCpcl.isEnabled = false
         }.onFailure {
             binding.tvResult.text = it.message
             it.printStackTrace()
@@ -290,31 +310,19 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun onPrintTextButtonClicked() {
+    private fun onPrintTextRawButtonClicked() {
         Thread {
-            val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             runCatching {
                 val s = socket ?: throw Exception("Not connected yet")
                 val os = s.outputStream
-                val contentInBytes: ByteArray = when (binding.spPrintSize.selectedItem as String) { // If wants to support Chinese Characters, use "content.toByteArray(Charset.forName("GBK"))"
-                    arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charsets.UTF_8)
-                    arrayOfSize[1] -> CONTENT_3_INCH.toByteArray(Charsets.UTF_8)
-                    arrayOfSize[2] -> CONTENT_4_INCH.toByteArray(Charsets.UTF_8)
-                    else -> ByteArray(0)
+                val content = when (binding.spPrintSize.selectedItem as String) {
+                    arrayOfSize[0] -> CONTENT_2_INCH
+                    arrayOfSize[1] -> CONTENT_3_INCH
+                    arrayOfSize[2] -> CONTENT_4_INCH
+                    else -> ""
                 }
-                // Using ESC/POS 1B401B61011B45012020202020202057414C4D41525420535550455243454E54455220202020200A2031323334204D41494E205354524545542C20414E59544F574E2C205553410A2020202020202054454C3A202835353529203132332D3435363720202020200A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A51545920204954454D2020202020202020205052494345202020544F54414C0A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A20312020204D494C4B20312047414C20202024332E343920202024332E34390A20322020204252454144204C4F414620202024312E393920202024332E39380A20312020204547475320444F5A454E20202024322E373920202024322E37390A20332020204150504C45532020202020202024302E393920202024322E39370A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A535542544F54414C20202020202020202020202020202020202431332E32330A5441582028382E3235252920202020202020202020202020202024312E30390A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A544F54414C20202020202020202020202020202020202020202431342E33320A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A434153482020202020202020202020202020202020202020202432302E30300A4348414E4745202020202020202020202020202020202020202024352E36380A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A202020205448414E4B20594F5520464F522053484F5050494E4720202020200A20202020202020504C4541534520564953495420414741494E2020202020200A1B45001B61005369676E61747572653A205061747269636B2058750A1B6102446174653A20323032362D30322D30370A0A0A
-                os.write(byteArrayOf(0x1B, 0x40)) // Initialize
-                os.write(byteArrayOf(0x1B, 0x61, 0x01)) // Align Center
-                os.write(byteArrayOf(0x1B, 0x45, 0x01)) // Bold On
-                os.write(contentInBytes)
-                os.write(byteArrayOf(0x0A)) // feed line
-                os.write(byteArrayOf(0x1B, 0x45, 0x00)) // Bold off
-                os.write(byteArrayOf(0x1B, 0x61, 0x00)) // Align Left
-                os.write("Signature: Patrick Xu\n".toByteArray(Charsets.UTF_8))
-                os.write(byteArrayOf(0x1B, 0x61, 0x02)) // Align Right
-                os.write("Date: $time".toByteArray(Charsets.UTF_8))
-                os.write(byteArrayOf(0x0A, 0x0A, 0x0A)) // feed line
-                os.flush() // Start printing
+                os.write(("$content\nRAW TEXT\n\n\n").toByteArray(Charsets.UTF_8))
+                os.flush()
             }.onSuccess {
                 runOnUiThread {
                     Toast.makeText(this, "Print sent", Toast.LENGTH_SHORT).show()
@@ -327,6 +335,105 @@ class SppBluetoothPrinterActivity : AppCompatActivity() {
             }
         }.start()
     }
+
+
+    private fun onPrintTextEscButtonClicked() {
+        Thread {
+            val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            runCatching {
+                val s = socket ?: throw Exception("Not connected yet")
+                val os = s.outputStream
+                val contentInBytes: ByteArray = when (binding.spPrintSize.selectedItem as String) { // If wants to support Chinese Characters, use "content.toByteArray(Charset.forName("GBK"))"
+//                    arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charset.forName("US-ASCII")) // Only ASCII[Digits+Letters+Symbols]
+//                    arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charset.forName("ISO-8859-1")) // ASCII + European Letters
+//                    arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charset.forName("GB2312")) // ASCII + Chinese Characters
+//                    arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charset.forName("GBK")) // ASCII + Chinese Characters+++
+//                    arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charset.forName("Windows-1251")) // ASCII + Chinese Characters+++
+                    arrayOfSize[0] -> CONTENT_2_INCH.toByteArray(Charsets.UTF_8) // Support All!
+                    arrayOfSize[1] -> CONTENT_3_INCH.toByteArray(Charsets.UTF_8)
+                    arrayOfSize[2] -> CONTENT_4_INCH.toByteArray(Charsets.UTF_8)
+                    else -> ByteArray(0)
+                }
+                // Using ESC/POS 1B401B61011B45012020202020202057414C4D41525420535550455243454E54455220202020200A2031323334204D41494E205354524545542C20414E59544F574E2C205553410A2020202020202054454C3A202835353529203132332D3435363720202020200A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A51545920204954454D2020202020202020205052494345202020544F54414C0A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A20312020204D494C4B20312047414C20202024332E343920202024332E34390A20322020204252454144204C4F414620202024312E393920202024332E39380A20312020204547475320444F5A454E20202024322E373920202024322E37390A20332020204150504C45532020202020202024302E393920202024322E39370A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A535542544F54414C20202020202020202020202020202020202431332E32330A5441582028382E3235252920202020202020202020202020202024312E30390A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A544F54414C20202020202020202020202020202020202020202431342E33320A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A434153482020202020202020202020202020202020202020202432302E30300A4348414E4745202020202020202020202020202020202020202024352E36380A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A202020205448414E4B20594F5520464F522053484F5050494E4720202020200A20202020202020504C4541534520564953495420414741494E2020202020200A1B45001B61005369676E61747572653A205061747269636B2058750A1B6102446174653A20323032362D30322D30370A0A0A
+                Log.e("Patrick", "onPrintTextEscButtonClicked: ${BytesUtil.bytes2HexString(contentInBytes)}", )
+                os.write(byteArrayOf(0x1B, 0x40)) // Initialize
+                os.write(byteArrayOf(0x1B, 0x61, 0x01)) // Align Center
+                os.write(byteArrayOf(0x1B, 0x45, 0x01)) // Bold On
+                os.write(contentInBytes)
+                os.write(byteArrayOf(0x0A)) // feed line
+                os.write(byteArrayOf(0x1B, 0x45, 0x00)) // Bold off
+                os.write(byteArrayOf(0x1B, 0x61, 0x00)) // Align Left
+                os.write("Signature: Patrick Xu\n".toByteArray(Charsets.UTF_8))
+                os.write(byteArrayOf(0x1B, 0x61, 0x02)) // Align Right
+                os.write("Date: $time".toByteArray(Charsets.UTF_8))
+                os.write(byteArrayOf(0x0A)) // feed line
+                os.write(byteArrayOf(0x1B, 0x61, 0x01)) // Align Center
+                os.write("ESC/POS TEXT".toByteArray(Charsets.UTF_8))
+                os.write(byteArrayOf(0x0A, 0x0A, 0x0A)) // feed three lines
+                os.flush()
+            }.onSuccess {
+                runOnUiThread {
+                    Toast.makeText(this, "Print sent", Toast.LENGTH_SHORT).show()
+                }
+            }.onFailure {
+                runOnUiThread {
+                    binding.tvResult.text = it.message
+                    it.printStackTrace()
+                }
+            }
+        }.start()
+    }
+
+
+    private fun onPrintTextCpclButtonClicked() {
+        Thread {
+            runCatching {
+                val s = socket ?: throw Exception("Not connected yet")
+                val os = s.outputStream
+                val cpclCommand = """
+                    SIZE 50 mm, 80 mm
+                    GAP 0 mm, 0 mm
+                    CLS
+                    TEXT 50, 120, "1", 0, 1, 1, "1234567890123456789012345678901"
+                    TEXT 50, 140, "1", 0, 1, 1, "       WALMART SUPERCENTER     "
+                    TEXT 50, 160, "1", 0, 1, 1, " 1234 MAIN STREET, ANYTOWN, USA"
+                    TEXT 50, 180, "1", 0, 1, 1, "       TEL: (555) 123-4567     "
+                    TEXT 50, 200, "1", 0, 1, 1, "-------------------------------"
+                    TEXT 50, 220, "1", 0, 1, 1, "QTY  ITEM         PRICE   TOTAL"
+                    TEXT 50, 240, "1", 0, 1, 1, "-------------------------------"
+                    TEXT 50, 260, "1", 0, 1, 1, " 1   MILK 1 GAL   ${'$'}3.49   ${'$'}3.49"
+                    TEXT 50, 280, "1", 0, 1, 1, " 2   BREAD LOAF   ${'$'}1.99   ${'$'}3.98"
+                    TEXT 50, 300, "1", 0, 1, 1, " 1   EGGS DOZEN   ${'$'}2.79   ${'$'}2.79"
+                    TEXT 50, 320, "1", 0, 1, 1, " 3   APPLES       ${'$'}0.99   ${'$'}2.97"
+                    TEXT 50, 340, "1", 0, 1, 1, "-------------------------------"
+                    TEXT 50, 360, "1", 0, 1, 1, "SUBTOTAL                 ${'$'}13.23"
+                    TEXT 50, 380, "1", 0, 1, 1, "TAX (8.25%)               ${'$'}1.09"
+                    TEXT 50, 400, "1", 0, 1, 1, "-------------------------------"
+                    TEXT 50, 420, "1", 0, 1, 1, "TOTAL                    ${'$'}14.32"
+                    TEXT 50, 440, "1", 0, 1, 1, "-------------------------------"
+                    TEXT 50, 460, "1", 0, 1, 1, "CASH                     ${'$'}20.00"
+                    TEXT 50, 480, "1", 0, 1, 1, "CHANGE                    ${'$'}5.68"
+                    TEXT 50, 500, "1", 0, 1, 1, "-------------------------------"
+                    TEXT 50, 520, "1", 0, 1, 1, "    THANK YOU FOR SHOPPING     "
+                    TEXT 50, 540, "1", 0, 1, 1, "       PLEASE VISIT AGAIN      "
+                    PRINT 1
+        
+                """.trimIndent()
+                os.write(cpclCommand.toByteArray(Charsets.UTF_8))
+                os.flush()
+            }.onSuccess {
+                runOnUiThread {
+                    Toast.makeText(this, "Print sent", Toast.LENGTH_SHORT).show()
+                }
+            }.onFailure {
+                runOnUiThread {
+                    binding.tvResult.text = it.message
+                    it.printStackTrace()
+                }
+            }
+        }.start()
+    }
+
 
     private fun isValidMacAddress(mac: String): Boolean {
         return mac.trim().matches(Regex("^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$"))

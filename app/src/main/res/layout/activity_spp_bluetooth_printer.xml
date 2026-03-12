@@ -107,13 +107,45 @@
         android:textSize="20sp"
         android:padding="0dp"/>
 
-    <Button
-        android:id="@+id/btnPrintText"
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Print Text"
-        android:textSize="20sp"
-        android:padding="0dp"/>
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnPrintTextRaw"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Print(Raw)"
+            android:layout_margin="1dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/btnPrintTextEsc"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Print(ESC)"
+            android:layout_margin="1dp"
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/btnPrintTextCpcl"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Print(CPCL)"
+            android:layout_margin="1dp"
+            android:padding="0dp"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Note: The decoding is GB18030(GBK) only\n(CPCL is 2-inch only)"/>
 
     <ScrollView
         android:layout_width="match_parent"

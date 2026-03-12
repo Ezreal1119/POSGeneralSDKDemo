@@ -50,7 +50,7 @@ object EmvUtil {
             // 3. Rarely used
 //            put(TransactionTag.CASHBACK_AMOUNT.tag, "") // 0 cashback
 //            put(TransactionTag.SUPPORT_DRL.tag, true) // Support Visa's Dynamic Reading Limit
-//            put(TransactionTag.ENABLE_BEEPER.tag, false) // true by default. Enable the beeper when reading Card successfully(Only effective for PICC)
+            put(TransactionTag.ENABLE_BEEPER.tag, true) // true by default. Enable the beeper when reading Card successfully(Only effective for PICC)
 //            put(TransactionTag.ENABLE_TAP_SWIPE_COLLISION.tag, false) // Use the first payment method detected when encounter a collision within a short period of time.
 //            put(TransactionTag.PRIORITIZED_CANDIDATE_APP.tag, "A0000000031010") // Prioritize Visa Credit
 //            put(TransactionTag.DISABLE_CHECK_MSR_FORMAT.tag, true) // Disable checking the validity of the format of the Magnetic Strip Card's Track Data's Format

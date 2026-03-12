@@ -16,6 +16,7 @@ import com.example.posdemo.databinding.ActivitySettingsBinding
 import com.example.posdemo.utils.ImageUtil
 import com.example.posdemo.utils.PermissionUtil
 import com.example.posdemo.webview.WebViewActivity
+import com.urovo.sdk.utils.SystemProperties.getSystemProperty
 import java.util.Locale
 
 class SettingsActivity : AppCompatActivity() {
@@ -156,7 +157,11 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun onSetSettingsPasswordButtonClicked() {
         runCatching {
-            DeviceManager().setSettingProperty("persist-persist.sys.urv.all.settings.password", binding.etPassword.text.toString())
+            if (getDevType() == "SQ29M") {
+                DeviceManager().setSettingProperty("persist-persist.sys.urv.set.settings.password", binding.etPassword.text.toString())
+            } else {
+                DeviceManager().setSettingProperty("persist-persist.sys.urv.settings.password", binding.etPassword.text.toString())
+            }
         }.onSuccess {
             Toast.makeText(this, "Set Password ${binding.etPassword.text} successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {
@@ -281,5 +286,7 @@ class SettingsActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-
+    private fun getDevType(): String {
+        return getSystemProperty("pwv.project", "no result found!")
+    }
 }
