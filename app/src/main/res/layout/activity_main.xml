@@ -44,7 +44,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Developed by Patrick"
+                android:text="Developed by Patrick Xu"
                 android:textSize="12sp"
                 android:textColor="#9CA3AF"
                 android:gravity="center"/>

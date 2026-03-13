@@ -329,7 +329,6 @@ class KioskRelatedActivity : AppCompatActivity() {
         }
     }
 
-
     private fun onGetPackageInstallerButtonClicked() {
         runCatching {
             Toast.makeText(this, DeviceManager().packageInstaller?.toString() ?: "Not Set yet", Toast.LENGTH_SHORT).show()

@@ -1,5 +1,7 @@
 package com.example.posdemo.others
 
+import android.R.layout.simple_spinner_dropdown_item
+import android.R.layout.simple_spinner_item
 import android.app.AlertDialog
 import android.content.Intent
 import android.device.DeviceManager
@@ -9,6 +11,9 @@ import android.os.Bundle
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.R
@@ -21,6 +26,16 @@ import java.util.Locale
 
 class SettingsActivity : AppCompatActivity() {
 
+    companion object {
+        private val ARRAY_OF_PROPERTIES = arrayOf(
+            "Complete Settings Password", // persist.sys.urv.all.settings.password ? "$password" ? ""
+            "Icon Settings Password", // persist.sys.urv.set.settings.password ? "$password" ? ""
+            "StatusBar Settings Password", // persist.sys.urv.enable.record.access.status ? "true" ? "*"
+            "ADB truncation status", // persist.sys.truncated.adb ? "*" ? "false"
+            "Double Tap 2 wake", // persist.sys.urv.tp.wakeup.gesture ? "doubleclick" : ""
+        )
+    }
+
     private lateinit var binding: ActivitySettingsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +43,8 @@ class SettingsActivity : AppCompatActivity() {
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.btnGetSystemProperty.setOnClickListener { onGetSystemPropertyButtonClicked() }
+        binding.btnSetSystemProperty.setOnClickListener { onSetSystemPropertyButtonClicked() }
         binding.btnGetBrightness.setOnClickListener { onGetBrightnessButtonClicked() }
         binding.btnSetBrightness.setOnClickListener { onSetBrightnessButtonClicked() }
         binding.btnSetFontSize.setOnClickListener { onSetFontSizeButtonClicked() }
@@ -45,9 +62,90 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnSetDefaultWallpaper.setOnClickListener { onSetDefaultWallpaperButtonClicked() }
         binding.btnTtsTest.setOnClickListener { onTtsTestButtonClicked() }
         binding.btnWebViewTestUrovo.setOnClickListener { onWebViewTestUrovoButtonClicked() }
-
         binding.btnWebViewTestLocal.setOnClickListener { onWebViewTestLocalButtonClicked() }
+
+        binding.spSystemProperty.adapter = ArrayAdapter(this, simple_spinner_item, ARRAY_OF_PROPERTIES).apply {
+            setDropDownViewResource(simple_spinner_dropdown_item)
+        }
+        binding.spSystemProperty.onItemSelectedListener = object :
+            AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                var propName= ""
+                var valueHint = ""
+                when (binding.spSystemProperty.selectedItem as String) {
+                    ARRAY_OF_PROPERTIES[0] -> {
+                        propName = "persist.sys.urv.all.settings.password"
+                        valueHint = "\"\$password\" | \"\""
+                    }
+                    ARRAY_OF_PROPERTIES[1] -> {
+                        propName = "persist.sys.urv.set.settings.password"
+                        valueHint = "\"\$password\" | \"\""
+                    }
+                    ARRAY_OF_PROPERTIES[2] -> {
+                        propName = "persist.sys.urv.enable.record.access.status"
+                        valueHint = "\"true\" | \"*\""
+                    }
+                    ARRAY_OF_PROPERTIES[3] -> {
+                        propName = "persist.sys.truncated.adb"
+                        valueHint = "\"*\" | \"false\""
+                    }
+                    ARRAY_OF_PROPERTIES[4] -> {
+                        propName = "persist.sys.truncated.adb"
+                        valueHint = "\"*\" | \"false\""
+                    }
+                }
+                binding.etSystemPropertyKey.setText(propName)
+                binding.etSystemPropertyValue.hint = valueHint
+                binding.etSystemPropertyValue.setText("")
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                TODO("Not yet implemented")
+            }
+        }
+
     }
+
+    private fun onGetSystemPropertyButtonClicked() {
+        runCatching {
+            return@runCatching DeviceManager().getSettingProperty(binding.etSystemPropertyKey.text.toString().trim())
+        }.onSuccess { ret ->
+            if (ret.isBlank()) {
+                Toast.makeText(this, "No Value for this Property", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Value: $ret", Toast.LENGTH_SHORT).show()
+            }
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+
+    private fun onSetSystemPropertyButtonClicked() {
+        runCatching {
+            DeviceManager().setSettingProperty("persist-${binding.etSystemPropertyKey.text.toString().trim()}", binding.etSystemPropertyValue.text.toString().trim())
+        }.onSuccess {
+            if (binding.etSystemPropertyKey.text.toString().isBlank()) {
+                Toast.makeText(this, "Please enter a Property first", Toast.LENGTH_SHORT).show()
+                return
+            }
+            if (binding.etSystemPropertyValue.text.toString().isBlank()) {
+                Toast.makeText(this, "Set Empty String successfully", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Set value ${binding.etSystemPropertyValue.text} successfully", Toast.LENGTH_SHORT).show()
+            }
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
 
     private fun onSetFontSizeButtonClicked() {
         runCatching {
@@ -159,8 +257,10 @@ class SettingsActivity : AppCompatActivity() {
         runCatching {
             if (getDevType() == "SQ29M") {
                 DeviceManager().setSettingProperty("persist-persist.sys.urv.set.settings.password", binding.etPassword.text.toString())
-            } else {
+            } else if (getDevType() == "SQ68"){
                 DeviceManager().setSettingProperty("persist-persist.sys.urv.settings.password", binding.etPassword.text.toString())
+            } else {
+                Toast.makeText(this, "Not yet implemented", Toast.LENGTH_SHORT).show()
             }
         }.onSuccess {
             Toast.makeText(this, "Set Password ${binding.etPassword.text} successfully", Toast.LENGTH_SHORT).show()

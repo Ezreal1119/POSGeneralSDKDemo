@@ -3,7 +3,10 @@ package com.example.posdemo
 import android.Manifest
 import android.app.admin.DevicePolicyManager
 import android.bluetooth.BluetoothClass
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.device.DeviceManager
 import android.device.IccManager
 import android.device.SEManager
@@ -47,6 +50,43 @@ class ApiTestActivity : AppCompatActivity() {
         private const val TAG = "ApiTestActivity_TAG"
     }
 
+    private val installReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent ?: return
+            // 1. 获取包名（核心！）
+            val packageName = intent.data?.schemeSpecificPart ?: return
+
+            when (intent.action) {
+                // ✅ 安装失败（你要的核心监听）
+                Intent.ACTION_INSTALL_FAILURE -> {
+                    // 失败原因（可选）
+                    println("安装失败 → 包名：$packageName")
+                    Log.e(TAG, "onReceive: $packageName", )
+                    // 这里可以做你的业务逻辑：上报、弹窗、记录日志
+                }
+
+                // 安装成功
+                Intent.ACTION_PACKAGE_ADDED -> {
+                    println("安装成功 → 包名：$packageName")
+                }
+
+                // 卸载成功
+                Intent.ACTION_PACKAGE_REMOVED -> {
+                    println("卸载成功 → 包名：$packageName")
+                }
+            }
+        }
+    }
+
+    private fun registerInstallReceiver() {
+        val filter = IntentFilter()
+        filter.addAction(Intent.ACTION_INSTALL_FAILURE) // 安装失败
+        filter.addAction(Intent.ACTION_PACKAGE_ADDED)          // 安装成功
+        filter.addAction(Intent.ACTION_PACKAGE_REMOVED)        // 卸载成功
+        filter.addDataScheme("package") // 必须加！否则收不到包相关广播
+        registerReceiver(installReceiver, filter)
+    }
+
     private lateinit var binding: ActivityApiTestBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +99,8 @@ class ApiTestActivity : AppCompatActivity() {
         binding.btnTest3.setOnClickListener { onTest3ButtonClicked() }
         binding.btnTest4.setOnClickListener { onTest4ButtonClicked() }
         binding.btnTest5.setOnClickListener { onTest5ButtonClicked() }
+
+        registerInstallReceiver()
 
     }
 
@@ -242,9 +284,11 @@ PRINT 1
         Log.e(TAG, "onTest4ButtonClicked")
 
 //        UFSManager().setBootanimation("/sdcard/Download/bootanimation_720_1440.zip")
-        Log.e(TAG, "onTest4ButtonClicked: ${Build.VERSION.RELEASE}", )
-        Log.e(TAG, "onTest4ButtonClicked: ${DeviceManager().getSettingProperty("persist-ro.ufs.build.version")}", )
-        Log.e(TAG, "onTest4ButtonClicked: ${Build.VERSION.SDK_INT}", )
+//        Log.e(TAG, "onTest4ButtonClicked: ${Build.VERSION.RELEASE}", )
+//        Log.e(TAG, "onTest4ButtonClicked: ${DeviceManager().getSettingProperty("persist-ro.ufs.build.version")}", )
+//        Log.e(TAG, "onTest4ButtonClicked: ${Build.VERSION.SDK_INT}", )
+
+        Log.e(TAG, "onTest4ButtonClicked: ${DeviceManager().autoRunningApp}", )
     }
 
     private fun onTest5ButtonClicked() {

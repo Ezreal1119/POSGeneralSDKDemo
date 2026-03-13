@@ -21,6 +21,76 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:background="@drawable/border"
+                android:orientation="vertical">
+
+
+                <EditText
+                    android:id="@+id/etSystemPropertyKey"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:textSize="15sp"
+                    android:hint="System Property Name"
+                    android:inputType="textNoSuggestions"/>
+
+
+                <EditText
+                    android:id="@+id/etSystemPropertyValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="15sp"
+                    android:hint="Value"
+                    android:inputType="textNoSuggestions"/>
+
+                <Spinner
+                    android:id="@+id/spSystemProperty"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:background="#DDDDDD"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"
+                    />
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnGetSystemProperty"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Get System Property"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnSetSystemProperty"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Set System Property"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Note: The system persists till a Factory reset."/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:background="@drawable/border"
                 android:layout_margin="5dp"
