@@ -58,6 +58,12 @@ class LocationActivity : AppCompatActivity() {
                         "showPoint(${location?.latitude}, ${location?.longitude});",
                         null
                     )
+//                    val url = "https://staticmap.openstreetmap.de/staticmap.php" +
+//                            "?center=${location?.latitude},${location?.longitude}" +
+//                            "&zoom=14" +
+//                            "&size=512x512" +
+//                            "&markers=${location?.latitude},${location?.longitude},red-pushpin"
+//                    binding.webViewLocation.loadUrl(url)
                 }
 
             }
@@ -73,6 +79,14 @@ class LocationActivity : AppCompatActivity() {
         binding.webViewLocation.settings.domStorageEnabled = true
         binding.webViewLocation.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
         binding.webViewLocation.loadUrl("file:///android_asset/map.html")
+//        val url = "https://staticmap.openstreetmap.de/staticmap.php" +
+//                "?center=0,0" +
+//                "&zoom=14" +
+//                "&size=512x512" +
+//                "&markers=0,0,red-pushpin"
+//        binding.webViewLocation.loadUrl(url)
+
+
 
 
 

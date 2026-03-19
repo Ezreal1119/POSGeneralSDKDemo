@@ -1124,6 +1124,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
                 result.append("ISO8583_Resp ARC(8A): 3035 - Decline\n\n")
             }
             mEmvKernelManager.sendOnlineProcessResult(true, authorizationResponseCode + authorizationCode)
+//            mEmvKernelManager.sendOnlineProcessResult(false, null)
         }
 
         override fun onReturnBatchData(cardTlvData: String?) {
@@ -1154,6 +1155,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
                     }
                 }
                 ContantPara.TransactionResult.OFFLINE_DECLINED, ContantPara.TransactionResult.OFFLINE_APPROVAL -> {
+                    TODO() // This is not handled well. This should be GAC-2
                     result.apply {
                         append("<============TRM Started============>\n\n")
                         append(".........\n\n")

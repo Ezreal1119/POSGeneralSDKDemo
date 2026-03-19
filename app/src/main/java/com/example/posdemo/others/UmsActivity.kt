@@ -225,8 +225,7 @@ class UmsActivity : AppCompatActivity() {
                         append("Note: \n" +
                                 " - Will poll periodically(Only Config+UnfinishedOrder)\n" +
                                 " - Will poll thoroughly(Config+UnfinishedOrder+ReportInfo) when UMS first Installed or Reboot\n" +
-                                " - Ungrouped to Any Group trigger MQTT for config_detail\n" +
-                                " - MQTT will trigger all the UMS APIs for sure.")
+                                " - MoveGroup/DistributeSubOrg will clear all the Unfinished Orders")
                     }
                 }
             }.onFailure {
@@ -289,7 +288,8 @@ class UmsActivity : AppCompatActivity() {
                                 "Note:\n" +
                                 " - Will poll(Config+UnfinishedOrder) periodically\n" +
                                 " - Will poll(Config+UnfinishedOrder) + push(ReportDeviceInfo) when UMS first Installed or Reboot\n" +
-                                " - MoveGroup/DistributeSubOrg will clear all the Unfinished Orders")
+                                " - Ungrouped to Any Group trigger MQTT for config_detail\n" +
+                                " - MQTT will trigger all the UMS APIs for sure.")
                     }
                 }
             }.onFailure {
