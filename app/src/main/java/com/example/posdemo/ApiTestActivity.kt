@@ -19,12 +19,14 @@ import android.os.Looper
 import android.text.format.DateFormat
 import android.util.Base64
 import android.util.Log
+import android.view.KeyEvent
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doOnTextChanged
 import com.example.posdemo.databinding.ActivityApiTestBinding
 import com.example.posdemo.others.SimCard
 import com.example.posdemo.utils.ImageUtil
@@ -101,8 +103,65 @@ class ApiTestActivity : AppCompatActivity() {
         binding.btnTest4.setOnClickListener { onTest4ButtonClicked() }
         binding.btnTest5.setOnClickListener { onTest5ButtonClicked() }
 
-        registerInstallReceiver()
+        binding.etTest1.doOnTextChanged { text, start, before, count ->
 
+            if (text!!.endsWith("\n")) {
+                Log.d("SCAN", "LF detected")
+            }
+
+            if (text.endsWith("\r")) {
+                Log.d("SCAN", "CR detected")
+            }
+
+            if (text.endsWith("\t")) {
+                Log.d("SCAN", "TAB detected")
+            }
+        }
+
+
+        binding.etTest1.setOnKeyListener { v, keyCode, event ->
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_ENTER -> {
+                            Log.d("INPUT", "Enter key pressed (KeyEvent)")
+                            true
+                        }
+                        KeyEvent.KEYCODE_DEL -> {
+                            Log.d("INPUT", "Delete key pressed")
+                            true
+                        }
+                        else -> false
+                    }
+                } else {
+                    false
+                }
+            }
+
+        binding.etTest1.setOnEditorActionListener { v, actionId, event ->
+
+            Log.e(TAG, "onCreate: 123", )
+            when (actionId) {
+                EditorInfo.IME_ACTION_DONE -> {
+                    Log.d("INPUT", "IME Done pressed")
+                    true
+                }
+                EditorInfo.IME_ACTION_SEARCH -> {
+                    Log.d("INPUT", "IME Search pressed")
+                    true
+                }
+                EditorInfo.IME_ACTION_NEXT -> {
+                    Log.d("INPUT", "IME Next pressed")
+                    true
+                }
+                else -> false
+            }
+        }
+
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        Log.e(TAG, "dispatchKeyEvent: ${event.keyCode}", )
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onStart() {
@@ -284,12 +343,9 @@ PRINT 1
     private fun onTest4ButtonClicked() {
         Log.e(TAG, "onTest4ButtonClicked")
 
-//        UFSManager().setBootanimation("/sdcard/Download/bootanimation_720_1440.zip")
-//        Log.e(TAG, "onTest4ButtonClicked: ${Build.VERSION.RELEASE}", )
-//        Log.e(TAG, "onTest4ButtonClicked: ${DeviceManager().getSettingProperty("persist-ro.ufs.build.version")}", )
-//        Log.e(TAG, "onTest4ButtonClicked: ${Build.VERSION.SDK_INT}", )
 
-        Log.e(TAG, "onTest4ButtonClicked: ${DeviceManager().autoRunningApp}", )
+
+
     }
 
     private fun onTest5ButtonClicked() {

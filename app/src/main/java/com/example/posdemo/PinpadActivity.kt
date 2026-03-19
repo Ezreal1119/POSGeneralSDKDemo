@@ -129,8 +129,9 @@ class PinpadActivity : AppCompatActivity() {
             btnGenerateSessionKey.setOnClickListener { onGenerateSessionKeyButtonClicked() }
             btnWriteTr34Data.setOnClickListener { onWriteTr34DataButtonClicked() }
             btnReadTr34Data.setOnClickListener { onReadTr34DataButtonClicked() }
-            btnDownloadTr31Wk.setOnClickListener { onDownloadTr31WkButtonClicked() }
+            btnDownloadTr31Wk.setOnClickListener { onDownloadTr31WkButtonClicked(false) }
             btnDownloadTr31DukptTDes.setOnClickListener { onDownloadTr31DukptTDesButtonClicked() }
+            btnTestKbpkSelfUpdate.setOnClickListener { onDownloadTr31WkButtonClicked(true) }
 
             btnDownloadDukpt.setOnClickListener { onDownloadDukptButtonClicked() }
             btnDukptGetKSN.setOnClickListener { onDukptGetKSNButtonClicked() }
@@ -677,7 +678,7 @@ class PinpadActivity : AppCompatActivity() {
     }
 
 
-    private fun onDownloadTr31WkButtonClicked() {
+    private fun onDownloadTr31WkButtonClicked(testSelfUpdate: Boolean) {
         val kbpkInBytes = BytesUtil.hexString2Bytes(KBPK)
         val kbpkKcvInBytes = BytesUtil.hexString2Bytes(KBPK_KCV)
         val tr34MessageCache = ByteArray(2048)
@@ -692,16 +693,26 @@ class PinpadActivity : AppCompatActivity() {
                 // Use this to simulate the extraction of TR31 Key Block from TR34 Message
                 putByteArray(Tr31Params.TR31_KEY_BLOCK_IN_BYTES.tag, String(tr34MessageCache.copyOf(tr34MessageLen[0])).substring(0, 96).toByteArray())
                 putInt(Tr31Params.TR31_KEY_BLOCK_LEN.tag, 96)
+                // B0112B1AX00S0200KS181ED9D5000000BC200000PB08UhKlB34EA8DD29667DDC399295254398F4A5C190AE49898BBC4588DE89E5B2FD5A7E
             }
             // Load KBPK as a MainKey to Slot_99(No need TEK for decryption)
             var ret = mPinpadManager.loadMainKey(INDEX_NINETY_NINE, kbpkInBytes, kbpkKcvInBytes)
             if (!ret) throw Exception("Load KBPK(MainKey) failed")
             // Use KBPK to decrypt the TR31 Key Block then extract the KEY into PIN_KEY@Slot_99
-            ret = mPinpadManager.downloadKeyTR31(Constant.KeyType.MAIN_KEY, Constant.KeyType.PIN_KEY, tr31DownloadBuddle)
+            if (testSelfUpdate) {
+                Toast.makeText(this, "SelfUpdate: ${DeviceManager().getSettingProperty("ro.urv.allow.selfupdate.kbpk")}", Toast.LENGTH_SHORT).show()
+                ret = mPinpadManager.downloadKeyTR31(Constant.KeyType.MAIN_KEY, Constant.KeyType.MAIN_KEY, tr31DownloadBuddle)
+            } else {
+                ret = mPinpadManager.downloadKeyTR31(Constant.KeyType.MAIN_KEY, Constant.KeyType.PIN_KEY, tr31DownloadBuddle)
+            }
             if (!ret) throw Exception("Download(Extract) KEY from TR31 failed")
             // Verify if the KEY has been loaded into PIN_KEY@Slot_99 by calculating the KCV and compare it with the given one.
             val kcvBuffer = ByteArray(8)
-            retInt = mPinpadManager.calculateDes(Constant.DesMode.ENC, Constant.Algorithm.DES_ECB, Constant.KeyType.PIN_KEY, INDEX_NINETY_NINE, ByteArray(8), kcvBuffer)
+            if (testSelfUpdate) {
+                retInt = mPinpadManager.calculateDes(Constant.DesMode.ENC, Constant.Algorithm.DES_ECB, Constant.KeyType.MAIN_KEY, INDEX_NINETY_NINE, ByteArray(8), kcvBuffer)
+            } else {
+                retInt = mPinpadManager.calculateDes(Constant.DesMode.ENC, Constant.Algorithm.DES_ECB, Constant.KeyType.PIN_KEY, INDEX_NINETY_NINE, ByteArray(8), kcvBuffer)
+            }
             if (retInt != 0x00) throw Exception("Calculated KCV for Key downloaded failed")
             return@runCatching kcvBuffer
         }.onSuccess { kcvBuffer ->
@@ -731,11 +742,13 @@ class PinpadActivity : AppCompatActivity() {
                 append(" - T: TDES(16Bytes/32Bytes Key Length)\n")
                 append(" - D: DES(8Bytes Key Length)\n")
                 append(" - H: HMAC\n")
-                append(" - R: RSA")
+                append(" - R: RSA\n\n")
+                append("Self Update:\n")
+                append("Basically just downloadTR31() to update KBPK of the same INDEX(MAIN_KEY)")
             }
         }.onFailure {
             binding.tvResult.text = it.message
-            binding.tvResult.append("\n\nThis might due to TR31 not being Valid e.g.:\n - Not Valid TR31 format\n - MAC verification fails")
+            binding.tvResult.append("\n\nThis might due to TR31 not being Valid e.g.:\n - Not Valid TR31 format\n - MAC verification fails\n - SelfUpdate Failed\n[Please make sure TR34 has been written]")
             it.printStackTrace()
         }
 
