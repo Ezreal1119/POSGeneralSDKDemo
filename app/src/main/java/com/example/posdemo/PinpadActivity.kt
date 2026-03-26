@@ -1084,7 +1084,7 @@ class PinpadActivity : AppCompatActivity() {
     }
 
     private fun onPinBlockDukptBlindButtonClicked() {
-        var strJson = PinpadUtil.getJson("json_custom_blind_720x1280.json", this@PinpadActivity)
+        var strJson = PinpadUtil.getJson("json_custom_blind_720x1440.json", this@PinpadActivity)
 
         val jsonPinpad = Gson().fromJson(strJson, Pinpad::class.java)
         DeviceManager().setSettingProperty("Secure-tts_default_locale", "com.google.android.tts:it_IT")
@@ -1092,12 +1092,18 @@ class PinpadActivity : AppCompatActivity() {
         jsonPinpad.key_del?.text = "CANCELLA"
         jsonPinpad.key_ok?.text = "CONFERMA"
         Translations(
-            pinpad_below = "La tastiera è sotto",
+            pinpad_init = "Inserisci la prima cifra del PIN utilizzando il tastierino numerico. Il PinPad si trova nei due terzi inferiori dello schermo. La tastiera ha il layout telefonico standard con i tasti 1 2 3 nella riga superiore, con Annulla, Zero e Cancella, e Conferma nella riga inferiore",
+            pinpad_below = "La tastiera è in basso",
             pinpad_blank_click_tip = "Nessun numero o tasto funzione selezionato",
-            pinpad_input_less = "Spiacente, PIN troppo corto",
-            pinpad_input_more = "Spiacente, PIN troppo lungo",
-            password_confirm = "Conferma PIN",
-            password_cancel = "Esci dalla tastiera",
+            pinpad_input_less = "Spiacente, la password è troppo corta",
+            pinpad_input_more = "Spiacente, ultima cifra già inserita",
+            pinpad_ok = "Tasto Conferma",
+            password_confirm = "PIN Inserito",
+            pinpad_cancel = "Tasto Annulla",
+            password_cancel = "Inserimento PIN Annullato",
+            pinpad_delete = "Tasto Cancella",
+            password_delete = "Cancellata ultima cifra inserita",
+            password_nodigit_delete = "Inserire prima cifra",
             has_selected_one = "Inserita una cifra",
             has_selected_two = "Inserite due cifre",
             has_selected_three = "Inserite tre cifre",
@@ -1142,16 +1148,24 @@ class PinpadActivity : AppCompatActivity() {
         runCatching {
             tts = TextToSpeech(this) { status ->
                 if (status != TextToSpeech.SUCCESS) return@TextToSpeech
+                Log.e(TAG, "onPinBlockDukptBlindButtonClicked: dasdasd", )
                 tts.speak(
-                    "Inserisci la prima cifra del PIN utilizzando il tastierino numerico.\n" +
-                            "Il PIN Pad si trova nei due terzi inferiori dello schermo.\n" +
-                            "La tastiera è nel layout telefonico standard, con uno, due e tre nella riga superiore e annulla, 0, cancella e conferma nella riga inferiore.",
+                    "Tasto Annulla",
                     TextToSpeech.QUEUE_FLUSH,
                     null,
                     "italy_payment"
                 )
             }
             mPinpadManager.GetDukptPinBlock(pinpadBundle, object : PinInputListener by mPinInputListener {
+                override fun onTimeOut() {
+                    tts.speak(
+                        "Pin Time Out",
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "italy_payment"
+                    )
+                }
+
                 override fun onCancel() {
                     tts.shutdown()
                 }

@@ -109,12 +109,18 @@ data class EchoImageviews(
 
 
 data class Translations(
+    val pinpad_init: String? = null,
     val pinpad_below: String? = null,
     val pinpad_blank_click_tip: String? = null,
     val pinpad_input_less: String? = null,
     val pinpad_input_more: String? = null,
+    val pinpad_ok: String? = null,
     val password_confirm: String? = null,
+    val pinpad_cancel: String? = null,
     val password_cancel: String? = null,
+    val pinpad_delete: String? = null,
+    val password_delete: String? = null,
+    val password_nodigit_delete: String? = null,
 
     val has_selected_one: String? = null,
     val has_selected_two: String? = null,

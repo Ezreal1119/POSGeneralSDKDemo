@@ -35,6 +35,8 @@ import com.example.posdemo.others.SettingsActivity
 import com.example.posdemo.others.UeeIntentActivity
 import com.example.posdemo.others.UmsActivity
 import com.example.posdemo.others.WifiActivity
+import com.example.posdemo.utils.DeviceInfoUtil
+import com.example.posdemo.utils.PermissionUtil
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -109,9 +111,6 @@ class OthersActivity : AppCompatActivity() {
         binding.btnFactoryMenu.setOnClickListener { onFactoryMenuButtonClicked() }
         binding.btnRki.setOnClickListener { startActivity(Intent(this, RkiActivity::class.java)) }
         binding.btnLoadGMS.setOnClickListener { onLoadGMSButtonClicked() }
-        binding.btnDebuglogger.setOnClickListener { onDebugloggerButtonClicked() }
-        binding.btnUploadLog.setOnClickListener { onUploadLogButtonClicked() }
-        binding.btnRecordLogcat.setOnClickListener { onRecordLogcatButtonClicked() }
         binding.btnShutDown.setOnClickListener { onShutDownButtonClicked() }
         binding.btnReboot.setOnClickListener { onRebootButtonClicked() }
         binding.btnReset.setOnClickListener { onResetButtonClicked() }
@@ -130,7 +129,6 @@ class OthersActivity : AppCompatActivity() {
         if ("GMS" in DeviceManager().getSettingProperty("ro.ufs.custom") || url.isEmpty()) {
             binding.btnLoadGMS.isEnabled = false
         }
-        binding.btnUploadLog.isEnabled = File("/sdcard/debuglogger").isDirectory
         registerReceiver(downloadReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
     }
 
@@ -141,7 +139,7 @@ class OthersActivity : AppCompatActivity() {
 
     private fun onLoadGMSButtonClicked() {
         // 1. Check if have Internet
-        if (getNetworkType() == null) {
+        if (DeviceInfoUtil.getNetworkType(this) == null) {
             Toast.makeText(this, "Please connect to Internet first", Toast.LENGTH_SHORT).show()
             return
         }
@@ -172,98 +170,6 @@ class OthersActivity : AppCompatActivity() {
             Toast.makeText(this, "Start Factory Menu failed", Toast.LENGTH_SHORT).show()
             it.printStackTrace()
         }
-    }
-
-
-    private fun onDebugloggerButtonClicked() {
-        val intent = Intent().apply {
-            component = ComponentName(
-                "com.debug.loggerui",
-                "com.debug.loggerui.MainActivity"
-            )
-            flags = FLAG_ACTIVITY_NEW_TASK
-        }
-        runCatching {
-            startActivity(intent)
-        }.onFailure {
-            Toast.makeText(this, "Start Debuglogger failed", Toast.LENGTH_SHORT).show()
-            it.printStackTrace()
-        }
-    }
-
-
-    private fun onUploadLogButtonClicked() {
-        if (!ensureAllFilesAccess(this)) {
-            Toast.makeText(this, "Please grant permission to access all files first", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (getNetworkType() == null) {
-            Toast.makeText(this, "Please connect to Internet first", Toast.LENGTH_SHORT).show()
-            return
-        }
-        AlertDialog.Builder(this@OthersActivity)
-            .setTitle("Confirm")
-            .setMessage("Are you sure you want to Upload the log?")
-            .setPositiveButton("Confirm") { _, _ ->
-                binding.btnUploadLog.isEnabled = false
-                val srcDir = File("/sdcard/debuglogger")
-                val zipFile = File(getExternalFilesDir(null), "debuglogger.zip")
-                runCatching {
-                    zipFolder(srcDir, zipFile)
-                }.onFailure {
-                    it.printStackTrace()
-                    binding.btnUploadLog.isEnabled = true
-                    return@setPositiveButton
-                }
-                runCatching {
-                    uploadLog(
-                        serverUrl = "https://logs.patrick-shenzhen.org",
-                        logZip = zipFile,
-                        sn = DeviceManager().deviceId
-                    )
-                }.onSuccess {
-                    Toast.makeText(this, "Start uploading", Toast.LENGTH_SHORT).show()
-                }.onFailure {
-                    it.printStackTrace()
-                    binding.btnUploadLog.isEnabled = true
-                    return@setPositiveButton
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-
-    private fun onRecordLogcatButtonClicked() {
-        fun startLog() {
-            val intent = Intent("action.LOG_CONTROL_SERVICE").apply {
-                putExtra("option", 1)
-                putExtra("android", true)
-                putExtra("kernel", false)
-                putExtra("androidFile", "SystemLog_${DateFormat.format("yyyy-MM-dd_HH_mm_ss", Date().time)}")
-                putExtra("fileMaxSize", 5)
-            }
-            sendBroadcast(intent)
-        }
-
-        fun stopLog() {
-            val intent = Intent("action.LOG_CONTROL_SERVICE").apply {
-                putExtra("option", 0)
-                putExtra("android", true)
-                putExtra("kernel", true)
-            }
-            sendBroadcast(intent)
-        }
-
-        startLog()
-        Toast.makeText(this, "Started recording Logcat for 30s\nlogPath: /sdcard/ULog/logs/adb", Toast.LENGTH_SHORT).show()
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            stopLog()
-            runOnUiThread {
-                Toast.makeText(this, "Finished recording Logcat", Toast.LENGTH_SHORT).show()
-            }
-        }, 30000L)
     }
 
     private fun onShutDownButtonClicked() {
@@ -318,15 +224,6 @@ class OthersActivity : AppCompatActivity() {
         return getSystemProperty("pwv.project", "no result found!")
     }
 
-    private fun getNetworkType(): String? {
-        val activeNetworkInfo = (this
-            .getSystemService("connectivity") as ConnectivityManager).activeNetworkInfo
-        if (activeNetworkInfo == null) {
-            return null
-        }
-        return if (activeNetworkInfo.type == 1) "Wifi" else "4G"
-    }
-
 
     private fun ensureAllFilesAccess(activity: Activity): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return true
@@ -338,61 +235,7 @@ class OthersActivity : AppCompatActivity() {
         activity.startActivity(intent)
         return false
     }
-    private fun zipFolder(srcDir: File, outZip: File) {
-        ZipOutputStream(BufferedOutputStream(FileOutputStream(outZip))).use { zos ->
-            srcDir.walkTopDown()
-                .filter { it.isFile }
-                .forEach { file ->
-                    val entryName = file.relativeTo(srcDir).path.replace("\\", "/")
-                    zos.putNextEntry(ZipEntry(entryName))
-                    file.inputStream().use { it.copyTo(zos) }
-                    zos.closeEntry()
-                }
-        }
-    }
 
-    private fun uploadLog(serverUrl: String, logZip: File, sn: String) {
-        val client = OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .build()
-        val fileBody = logZip.asRequestBody("application/zip".toMediaType())
-        val requestBody = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("sn", sn)
-            .addFormDataPart(
-                "file",
-                logZip.name,
-                fileBody
-            )
-            .build()
-        val request = Request.Builder()
-            .url("$serverUrl/upload")
-            .post(requestBody)
-            .build()
-        client.newCall(request).enqueue(object: Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                runOnUiThread {
-                    Toast.makeText(this@OthersActivity, "Upload failed", Toast.LENGTH_SHORT).show()
-                    binding.btnUploadLog.isEnabled = true
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                val ok = response.isSuccessful
-                val code = response.code
-                response.close()
-                runOnUiThread {
-                    if (ok) {
-                        Toast.makeText(this@OthersActivity, "Upload success", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this@OthersActivity, "Upload failed: $code", Toast.LENGTH_SHORT).show()
-                    }
-                    binding.btnUploadLog.isEnabled = true
-                }
-            }
-        })
-    }
 }
 
 enum class GmsFirmware(val url: String) {
