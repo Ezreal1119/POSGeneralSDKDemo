@@ -97,7 +97,7 @@ class ApiTestActivity : AppCompatActivity() {
         binding = ActivityApiTestBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnTest1.setOnClickListener @androidx.annotation.RequiresPermission(allOf = [android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION]) { onTest1ButtonClicked() }
+        binding.btnTest1.setOnClickListener { onTest1ButtonClicked() }
         binding.btnTest2.setOnClickListener { onTest2ButtonClicked() }
         binding.btnTest3.setOnClickListener { onTest3ButtonClicked() }
         binding.btnTest4.setOnClickListener { onTest4ButtonClicked() }
@@ -168,58 +168,28 @@ class ApiTestActivity : AppCompatActivity() {
         super.onStart()
         binding.apply {
             btnTest1.visibility = VISIBLE
-            btnTest2.visibility = VISIBLE
-            btnTest3.visibility = VISIBLE
-            btnTest4.visibility = VISIBLE
-            btnTest5.visibility = VISIBLE
+            btnTest2.visibility = GONE
+            btnTest3.visibility = GONE
+            btnTest4.visibility = GONE
+            btnTest5.visibility = GONE
+//            btnTest2.visibility = VISIBLE
+//            btnTest3.visibility = VISIBLE
+//            btnTest4.visibility = VISIBLE
+//            btnTest5.visibility = VISIBLE
         }
     }
 
 
     private fun onTest1ButtonClicked() {
         Log.e(TAG, "onTest1ButtonClicked")
-        fun printWithCPCL(printerIp: String = "192.168.1.100", printerPort: Int = 9100) {
-            // 1. 配置打印参数
-            val time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-            val russianText = "Станова про накладання адміністративного стягнення" // 俄语文本
-            val charset = Charset.forName("Windows-1251") // 匹配WPC1251编码
-
-            // 2. 构建CPCL指令（核心：指定编码+字体编号）
-            val cpclCommand = """
-SIZE 50 mm, 30 mm
-GAP 0 mm, 0 mm
-CLS
-TEXT 50, 120, "1", 0, 1, 1, "123 中文测试" 
-PRINT 1
-        
-    """.trimIndent()
-
-            // 3. 发送指令到打印机
-            var socket: Socket? = null
-            var os: OutputStream? = null
-            try {
-                socket = Socket(printerIp, printerPort)
-                os = socket.getOutputStream()
-
-                // 关键：将CPCL指令转为WPC1251编码的字节流（匹配打印机解码方式）
-                val cpclBytes = cpclCommand.toByteArray(Charsets.UTF_8)
-                os.write(cpclBytes)
-                os.flush()
-
-                println("CPCL指令发送成功！")
-            } catch (e: Exception) {
-                println("打印失败：${e.message}")
-                e.printStackTrace()
-            } finally {
-                // 4. 关闭资源
-                os?.close()
-                socket?.close()
+        binding.tvResult.text = buildString {
+            runCatching {
+                appendLine("SIM1: ${DeviceManager().getPhoneNumber(0)}")
+                appendLine("SIM2: ${DeviceManager().getPhoneNumber(1)}")
+            }.onFailure {
+                appendLine(it.message)
             }
         }
-
-        Thread {
-            printWithCPCL(printerIp = "10.10.10.235")
-        }.start()
 
     }
 

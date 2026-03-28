@@ -1,11 +1,17 @@
 {
   "translations": {
+    "pinpad_init": "Pinpad has been initialized successfully",
     "pinpad_below": "The keyboard is below",
     "pinpad_blank_click_tip": "No numbers or function keys selected",
     "pinpad_input_less": "Sorry, the password length error",
     "pinpad_input_more": "Sorry, the password length error",
+    "pinpad_ok": "This is Confirm button",
     "password_confirm": "Confirmation",
+    "pinpad_cancel": "This is Cancel button",
     "password_cancel": "Cancellation",
+    "pinpad_delete": "This is Delete button",
+    "password_delete": "Deleted a PIN",
+    "password_nodigit_delete": "No digit to delete",
     "has_selected_one": "First number entered",
     "has_selected_two": "Second number entered",
     "has_selected_three": "Third number entered",

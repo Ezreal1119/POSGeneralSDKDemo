@@ -1092,7 +1092,7 @@ class PinpadActivity : AppCompatActivity() {
         jsonPinpad.key_del?.text = "CANCELLA"
         jsonPinpad.key_ok?.text = "CONFERMA"
         Translations(
-            pinpad_init = "Inserisci la prima cifra del PIN utilizzando il tastierino numerico. Il PinPad si trova nei due terzi inferiori dello schermo. La tastiera ha il layout telefonico standard con i tasti 1 2 3 nella riga superiore, con Annulla, Zero e Cancella, e Conferma nella riga inferiore",
+            pinpad_init = "Inserisci la prima cifra del codice segreto usando il tastierino numerico. La tastiera si trova nella parte inferiore dello schermo. Nella riga superiore ci sono i tasti uno, due e tre. Nella riga inferiore ci sono Annulla, Zero, Cancella e Conferma.",
             pinpad_below = "La tastiera è in basso",
             pinpad_blank_click_tip = "Nessun numero o tasto funzione selezionato",
             pinpad_input_less = "Spiacente, la password è troppo corta",
@@ -1131,7 +1131,7 @@ class PinpadActivity : AppCompatActivity() {
             putBoolean(PinParams.BYPASS.tag, false) // Support 0 PIN or not. false by default.
             putString(PinParams.SUPPORT_PIN_LEN.tag, SUPPORT_PIN_LENGTH) // Will use the one set by last time by default. Thus, must set before using.
             putBoolean(PinParams.FULL_SCREEN.tag, true) // true by default. Won't have Cancel button when half screen
-            putLong(PinParams.TIMEOUT_MS.tag, TIMEOUT_BLIND_KEYBOARD) // Time out since opening the Pad. 0 by default, must set!
+            putLong(PinParams.TIMEOUT_MS.tag, 90 * 1000L) // Time out since opening the Pad. 0 by default, must set!
             putBoolean(PinParams.RANDOM_KEYBOARD.tag, false) // true by default.
             putBoolean(PinParams.RANDOM_KEYBOARD_LOCATION.tag, false)
             putBoolean(PinParams.INPUT_BY_SECURITY_PIN_PAD.tag, false) // false by default. Only by this, Custom UI can take place
@@ -1149,12 +1149,6 @@ class PinpadActivity : AppCompatActivity() {
             tts = TextToSpeech(this) { status ->
                 if (status != TextToSpeech.SUCCESS) return@TextToSpeech
                 Log.e(TAG, "onPinBlockDukptBlindButtonClicked: dasdasd", )
-                tts.speak(
-                    "Tasto Annulla",
-                    TextToSpeech.QUEUE_FLUSH,
-                    null,
-                    "italy_payment"
-                )
             }
             mPinpadManager.GetDukptPinBlock(pinpadBundle, object : PinInputListener by mPinInputListener {
                 override fun onTimeOut() {

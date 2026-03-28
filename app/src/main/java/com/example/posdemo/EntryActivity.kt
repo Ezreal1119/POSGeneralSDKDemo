@@ -54,6 +54,10 @@ class EntryActivity : AppCompatActivity() {
                 intent.component = ComponentName(packageName, "$packageName.others.LogActivity")
                 startActivity(intent)
             }
+            "7777" -> {
+                intent.component = ComponentName(packageName, "$packageName.ApiTestActivity")
+                startActivity(intent)
+            }
             "36985" -> {
                 DeviceManager().setSettingProperty("persist.sys.truncated.adb", "false")
                 Toast.makeText(this, "ADB unlocked", Toast.LENGTH_SHORT).show()

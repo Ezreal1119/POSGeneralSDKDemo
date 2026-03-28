@@ -226,8 +226,6 @@ class UmsHelper(private val activity: Activity) {
             it.configType == config
         }
         return item?.configCode
-
-
     }
 
     fun getSpecificConfig(config: String, code: String): String {

@@ -49,7 +49,6 @@ class LogActivity : AppCompatActivity() {
             "System Log",
             "DebugLogger Log",
             "EMV Log",
-            "OS Update Log",
             "UMS Log",
             "UMS AppMarket Log",
             "Custom File Path"
@@ -59,7 +58,6 @@ class LogActivity : AppCompatActivity() {
             "/sdcard/ULog/logs/adb",
             "/sdcard/debuglogger",
             "/sdcard/UROPE",
-            "/sdcard/Android/data/com.ubx.update/files",
             "/sdcard/UHome/",
             "/sdcard/UhomeAppmarket/",
             "/sdcard/"
@@ -68,12 +66,16 @@ class LogActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLogBinding
 
+    private var isMtkDevice = true
+
     private var isRecording = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLogBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        isMtkDevice = PackageUtil.isPackageInstalled(this, "com.debug.loggerui")
 
         binding.tvSelectedLogType.text = LOG_TYPES[0]
         binding.etFilePath.setText(LOG_FILE_PATHS[0])
@@ -98,15 +100,14 @@ class LogActivity : AppCompatActivity() {
     }
 
     private fun onDebugLoggerImageClicked() {
-        val isMtkDevice = PackageUtil.isPackageInstalled(this, "com.debug.loggerui")
         val intent = Intent().apply {
-            if (isMtkDevice) {
-                component = ComponentName(
+            component = if (isMtkDevice) {
+                ComponentName(
                     "com.debug.loggerui",
                     "com.debug.loggerui.MainActivity"
                 )
             } else {
-                component = ComponentName(
+                ComponentName(
                     "com.un.logredirect",
                     "com.un.logredirect.LogRedirectorSettings"
                 )
@@ -126,7 +127,11 @@ class LogActivity : AppCompatActivity() {
             .setTitle("Select Log Type")
             .setItems(LOG_TYPES) { _, which ->
                 binding.tvSelectedLogType.text = LOG_TYPES[which]
+
                 binding.etFilePath.setText(LOG_FILE_PATHS[which])
+                if (!isMtkDevice && which == 1) {
+                    binding.etFilePath.setText("/sdcard/log")
+                }
 
                 if (LOG_TYPES[which] == LOG_TYPES[6]) {
                     binding.etFilePath.isEnabled = true
@@ -142,32 +147,47 @@ class LogActivity : AppCompatActivity() {
 
         if (isRecording) {
             startRecordingUi()
-            when (binding.tvSelectedLogType.text.toString()) {
-                LOG_TYPES[0] -> {
-                    val intent = Intent("action.LOG_CONTROL_SERVICE").apply {
-                        putExtra("option", 1)
-                        putExtra("android", true)
-                        putExtra("kernel", false)
-                        putExtra("androidFile", "SystemLog_${DateFormat.format("yyyy-MM-dd_HH_mm_ss", Date().time)}")
-                        putExtra("fileMaxSize", 10)
-                    }
-                    sendBroadcast(intent)
+            if (isMtkDevice) {
+                val intent = Intent("action.LOG_CONTROL_SERVICE").apply {
+                    putExtra("option", 1)
+                    putExtra("android", true)
+                    putExtra("kernel", false)
+                    putExtra("androidFile", "SystemLog_${DateFormat.format("yyyy-MM-dd_HH_mm_ss", Date().time)}")
+                    putExtra("fileMaxSize", 10)
                 }
+                sendBroadcast(intent)
+            } else {
+                val intent = Intent("android.intent.action.UNER_START_LOG").apply {
+                    setClassName(
+                        "com.un.logredirect",
+                        "com.un.logredirect.LogRedirectorReceiver"
+                    )
+                    addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
+                    putExtra("isStart", true)
+                    putExtra("maxVolume", 10)
+                }
+                sendBroadcast(intent)
             }
         } else {
             stopRecordingUi()
-            when (binding.tvSelectedLogType.text.toString()) {
-                LOG_TYPES[0] -> {
-                    val intent = Intent("action.LOG_CONTROL_SERVICE").apply {
-                        putExtra("option", 0)
-                        putExtra("android", true)
-                        putExtra("kernel", false)
-                    }
-                    sendBroadcast(intent)
+            if (isMtkDevice) {
+                val intent = Intent("action.LOG_CONTROL_SERVICE").apply {
+                    putExtra("option", 0)
+                    putExtra("android", true)
+                    putExtra("kernel", false)
                 }
-
+                sendBroadcast(intent)
+            } else {
+                val intent = Intent("android.intent.action.UNER_START_LOG").apply {
+                    setClassName(
+                        "com.un.logredirect",
+                        "com.un.logredirect.LogRedirectorReceiver"
+                    )
+                    addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
+                    putExtra("isStart", false)
+                }
+                sendBroadcast(intent)
             }
-
         }
     }
 
