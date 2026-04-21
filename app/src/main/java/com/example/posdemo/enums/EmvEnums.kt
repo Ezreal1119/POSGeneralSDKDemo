@@ -23,7 +23,8 @@ enum class TransactionTag(val tag: String) {
     CASHBACK_AMOUNT("cashbackAmount"), // String not Int
     CHECK_CARD_TIMEOUT("checkCardTimeout"), // in seconds
     TRANSACTION_TYPE("transactionType"), // "00"(Purchase); "01"(Withdrawal); "09"(CashBack); "20"(Refund)
-    FALLBACK_SWITCH("FallbackSwitch"), // 0: Disable; 1: Enable
+    FALLBACK_SWITCH("FallbackSwitch"), // 0: Disable; 1: Enable; If true, ICC FAIL -> NEED_FALLBACK; else, ICC FAIL -> NOT_ICC
+    NEED_FALLBACK_TRY_TIMES("NeedFallBackTryTimes"), // If true, ICC  FAIL n times -> NEED_FALLBACK (Before that, NOT_ICC) & MAG n times -> MSR (Before that, NOT USE_ICC); else, nothing happens.
     ENTER_AMOUNT_AFTER_READ_RECORD("isEnterAmtAfterReadRecord"), // If true, then need to enter the amount in onRequestSetAmount() callback.
     SUPPORT_DRL("supportDRL"), // If true. then means support Visa's Dynamic adjusting the Limit logic.
     ENABLE_BEEPER("enableBeeper"), // Enable/Disable Beeper when card is read successfully

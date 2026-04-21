@@ -5,12 +5,14 @@ import android.R.layout.simple_spinner_item
 import android.app.AlertDialog
 import android.content.Intent
 import android.device.DeviceManager
+import android.device.PiccManager
 import android.device.UFSManager
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -18,6 +20,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.R
 import com.example.posdemo.databinding.ActivitySettingsBinding
+import com.example.posdemo.services.ConfigWatcherService
+import com.example.posdemo.tools.ConfigFileWatcher
 import com.example.posdemo.utils.ImageUtil
 import com.example.posdemo.utils.PermissionUtil
 import com.example.posdemo.webview.WebViewActivity
@@ -37,6 +41,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivitySettingsBinding
+    val piccManager = PiccManager()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +54,8 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnSetBrightness.setOnClickListener { onSetBrightnessButtonClicked() }
         binding.btnSetFontSize.setOnClickListener { onSetFontSizeButtonClicked() }
         binding.btnResetFontSize.setOnClickListener { onResetFontSizeButtonClicked() }
+        binding.btnSetDisplaySize.setOnClickListener { onSetDisplaySizeButtonClicked() }
+        binding.btnResetDisplaySize.setOnClickListener { onResetDisplaySizeButtonClicked() }
         binding.btnQueryApnByName.setOnClickListener { onQueryApnByNameButtonClicked() }
         binding.btnAddApn.setOnClickListener { onAddApnButtonClicked() }
         binding.btnDeleteApnByName.setOnClickListener { onDeleteApnByNameButtonClicked() }
@@ -56,13 +63,34 @@ class SettingsActivity : AppCompatActivity() {
         binding.btnClearLockPassword.setOnClickListener { onClearLockPasswordButtonClicked() }
         binding.btnSetSettingsPassword.setOnClickListener { onSetSettingsPasswordButtonClicked() }
         binding.btnClearSettingsPassword.setOnClickListener { onClearSettingsPasswordButtonClicked() }
+        binding.btnTurnOnHce.setOnClickListener { onTurnOnHceButtonClicked() }
+        binding.btnTurnOffHce.setOnClickListener { onTurnOffHceButtonClicked() }
+        binding.btnTurnOnHostMode.setOnClickListener { onTurnOnHostModeButtonClicked() }
+        binding.btnTurnOffHostMode.setOnClickListener { onTurnOffHostModeButtonClicked() }
         binding.btnGetTimeSettings.setOnClickListener { onGetTimeSettingsButtonClicked() }
         binding.btnSetTimeSettings.setOnClickListener { onSetTimeSettingsButtonClicked() }
         binding.btnSetCustomWallpaper.setOnClickListener { onSetCustomWallpaperButtonClicked() }
         binding.btnSetDefaultWallpaper.setOnClickListener { onSetDefaultWallpaperButtonClicked() }
         binding.btnTtsTest.setOnClickListener { onTtsTestButtonClicked() }
+        binding.btnStartConfigWatcher.setOnClickListener { onStartConfigWatcherButtonClicked() }
         binding.btnWebViewTestUrovo.setOnClickListener { onWebViewTestUrovoButtonClicked() }
         binding.btnWebViewTestLocal.setOnClickListener { onWebViewTestLocalButtonClicked() }
+
+        binding.etNumberInput.showSoftInputOnFocus = false
+        binding.etNumberInput.setOnFocusChangeListener{ v, hasFocus ->
+            if (hasFocus) {
+                DeviceManager().setSettingProperty("Global-ufans.keyboard.state", "0")
+                sendBroadcast(Intent("android.intent.action.ACTION_SWITCH_KEY_STATE"))
+            }
+        }
+
+        binding.etLetterInput.showSoftInputOnFocus = false
+        binding.etLetterInput.setOnFocusChangeListener{ v, hasFocus ->
+            if (hasFocus) {
+                DeviceManager().setSettingProperty("Global-ufans.keyboard.state", "1")
+                sendBroadcast(Intent("android.intent.action.ACTION_SWITCH_KEY_STATE"))
+            }
+        }
 
         binding.spSystemProperty.adapter = ArrayAdapter(this, simple_spinner_item, ARRAY_OF_PROPERTIES).apply {
             setDropDownViewResource(simple_spinner_dropdown_item)
@@ -109,6 +137,54 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
+    }
+
+    private fun onStartConfigWatcherButtonClicked() {
+        if (!PermissionUtil.ensureAllFilesAccess(this)) {
+            return
+        }
+        Toast.makeText(this, "ConfigWatcherService started", Toast.LENGTH_SHORT).show()
+        val configWatcherIntent = Intent(this, ConfigWatcherService::class.java)
+        startService(configWatcherIntent)
+    }
+
+    private fun onTurnOnHceButtonClicked() {
+
+        val addr = 1
+        val writeData = "Patrick".toByteArray()
+        val readBuffer = ByteArray(128)
+
+        piccManager.picc_TAG_SetMode(1)
+        piccManager.picc_TAG_Write(addr, writeData, writeData.size)
+        piccManager.picc_TAG_Read(addr, readBuffer.size, readBuffer)
+
+        val result = String(readBuffer).trim('\u0000', ' ')
+        Toast.makeText(this, "HCE on: $result", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onTurnOffHceButtonClicked() {
+        piccManager.picc_TAG_SetMode(0)
+        Toast.makeText(this, "HCE off", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onTurnOnHostModeButtonClicked() {
+        runCatching {
+            DeviceManager().setSettingProperty("System-sys.hostkey.switch","1")
+        }.onSuccess {
+            Toast.makeText(this, "Turned on Host Mode", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun onTurnOffHostModeButtonClicked() {
+        runCatching {
+            DeviceManager().setSettingProperty("System-sys.hostkey.switch","0")
+        }.onSuccess {
+            Toast.makeText(this, "Turned on Host Mode", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun onGetSystemPropertyButtonClicked() {
@@ -170,6 +246,29 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun onSetDisplaySizeButtonClicked() {
+        runCatching {
+            DeviceManager().setSettingProperty("Secure-display_density_forced", binding.sliderDisplaySize.value.toString());
+        }.onSuccess {
+            Toast.makeText(this, "Set Display Size to ${binding.sliderDisplaySize.value} successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Set Display Size failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
+
+    private fun onResetDisplaySizeButtonClicked() {
+        runCatching {
+            DeviceManager().setSettingProperty("Secure-display_density_forced", "1")
+        }.onSuccess {
+            binding.sliderDisplaySize.value = 1F
+            Toast.makeText(this, "Reset Display Size successfully", Toast.LENGTH_SHORT).show()
+        }.onFailure {
+            Toast.makeText(this, "Reset Display Size failed", Toast.LENGTH_SHORT).show()
+            it.printStackTrace()
+        }
+    }
 
     private fun onGetBrightnessButtonClicked() {
         runCatching {

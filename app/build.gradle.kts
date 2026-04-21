@@ -85,7 +85,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation(files("libs/urovoSdkLibs_New_v1.0.23_release.aar")) // Urovo POS SDK
+    implementation(files("libs/urovoSdkLibs_New_v1.0.24_release.aar")) // Urovo POS SDK
     implementation("com.google.zxing:core:3.5.3") // For BarcodeFormat
     implementation("com.squareup.okhttp3:okhttp:4.12.0") // For HTTP
     implementation("androidx.fragment:fragment-ktx:1.6.2") // sharedViewModel for EMV

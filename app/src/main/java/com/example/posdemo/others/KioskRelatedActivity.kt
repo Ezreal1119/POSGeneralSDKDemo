@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.R
 import androidx.core.content.edit
+import com.example.posdemo.EntryActivity
 import com.example.posdemo.MainActivity
 import com.example.posdemo.databinding.ActivityKioskRelatedBinding
 import com.example.posdemo.utils.PermissionUtil
@@ -243,7 +244,7 @@ class KioskRelatedActivity : AppCompatActivity() {
 
     private fun onSetDefaultLauncherButtonClicked() {
         runCatching {
-            DeviceManager().setDefaultLauncher(ComponentName.unflattenFromString("${this.packageName}/${MainActivity::class.java.name}"))
+            DeviceManager().setDefaultLauncher(ComponentName.unflattenFromString("${this.packageName}/${EntryActivity::class.java.name}"))
         }.onSuccess {
             Toast.makeText(this, "Set Default Launcher successfully", Toast.LENGTH_SHORT).show()
         }.onFailure {

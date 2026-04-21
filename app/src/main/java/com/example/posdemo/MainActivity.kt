@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.databinding.ActivityMainBinding
+import com.example.posdemo.services.ConfigWatcherService
 import com.urovo.sdk.utils.SystemProperties.getSystemProperty
 
 class MainActivity : AppCompatActivity() {
@@ -62,6 +63,7 @@ class MainActivity : AppCompatActivity() {
             append("https://github.com/Ezreal1119/POSGeneralSDKDemo\n")
             append("Version: ${BuildConfig.VERSION_NAME}")
         }
+
     }
 
     private fun getDevType(): String {

@@ -76,12 +76,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
+                android:inputType="number"
                 android:imeOptions="actionNext"
                 />
 
             <EditText
                 android:id="@+id/etTest2"
                 android:layout_width="match_parent"
+                android:inputType="text"
                 android:layout_height="wrap_content"/>
 
         </LinearLayout>

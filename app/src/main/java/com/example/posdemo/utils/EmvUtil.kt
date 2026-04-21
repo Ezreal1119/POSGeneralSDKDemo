@@ -30,7 +30,7 @@ object EmvUtil {
 
     // <-----------------Generate Transaction Parameters-----------------> //
 
-    fun generateTransactionParameters(enterAmountAfterRR: Boolean, amount: String, cardMode: ContantPara.CheckCardMode, emvOption: ContantPara.EmvOption,fallback: String): Hashtable<String, Any> {
+    fun generateTransactionParameters(enterAmountAfterRR: Boolean, amount: String, cardMode: ContantPara.CheckCardMode, emvOption: ContantPara.EmvOption, fallback: String, needFallbackTryTimes: String): Hashtable<String, Any> {
         return Hashtable<String, Any>().apply {
             // 1. Must Need for Transaction
             put(TransactionTag.TRANSACTION_TYPE.tag, "00") // Purchase goods
@@ -45,7 +45,10 @@ object EmvUtil {
             put(TransactionTag.CHECK_CARD_TIMEOUT.tag, "30") // Default: 30 second; TIME before reading card TIMEOUT
             put(TransactionTag.CHECK_CARD_MODE.tag, cardMode) // Default is SWIPE_OR_INSERT_OR_TAP
             put(TransactionTag.EMV_OPTION.tag, emvOption) // Default START, can also set START_WITH_FORCE_ONLINE
-            put(TransactionTag.FALLBACK_SWITCH.tag, fallback) // Default: Disabled - 0. Two effects: (a). Will trigger USE_ICC_CARD if use MagCard (b). Will trigger NEED_FALLBACK if ICCard not successful
+            put(TransactionTag.FALLBACK_SWITCH.tag, fallback) // Default: Disabled - 0. If true, ICC FAIL -> NEED_FALLBACK; else, ICC FAIL -> NOT_ICC
+            if (needFallbackTryTimes.isNotEmpty()) { // If true, ICC  FAIL n times -> NEED_FALLBACK (Before that, NOT_ICC) & MAG n times -> MSR (Before that, NOT USE_ICC); else, nothing happens.
+                put(TransactionTag.NEED_FALLBACK_TRY_TIMES.tag, needFallbackTryTimes)
+            }
 
             // 3. Rarely used
 //            put(TransactionTag.CASHBACK_AMOUNT.tag, "") // 0 cashback

@@ -231,6 +231,71 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="Display Size:"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:gravity="center" />
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/sliderDisplaySize"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="3"
+                        android:valueFrom="1"
+                        android:valueTo="10"
+                        android:value="1"
+                        android:stepSize="1"/>
+
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnSetDisplaySize"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Set Display Size"
+                        android:textSize="15sp"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnResetDisplaySize"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Reset Display Size"
+                        android:layout_margin="1dp"
+                        android:textSize="15sp"
+                        android:padding="0dp"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:padding="5dp"
+                android:background="@drawable/border"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
                     <EditText
                         android:id="@+id/etApnName"
                         android:layout_width="0dp"
@@ -395,6 +460,60 @@
                 android:orientation="horizontal">
 
                 <Button
+                    android:id="@+id/btnTurnOnHce"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Turn on HCE"
+                    android:textSize="13sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnTurnOffHce"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Turn off HCE"
+                    android:textSize="13sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnTurnOnHostMode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Turn on Host Mode"
+                    android:textSize="13sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+                <Button
+                    android:id="@+id/btnTurnOffHostMode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Turn off Host Mode"
+                    android:textSize="13sp"
+                    android:layout_margin="1dp"
+                    android:padding="0dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
                     android:id="@+id/btnGetTimeSettings"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -450,6 +569,13 @@
                 android:textSize="15sp"
                 android:text="TTS Test(Need Download)"/>
 
+            <Button
+                android:id="@+id/btnStartConfigWatcher"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:text="Start Config Watcher"/>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -474,6 +600,33 @@
                     android:textSize="12sp"
                     android:layout_margin="1dp"
                     android:padding="0dp"/>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@drawable/border">
+
+                <EditText
+                    android:id="@+id/etNumberInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Number Input Field"
+                    android:textSize="12sp"
+                    android:layout_margin="1dp" />
+
+                <EditText
+                    android:id="@+id/etLetterInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Letter Input Field"
+                    android:textSize="12sp"
+                    android:layout_margin="1dp" />
 
 
             </LinearLayout>

@@ -194,10 +194,10 @@ class InstallManager : AppCompatActivity() {
 
     private fun onInstallAppButtonClicked() {
         runCatching {
-            if (!File(binding.etApkPath.text.toString().trim()).isFile) {
-                binding.tvResult.text = "Apk not exists!"
-                return
-            }
+//            if (!File(binding.etApkPath.text.toString().trim()).isFile) {
+//                binding.tvResult.text = "Apk not exists!"
+//                return
+//            }
             mInstallManager.install(binding.etApkPath.text.toString().trim(), myInstallApkListener)
         }.onSuccess {
             binding.tvResult.text = ""

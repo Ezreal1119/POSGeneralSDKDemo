@@ -125,6 +125,7 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
     private var pinBlockCache: ByteArray? = null
     private var ksnCache: ByteArray? = null
     private var bypassPinPadFlag: Boolean = false
+    private var needFallBackTryTimes: String = ""
 
 
     override fun onCreateView(
@@ -367,7 +368,8 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
             (binding.spAmount.selectedItem as Amount).amount,
             cardMode,
             (binding.spEmvOptions.selectedItem as EmvOptions).value,
-            (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value
+            (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value,
+            needFallBackTryTimes
             )
         if (binding.spAmount.selectedItem == Amount.ENTER_AFTER_READ_RECORD) {
             Toast.makeText(requireContext(), "Please Insert Card", Toast.LENGTH_SHORT).show()
@@ -779,7 +781,8 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
                             (binding.spAmount.selectedItem as Amount).amount,
                             ContantPara.CheckCardMode.SWIPE_OR_TAP,
                             (binding.spEmvOptions.selectedItem as EmvOptions).value,
-                            (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value
+                            (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value,
+                            needFallBackTryTimes
                         )
                         Thread {
                             requireActivity().runOnUiThread {
@@ -801,12 +804,22 @@ class EmvHomeFragment : Fragment(R.layout.fragment_emv_home) {
                                 (binding.spAmount.selectedItem as Amount).amount,
                                 ContantPara.CheckCardMode.INSERT,
                                 (binding.spEmvOptions.selectedItem as EmvOptions).value,
-                                (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value)
+                                (binding.spFallbackSwitch.selectedItem as FallbackSwitch).value,
+                                needFallBackTryTimes
+                            )
                             Thread {
                                 requireActivity().runOnUiThread {
                                     Toast.makeText(requireContext(), "Please insert Card (FALLBACK on)", Toast.LENGTH_SHORT).show()
+                                    if (needFallBackTryTimes.isNotEmpty()) {
+                                        binding.btnStartEmv.isEnabled = true
+                                        binding.btnStopEmv.isEnabled = false
+                                        hideBlockingUi()
+                                        isKernelRunning = false
+                                    }
                                 }
-                                mEmvKernelManager.startKernel(transParams)
+                                if (needFallBackTryTimes.isEmpty()) {
+                                    mEmvKernelManager.startKernel(transParams)
+                                }
                             }.start()
                         }
                     }
