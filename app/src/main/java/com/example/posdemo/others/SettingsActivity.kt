@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
-import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -21,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.R
 import com.example.posdemo.databinding.ActivitySettingsBinding
 import com.example.posdemo.services.ConfigWatcherService
-import com.example.posdemo.tools.ConfigFileWatcher
 import com.example.posdemo.utils.ImageUtil
 import com.example.posdemo.utils.PermissionUtil
 import com.example.posdemo.webview.WebViewActivity

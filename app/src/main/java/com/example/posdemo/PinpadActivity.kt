@@ -1148,7 +1148,6 @@ class PinpadActivity : AppCompatActivity() {
         runCatching {
             tts = TextToSpeech(this) { status ->
                 if (status != TextToSpeech.SUCCESS) return@TextToSpeech
-                Log.e(TAG, "onPinBlockDukptBlindButtonClicked: dasdasd", )
             }
             mPinpadManager.GetDukptPinBlock(pinpadBundle, object : PinInputListener by mPinInputListener {
                 override fun onTimeOut() {

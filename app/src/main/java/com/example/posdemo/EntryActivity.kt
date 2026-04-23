@@ -22,6 +22,7 @@ class EntryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityEntryBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        hideNavigationBar()
 
         binding.btnEnter.setOnClickListener { onEnterButtonClicked() }
         binding.etEnterCode.doOnTextChanged { text, _, _, _ ->
@@ -65,6 +66,14 @@ class EntryActivity : AppCompatActivity() {
             else -> {
                 Toast.makeText(this, "Please contact Urovo to use this...", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun hideNavigationBar() {
+        window.insetsController?.let {
+            it.hide(android.view.WindowInsets.Type.navigationBars())
+            it.systemBarsBehavior =
+                android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
 }
