@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
@@ -161,7 +162,8 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
             btnSppBluetoothPrinter.setOnClickListener { onSppBluetoothPrinterButtonClicked() }
             btnWifiPrinter.setOnClickListener { onWifiPrinterButtonClicked() }
             btnStartWebSocketPrinter.setOnClickListener { onStartWebSocketPrinterButtonClicked() }
-            btnOpenPrintWeb.setOnClickListener { onOpenPrintWebButtonClicked() }
+            btnOpenPrintWebLocal.setOnClickListener { onOpenPrintWebLocalButtonClicked() }
+            btnOpenPrintWebCloud.setOnClickListener { onOpenPrintWebCloudButtonClicked() }
             btnStopWebSocketPrinter.setOnClickListener { onStopWebSocketPrinterButtonClicked() }
         }
     }
@@ -550,7 +552,7 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
         2. Create a Uri Interface using FileProvider, this is the requirement after Android 8
         (The other APP can only access the File asset of this APP using FileProvider API)
      */
-    private fun onOpenPrintWebButtonClicked() {
+    private fun onOpenPrintWebLocalButtonClicked() {
         val file = FileUtil.copyAssetToCacheIfNeeded(this, HTML_WEB_SOCKET_FILE_NAME)
         val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
         val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -565,6 +567,17 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
         }
     }
 
+    private fun onOpenPrintWebCloudButtonClicked() {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse("https://websocket-print.18807737955-70f.workers.dev")
+        }
+
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "No browser found", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private fun onStopWebSocketPrinterButtonClicked() {
         runCatching {
@@ -675,6 +688,7 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
 enum class ContentFormat(val value: String) {
     FONT("font"),
     FONT_BOLD("fontBold"),
+    FONT_NAME("fontName"),
     ALIGN("align"),
     LINE_HEIGHT("lineHeight"),
     WIDTH("width"),

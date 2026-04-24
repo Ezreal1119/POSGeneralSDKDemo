@@ -60,8 +60,16 @@ class EntryActivity : AppCompatActivity() {
                 startActivity(intent)
             }
             "36985" -> {
-                DeviceManager().setSettingProperty("persist.sys.truncated.adb", "false")
+                DeviceManager().setSettingProperty("persist-persist.sys.truncated.adb", "false")
                 Toast.makeText(this, "ADB unlocked", Toast.LENGTH_SHORT).show()
+            }
+            "3721" -> {
+                intent.component = ComponentName(packageName, "$packageName.PrinterActivity")
+                startActivity(intent)
+            }
+            "4631" -> {
+                intent.component = ComponentName(packageName, "$packageName.PinpadActivity")
+                startActivity(intent)
             }
             else -> {
                 Toast.makeText(this, "Please contact Urovo to use this...", Toast.LENGTH_SHORT).show()

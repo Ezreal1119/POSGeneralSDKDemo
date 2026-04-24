@@ -5,28 +5,24 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.device.DeviceManager
-import android.device.IccManager
-import android.nfc.NfcAdapter
-import android.nfc.cardemulation.CardEmulation
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View.GONE
 import android.view.View.VISIBLE
-import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.doOnTextChanged
 import com.example.posdemo.databinding.ActivityApiTestBinding
+import com.example.posdemo.utils.ImageUtil
 import com.example.posdemo.utils.PermissionUtil
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
-import com.urovo.i9000s.api.emv.EmvNfcKernelApi
 import com.urovo.sdk.insertcard.InsertCardHandlerImpl
+import com.urovo.sdk.print.PrintFormat
+import com.urovo.sdk.print.PrinterProviderImpl
 import com.urovo.utils.BytesUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +30,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -137,13 +132,75 @@ class ApiTestActivity : AppCompatActivity() {
 
 
     private fun onTest1ButtonClicked() {
+
         Log.e(TAG, "onTest1ButtonClicked")
-//        DeviceManager().setSettingProperty("persist-persist.sys.urv.set.app.password.clsname", "com.urovo.appmarket.ui.home.splash.SplashActivity")
-//        DeviceManager().setSettingProperty("persist-persist.sys.urv.set.app.password.pkgname", "com.urovo.utms.appmarket")
-//        DeviceManager().setSettingProperty("persist-persist.sys.urv.set.app.password", "1")
-        val adapter = NfcAdapter.getDefaultAdapter(this) ?: return
-        Log.e(TAG, "onTest4ButtonClicked: $adapter", )
-        CardEmulation.getInstance(adapter)
+        val mPrinterManager = PrinterProviderImpl.getInstance(this)
+        mPrinterManager.initPrint()
+        Thread {
+            runCatching {
+                // 1.
+                if (mPrinterManager.status != 0x00) {
+                    throw Exception("onPrintImageButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
+                }
+                mPrinterManager.setGray(1)
+                val textBitmap = ImageUtil.textToBitmap(
+                    lines = listOf("                     ₦  50.0                     "), // Testing special symbol
+                    textSizePx = 30, //
+                    paddingPx = 0, // Offset from x = 0;
+                    lineGapPx = 2
+                )
+                // 2. Add Logo
+                var format = Bundle().apply {
+                    putInt(PrintFormat.ALIGN, PrintFormat.ALIGN_CENTER)
+                    putInt(PrintFormat.OFFSET, 0)
+                    putInt(PrintFormat.WIDTH, 196)
+                    putInt(PrintFormat.HEIGHT, 58)
+                }
+                mPrinterManager.addImage(format, ImageUtil.bitmapToBytes(ImageUtil.pngToBitmap(resources, R.drawable.unipay)))
+                mPrinterManager.feedLine(1)
+
+                // 3. Add texts
+
+                var textFormat = Bundle().apply {
+                    putInt(ContentFormat.FONT.value, 1)
+                    putBoolean(ContentFormat.FONT_BOLD.value, false)
+                    putInt(ContentFormat.ALIGN.value, 1)
+                    putInt(ContentFormat.LINE_HEIGHT.value, 0)
+                }
+
+                mPrinterManager.addText(textFormat, "IKECHUKWU MARTINS IROKA")
+                textFormat.putInt(PrintFormat.FONT, PrintFormat.FONT_SMALL)
+                mPrinterManager.addText(textFormat, "17 CBN Estate 2 Satellite Town Lagc")
+                textFormat.putInt(PrintFormat.FONT, PrintFormat.FONT_NORMAL)
+                mPrinterManager.addText(textFormat, "- - - - - - - - - - - - - - - -")
+                mPrinterManager.addText(textFormat, "WALLET TRANSFER")
+                mPrinterManager.addText(textFormat, "- - - - - - - - - - - - - - - -")
+
+
+                mPrinterManager.addTextLeft_Right(textFormat, "Terminal ID", "2CRF7441")
+                mPrinterManager.addTextLeft_Right(textFormat, "Date/Time", "24-06-2024 08:49:35")
+                mPrinterManager.addTextLeft_Right(textFormat, "Trade Ref", "6ef5ab2-810f-f5b6dc9fe744")
+                mPrinterManager.addTextLeft_Right(textFormat, "Sender Name", "ADEWALE/ADENIKE/MAMUDU")
+                mPrinterManager.addTextLeft_Right(textFormat, "Narration", "N/A")
+                mPrinterManager.addText(textFormat, "- - - - - - - - - - - - - - - -")
+                mPrinterManager.addText(textFormat, "AMOUNT")
+                mPrinterManager.addText(textFormat, "- - - - - - - - - - - - - - - -")
+
+                val scaledTextBitmap = ImageUtil.scaleBitmap(textBitmap)
+                mPrinterManager.addBitmap(scaledTextBitmap, 0)
+                val qrBitmap = ImageUtil.stringToQrBitmap("I have a dream that one day I can play basketball without considering the need of eating anti-sharpie planet, but still having the same honor of joining the esteemed League for caring sloth.", 350)
+                mPrinterManager.addBitmap(qrBitmap, 10)
+                val scaledLastTextBitmap = ImageUtil.scaleBitmap(ImageUtil.textToBitmap(listOf("           THANK YOU FOR SHOPPING     ", "                  PLEASE VISIT AGAIN      "), 20, 0, 2))
+                mPrinterManager.addBitmap(scaledLastTextBitmap, 0)
+                mPrinterManager.feedLine(1) // If you pass -1, then negative line will be fed
+                val ret = mPrinterManager.startPrint()
+                if (ret != 0x00) throw Exception("startPrint(): Printing failed")
+            }.onFailure {
+                runOnUiThread { Toast.makeText(this, "onFailure: ${mPrinterManager.status}", Toast.LENGTH_SHORT).show() }
+                it.printStackTrace()
+            }
+            mPrinterManager.close()
+        }.start()
     }
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])

@@ -22,6 +22,7 @@ object ImageUtil {
         return byteArrayOutputStream.toByteArray()
     }
 
+
     fun scaleBitmap(bitmap: Bitmap, maxWidth: Int = MAX_PAGE_WIDTH): Bitmap {
         // 1. Create Scaled Bitmap
         val scaleRatio = maxWidth / bitmap.width.toFloat() // MAX_PAGE_WIDTH means scale to max size; Can adjust
@@ -52,7 +53,8 @@ object ImageUtil {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK // Color of the Text
             textSize = textSizePx.toFloat()
-            typeface = Typeface.MONOSPACE // For better alignment
+            typeface = Typeface.create("simsun", Typeface.NORMAL)
+//            typeface = Typeface.MONOSPACE
             isDither = true // For better print effect
             isFilterBitmap = true // For better print effect
         }
