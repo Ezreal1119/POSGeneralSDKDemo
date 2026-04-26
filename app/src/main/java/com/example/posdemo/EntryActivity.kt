@@ -13,7 +13,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doOnTextChanged
 import com.example.posdemo.databinding.ActivityEntryBinding
+import com.example.posdemo.printers.WebPrintActivity
 
+const val START_PRINT_SERVICE = "startPrintService"
 class EntryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEntryBinding
@@ -23,6 +25,7 @@ class EntryActivity : AppCompatActivity() {
         binding = ActivityEntryBinding.inflate(layoutInflater)
         setContentView(binding.root)
         hideNavigationBar()
+        handleDeepLink(intent)
 
         binding.btnEnter.setOnClickListener { onEnterButtonClicked() }
         binding.etEnterCode.doOnTextChanged { text, _, _, _ ->
@@ -74,6 +77,26 @@ class EntryActivity : AppCompatActivity() {
             else -> {
                 Toast.makeText(this, "Please contact Urovo to use this...", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleDeepLink(intent)
+    }
+
+    // <-------------------Helper methods-------------------> //
+
+    private fun handleDeepLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme == "wsprint" && data.host == "open_printer") {
+            val intent = Intent(this, WebPrintActivity::class.java).apply {
+                if (data.getQueryParameter("autostart") == "true") {
+                    putExtra(START_PRINT_SERVICE, true)
+                }
+            }
+            startActivity(intent)
         }
     }
 

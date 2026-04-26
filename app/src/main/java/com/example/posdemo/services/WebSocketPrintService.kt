@@ -11,17 +11,23 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Binder
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import com.example.posdemo.ContentFormat
 import com.example.posdemo.R
+import com.example.posdemo.utils.DeviceInfoUtil
+import com.urovo.sdk.print.PrinterProviderImpl
 import com.urovo.utils.BytesUtil
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
+import org.json.JSONObject
 import java.net.InetSocketAddress
 import java.util.UUID
 
@@ -36,6 +42,12 @@ class WebSocketPrintService : Service() {
         private val SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         private const val PORT_8080 = 8080
         var isRunning = false
+
+        private val imageFormat = Bundle().apply {
+            putInt(ContentFormat.HEIGHT.value, 300)
+            putInt(ContentFormat.WIDTH.value, 300)
+            putInt(ContentFormat.OFFSET.value, 35)
+        }
 
 
         fun start(context: Context) {
@@ -66,6 +78,7 @@ class WebSocketPrintService : Service() {
     @Volatile private var server: WebSocketPrinterServer? = null
     private val binder = LocalBinder()
     private var listener: WebSocketPrinterServiceListener? = null
+    private val mPrinterManager = PrinterProviderImpl.getInstance(this)
 
     override fun onCreate() {
         super.onCreate()
@@ -134,7 +147,7 @@ class WebSocketPrintService : Service() {
         val notif = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("WebSocket Print Service is running...")
-            .setContentText("WebSocket: ws://127.0.0.1:$PORT_8080/print")
+            .setContentText("ws://${DeviceInfoUtil.getWifiIpv4(this)}:$PORT_8080/print")
             .setOngoing(true)
             .build()
         startForeground(NOTIF_ID, notif)
@@ -142,7 +155,10 @@ class WebSocketPrintService : Service() {
 
     @Synchronized
     private fun startWebSocketIfNeeded() {
-        if (server != null) return
+        if (server != null) {
+            Log.e("Patrick", "server already running")
+            return
+        }
         server = WebSocketPrinterServer(PORT_8080, this) { cmd ->
             Thread {
                 var socket: BluetoothSocket? = null
@@ -151,8 +167,25 @@ class WebSocketPrintService : Service() {
                     val device = adapter.getRemoteDevice(MAC_SIMULATE_PRINTER)
                     socket = device.createRfcommSocketToServiceRecord(SPP_UUID).apply { connect() }
                     val os = socket.outputStream
-                    os.write(BytesUtil.hexString2Bytes(cmd))
-                    os.flush()
+
+                    if (cmd.trim().startsWith("{")) {
+                        val json = JSONObject(cmd)
+                        val type = json.optString("type")
+                        if (type !in listOf("esc", "cpcl", "image")) {
+                            throw IllegalArgumentException("Unsupported command type: $type")
+                        }
+
+                        val base64 = json.optString("data")
+                        val imageBytes = Base64.decode(base64, Base64.DEFAULT)
+                        mPrinterManager.initPrint()
+                        mPrinterManager.setGray(0)
+                        mPrinterManager.addImage(imageFormat, imageBytes)
+                        mPrinterManager.feedLine(2)
+                        mPrinterManager.startPrint()
+                    } else {
+                        os.write(BytesUtil.hexString2Bytes(cmd))
+                        os.flush()
+                    }
                 }.onSuccess {
                     Log.e("Patrick", "startWebSocketIfNeeded: Printing")
                 }.onFailure {
@@ -162,6 +195,21 @@ class WebSocketPrintService : Service() {
                 socket?.close()
             }.start()
         }.apply { start() }
+    }
+
+    private fun resolvePrintHex(cmd: String): String {
+        val text = cmd.trim()
+
+        return if (text.startsWith("{")) {
+            val json = JSONObject(text)
+            val type = json.optString("type")
+            when (type) {
+                "esc", "cpcl", "image" -> json.optString("data")
+                else -> throw IllegalArgumentException("Unsupported command type: $type")
+            }
+        } else {
+            text
+        }
     }
 
 

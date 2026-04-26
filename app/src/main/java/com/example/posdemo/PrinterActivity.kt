@@ -21,6 +21,7 @@ import com.example.posdemo.btprinter.PERMISSIONS_BT
 import com.example.posdemo.btprinter.PERMISSION_REQ_BT
 import com.example.posdemo.btprinter.SppBluetoothPrinterActivity
 import com.example.posdemo.databinding.ActivityPrinterBinding
+import com.example.posdemo.printers.WebPrintActivity
 import com.example.posdemo.printers.WifiPrinterActivity
 import com.example.posdemo.services.WebSocketPrintService
 import com.example.posdemo.services.WebSocketPrinterServiceListener
@@ -33,13 +34,14 @@ import com.hivemq.client.mqtt.MqttClient
 import com.hivemq.client.mqtt.MqttGlobalPublishFilter
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient
+import com.urovo.sdk.print.PrintFormat
 import com.urovo.sdk.print.PrinterProviderImpl
 import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 // implementation("com.google.zxing:core:3.5.3")
 
-class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
+class PrinterActivity : AppCompatActivity() {
 
     companion object {
         private const val PERMISSION_REQ_BT_NOTIFICATION = 1002
@@ -65,7 +67,6 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
                     "-------------------------------\n" +
                     "    THANK YOU FOR SHOPPING     \n" +
                     "       PLEASE VISIT AGAIN      \n"
-        private const val HTML_WEB_SOCKET_FILE_NAME = "web_socket_demo.html"
         private val textFormat = Bundle().apply {
             putInt(ContentFormat.FONT.value, 1)
             putBoolean(ContentFormat.FONT_BOLD.value, false)
@@ -108,39 +109,6 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
             }
         }
     }
-    private var service: WebSocketPrintService? = null
-    private var bound = false
-    private val conn = object : ServiceConnection {
-        override fun onServiceConnected(
-            name: ComponentName?,
-            binder: IBinder?
-        ) {
-            service = (binder as WebSocketPrintService.LocalBinder).getService()
-            service?.setListener(this@PrinterActivity)
-            bound = true
-        }
-
-        override fun onServiceDisconnected(name: ComponentName?) {
-            service?.setListener(null)
-            service = null
-            bound = false
-        }
-    }
-
-    override fun onServiceStart() {
-        runOnUiThread {
-            binding.btnStartWebSocketPrinter.isEnabled = false
-            binding.btnStopWebSocketPrinter.isEnabled = true
-        }
-    }
-
-    override fun onServiceDestroy() {
-        runOnUiThread {
-            binding.btnStartWebSocketPrinter.isEnabled = true
-            binding.btnStopWebSocketPrinter.isEnabled = false
-        }
-    }
-
 
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -158,39 +126,22 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
             btnPrintImage.setOnClickListener { onPrintImageButtonClicked() }
             btnPrintImageFromPhoto.setOnClickListener { onPrintImageFromPhotoButtonClicked() }
             btnPrintBitmapCanvas.setOnClickListener { onPrintBitmapCanvasButtonClicked() }
+            btnPrintHybrid.setOnClickListener { onPrintHybridButtonClicked() }
             btnLineFeed.setOnClickListener { onLineFeedButtonClicked() }
             btnSppBluetoothPrinter.setOnClickListener { onSppBluetoothPrinterButtonClicked() }
             btnWifiPrinter.setOnClickListener { onWifiPrinterButtonClicked() }
-            btnStartWebSocketPrinter.setOnClickListener { onStartWebSocketPrinterButtonClicked() }
-            btnOpenPrintWebLocal.setOnClickListener { onOpenPrintWebLocalButtonClicked() }
-            btnOpenPrintWebCloud.setOnClickListener { onOpenPrintWebCloudButtonClicked() }
-            btnStopWebSocketPrinter.setOnClickListener { onStopWebSocketPrinterButtonClicked() }
+            btnWebPrinter.setOnClickListener { onWebPrinterButtonClicked() }
         }
     }
 
     override fun onStart() {
         super.onStart()
         mqttSubscribeAndConnect(BuildConfig.MQTT_HOST)
-        if (WebSocketPrintService.isRunning) {
-            WebSocketPrintService.bind(this, conn)
-        }
-        binding.btnStartWebSocketPrinter.isEnabled = !WebSocketPrintService.isRunning
-        binding.btnStopWebSocketPrinter.isEnabled = WebSocketPrintService.isRunning
     }
 
     override fun onStop() {
         super.onStop()
         mqttDisconnect()
-        runCatching {
-            if (bound) {
-                service?.setListener(null)
-                service = null
-                unbindService(conn)
-                bound = false
-            }
-        }.onFailure {
-            it.printStackTrace()
-        }
     }
 
     override fun onRequestPermissionsResult(
@@ -467,6 +418,72 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
     }
 
 
+    private fun onPrintHybridButtonClicked() {
+        mPrinterManager.initPrint()
+        Thread {
+            runCatching {
+                // 1.
+                if (mPrinterManager.status != 0x00) {
+                    throw Exception("onPrintImageButtonClicked: Printer not ready - statusCode=${mPrinterManager.status}")
+                }
+                mPrinterManager.setGray(1)
+                val textBitmap = ImageUtil.textToBitmap(
+                    lines = listOf("                     ₦  50.0                     "), // Testing special symbol
+                    textSizePx = 30, //
+                    paddingPx = 0, // Offset from x = 0;
+                    lineGapPx = 2
+                )
+                // 2. Add Logo
+                var format = Bundle().apply {
+                    putInt(PrintFormat.ALIGN, PrintFormat.ALIGN_CENTER)
+                    putInt(PrintFormat.OFFSET, 0)
+                    putInt(PrintFormat.WIDTH, 196)
+                    putInt(PrintFormat.HEIGHT, 58)
+                }
+                mPrinterManager.addImage(format, ImageUtil.bitmapToBytes(ImageUtil.pngToBitmap(resources, R.drawable.unipay)))
+                mPrinterManager.feedLine(1)
+
+                // 3. Add texts
+                var textFormat = Bundle().apply {
+                    putInt(ContentFormat.FONT.value, 1)
+                    putBoolean(ContentFormat.FONT_BOLD.value, false)
+                    putInt(ContentFormat.ALIGN.value, 1)
+                    putInt(ContentFormat.LINE_HEIGHT.value, 0)
+                }
+                mPrinterManager.addText(textFormat, "IKECHUKWU MARTINS IROKA")
+                textFormat.putInt(PrintFormat.FONT, PrintFormat.FONT_SMALL)
+                mPrinterManager.addText(textFormat, "17 CBN Estate 2 Satellite Town Lagc")
+                textFormat.putInt(PrintFormat.FONT, PrintFormat.FONT_NORMAL)
+                mPrinterManager.addText(textFormat, "- - - - - - - - - - - - - - - -")
+                mPrinterManager.addText(textFormat, "WALLET TRANSFER")
+                mPrinterManager.addText(textFormat, "- - - - - - - - - - - - - - - -")
+                mPrinterManager.addTextLeft_Right(textFormat, "Terminal ID", "2CRF7441")
+                mPrinterManager.addTextLeft_Right(textFormat, "Date/Time", "24-06-2024 08:49:35")
+                mPrinterManager.addTextLeft_Right(textFormat, "Trade Ref", "6ef5ab2-810f-f5b6dc9fe744")
+                mPrinterManager.addTextLeft_Right(textFormat, "Sender Name", "ADEWALE/ADENIKE/MAMUDU")
+                mPrinterManager.addTextLeft_Right(textFormat, "Narration", "N/A")
+                mPrinterManager.addText(textFormat, "- - - - - - - - - - - - - - - -")
+                mPrinterManager.addText(textFormat, "AMOUNT")
+                mPrinterManager.addText(textFormat, "- - - - - - - - - - - - - - - -")
+
+                val scaledTextBitmap = ImageUtil.scaleBitmap(textBitmap)
+                mPrinterManager.addBitmap(scaledTextBitmap, 0)
+                val qrBitmap = ImageUtil.stringToQrBitmap("I have a dream that one day I can play basketball without considering the need of eating anti-sharpie planet, but still having the same honor of joining the esteemed League for caring sloth.", 350)
+                mPrinterManager.addBitmap(qrBitmap, 10)
+                val scaledLastTextBitmap = ImageUtil.scaleBitmap(ImageUtil.textToBitmap(listOf("           THANK YOU FOR SHOPPING     ", "                  PLEASE VISIT AGAIN      "), 20, 0, 2))
+                mPrinterManager.addBitmap(scaledLastTextBitmap, 0)
+                mPrinterManager.feedLine(1) // If you pass -1, then negative line will be fed
+                val ret = mPrinterManager.startPrint()
+                if (ret != 0x00) throw Exception("startPrint(): Printing failed")
+            }.onFailure {
+                runOnUiThread { Toast.makeText(this, "onFailure: ${mPrinterManager.status}", Toast.LENGTH_SHORT).show() }
+                it.printStackTrace()
+            }
+            mPrinterManager.close()
+        }.start()
+    }
+
+
     private fun onLineFeedButtonClicked() {
         // if you feedLine(-1), then no line will be fed at all
         mPrinterManager.initPrint()
@@ -517,79 +534,7 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
     }
 
 
-    private fun onStartWebSocketPrinterButtonClicked() {
-        if(!PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS) + PERMISSIONS_BT, PERMISSION_REQ_BT_NOTIFICATION)) {
-            Toast.makeText(this, "Please grant Permission first", Toast.LENGTH_SHORT).show()
-            return
-        }
-        runCatching {
-            WebSocketPrintService.start(this)
-            WebSocketPrintService.bind(this, conn)
-        }.onFailure {
-            Toast.makeText(this, "Server started failed", Toast.LENGTH_SHORT).show()
-            it.printStackTrace()
-        }
-    }
 
-
-    /*
-        1. Register a FileProvider (It's an Interface for other APP to access the File asset of this APP.
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
-
-        <?xml version="1.0" encoding="utf-8"?>
-        <paths>
-            <cache-path name="cache" path="." />
-        </paths>
-
-        2. Create a Uri Interface using FileProvider, this is the requirement after Android 8
-        (The other APP can only access the File asset of this APP using FileProvider API)
-     */
-    private fun onOpenPrintWebLocalButtonClicked() {
-        val file = FileUtil.copyAssetToCacheIfNeeded(this, HTML_WEB_SOCKET_FILE_NAME)
-        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "text/html")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        if (intent.resolveActivity(packageManager) != null) {
-            startActivity(intent)
-        } else {
-            // This means no package can handle this Intent(with action=ACTION_VIEW)
-            Toast.makeText(this, "No browser found", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun onOpenPrintWebCloudButtonClicked() {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse("https://websocket-print.18807737955-70f.workers.dev")
-        }
-
-        if (intent.resolveActivity(packageManager) != null) {
-            startActivity(intent)
-        } else {
-            Toast.makeText(this, "No browser found", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun onStopWebSocketPrinterButtonClicked() {
-        runCatching {
-            unbindService(conn)
-            WebSocketPrintService.stop(this)
-        }.onSuccess {
-            Toast.makeText(this, "Server stopped successfully", Toast.LENGTH_SHORT).show()
-        }.onFailure {
-            Toast.makeText(this, "Server stopped failed", Toast.LENGTH_SHORT).show()
-            it.printStackTrace()
-        }
-    }
 
     private fun onWifiPrinterButtonClicked() {
         val wifiManager = getSystemService(WIFI_SERVICE) as WifiManager
@@ -599,6 +544,12 @@ class PrinterActivity : AppCompatActivity(), WebSocketPrinterServiceListener {
         }
         startActivity(Intent(this, WifiPrinterActivity::class.java))
     }
+
+
+    private fun onWebPrinterButtonClicked() {
+        startActivity(Intent(this, WebPrintActivity::class.java))
+    }
+
 
 
     // <-----------------------MQTT print-----------------------> //

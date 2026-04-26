@@ -153,6 +153,9 @@ class PinpadActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         encryptedDataCache = null
+        Toast.makeText(this, "${ScreenUtil.getRealScreenWidth(this)} * ${ScreenUtil.getRealScreenHeight(this)}", Toast.LENGTH_SHORT).show()
+        Log.e(TAG, "GetRealWidth: ${ScreenUtil.getRealScreenWidth(this)}; GetRealHeight: ${ScreenUtil.getRealScreenHeight(this)}")
+        Log.e(TAG, "GetWidth: ${ScreenUtil.getScreenWidth(this)}; GetHeight: ${ScreenUtil.getScreenHeight(this)}")
     }
 
 

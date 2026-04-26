@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+
+
+        <TextView
+            android:id="@+id/tvPrinterTitle"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:textSize="25dp"
+            android:text="Printer Demo"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:background="@drawable/border"
+            android:visibility="visible"
+            android:layout_margin="7dp"/>
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="7dp"
+                android:background="@drawable/border"
+                android:layout_margin="5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnStartWebSocketPrinter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Start WebSocket"
+                        android:textSize="12sp"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnStopWebSocketPrinter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Stop WebSocket"
+                        android:textSize="12sp"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="10dp"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    >
+
+
+                    <Button
+                        android:id="@+id/btnOpenPrintWebLocal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Open Print Web Local"
+                        android:textSize="12sp"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+                    <Button
+                        android:id="@+id/btnOpenPrintWebCloud"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Open Print Web Cloud"
+                        android:textSize="12sp"
+                        android:layout_margin="1dp"
+                        android:padding="0dp"/>
+
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvPrintNotes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnInstallPrintService"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Install Print Service (For Native Print Demo)"
+                android:textSize="15sp"
+                android:layout_margin="5dp"
+                android:padding="0dp"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

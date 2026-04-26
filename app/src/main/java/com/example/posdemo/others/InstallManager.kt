@@ -43,7 +43,7 @@ class InstallManager : AppCompatActivity() {
     private val mInstallManager by lazy { InstallManagerImpl.getInstance(this) }
     private var isUmsOrAppMarket = true // true means UMS, false means AppMarket
 
-    private val myInstallApkListener = object: InstallApkListener {
+    private val myInstallApkListener = object : InstallApkListener {
         override fun onInstallFinished(
             packageName: String?,
             returnCode: Int,

@@ -184,64 +184,6 @@
                 android:text="Line Feed"
                 android:textSize="20sp" />
 
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Button
-                    android:id="@+id/btnStartWebSocketPrinter"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Start WebSocket"
-                    android:textSize="12sp"
-                    android:layout_margin="1dp"
-                    android:padding="0dp"/>
-
-                <Button
-                    android:id="@+id/btnStopWebSocketPrinter"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Stop WebSocket"
-                    android:textSize="12sp"
-                    android:layout_margin="1dp"
-                    android:padding="0dp"/>
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-
-                <Button
-                    android:id="@+id/btnOpenPrintWebLocal"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Open Print Web Local"
-                    android:textSize="12sp"
-                    android:layout_margin="1dp"
-                    android:padding="0dp"/>
-
-                <Button
-                    android:id="@+id/btnOpenPrintWebCloud"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Open Print Web Cloud"
-                    android:textSize="12sp"
-                    android:layout_margin="1dp"
-                    android:padding="0dp"/>
-
-
-            </LinearLayout>
-
             <Button
                 android:id="@+id/btnSppBluetoothPrinter"
                 android:layout_width="match_parent"
@@ -255,6 +197,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="WiFi Printer"
+                android:textSize="20sp"/>
+
+            <Button
+                android:id="@+id/btnWebPrinter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Web Printer"
                 android:textSize="20sp"/>
 
 

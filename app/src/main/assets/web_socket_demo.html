@@ -1,140 +1,398 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebSocket Printer Client - Patrick</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Printer</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 16px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
-    input, textarea { width: 100%; padding: 10px; font-size: 14px; box-sizing: border-box; }
-    input[type="text"] { flex: 1; min-width: 320px; }
-    button { padding: 10px 16px; font-size: 14px; cursor: pointer; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .status { padding: 10px; border-radius: 6px; margin-top: 8px; }
-    .ok { background: #e7f7ee; border: 1px solid #bde5c8; }
-    .bad { background: #fdeaea; border: 1px solid #f1b5b5; }
-    .log { white-space: pre-wrap; word-break: break-word; background: #f6f6f6; border: 1px solid #ddd; padding: 10px; border-radius: 6px; min-height: 140px; }
-    label { font-weight: 600; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 5px auto;
+      padding: 10px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+      font-size: 30px;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+    .title-open-app {
+      margin-bottom: 12px;
+    }
+    .title-open-app button {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      background-color: #00c853;
+      font-size: 20px;
+    }
+    .title-open-app button:hover {
+      background-color: #009624;
+    }
+    .print-test-title {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .input-group {
+      margin: 12px 0;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #6200EE;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #3700B3;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .status.connected {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .status.disconnected {
+      background-color: #f44336;
+      color: white;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: nowrap;
+    }
+    .button-group button {
+      flex: 1 1 0;
+      margin: 0;
+    }
+    .button-group-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .button-group-vertical button {
+      width: 100%;
+      margin: 0;
+    }
+    .legacy-send {
+      text-align: center;
+    }
+    .legacy-send textarea {
+      text-align: left;
+    }
+    .legacy-send button {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 8px 0 0 0;
+    }
+    .page-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      margin: 20px 0 0 0;
+    }
   </style>
 </head>
 <body>
-  <h2>WebSocket Printer - Patrick</h2>
+  <div class="container">
+    <h1>WebSocket Printer</h1>
 
-  <div class="row">
-    <label for="wsUrl" style="min-width: 170px;">WebSocket URL:</label>
-    <input id="wsUrl" type="text" value="ws://127.0.0.1:8080/print" />
+    <div class="title-open-app">
+      <button type="button" onclick="window.location.href='wsprint://open_printer'">Open DEMO App</button>
+    </div>
+
+    <div class="input-group">
+      <label for="serverUrl">Server URL:</label>
+      <input type="text" id="serverUrl" value="ws://127.0.0.1:8080/print" placeholder="ws://device-ip:port">
+      <small style="color: #666;">You can change the IP address to the actual Android device IP address if using PC.</small>
+    </div>
+
+    <div class="status disconnected" id="status">Status: Disconnected</div>
+
+    <div class="button-group">
+      <button onclick="connect()" id="btnConnect">Connect</button>
+      <button onclick="disconnect()" id="btnDisconnect" disabled>Disconnect</button>
+    </div>
+
+    <div style="background: #f0f4ff; padding: 10px; border-radius: 8px; margin: 12px 0;">
+      <h3 class="print-test-title">ESC/POS Printing Test</h3>
+      <div class="button-group-vertical">
+        <button onclick="sendTestPrint()" id="btnTest" disabled>Print Receipt</button>
+      </div>
+      <div class="input-group legacy-send">
+        <textarea id="customData" rows="5" placeholder="Enter print command as a hex string"></textarea>
+        <button onclick="sendCustomData()" id="btnSend" disabled>Send Custom Data</button>
+      </div>
+    </div>
+
+    <hr style="margin: 16px 0; border: none; border-top: 2px solid #eee;">
+
+    <div style="background: #f0f4ff; padding: 10px; border-radius: 8px; margin: 12px 0;">
+      <h3 class="print-test-title">Image Printing Test</h3>
+      <div class="input-group">
+        <input type="file" id="imageFile" accept="image/*" onchange="previewImage()">
+        <canvas id="imagePreview" style="max-width: 100%; border: 1px solid #ddd; margin-top: 6px; display: none;"></canvas>
+      </div>
+      <div class="input-group legacy-send">
+        <button type="button" onclick="printImage()" id="btnPrintImage" disabled>Print Image</button>
+      </div>
+    </div>
+
+    <p class="page-footer">© PatrickXu</p>
   </div>
 
-  <div class="row">
-    <button id="btnConnect" onclick="connectWs()">Connect</button>
-    <button id="btnDisconnect" onclick="disconnectWs()" disabled>Disconnect</button>
-  </div>
+  <script>
+    let ws = null;
 
-  <div id="status" class="status bad">Status: Disconnected</div>
-
-  <hr />
-
-  <div class="row">
-    <button id="btnPrint" onclick="printHexString()" disabled>Print Receipt (ESC/POS)</button>
-  </div>
-
-  <div class="row">
-    <label>Log:</label>
-  </div>
-  <div id="log" class="log">Ready.</div>
-
-<script>
-  let ws = null;
-
-  // Keep the data inside the file (not user-editable)
-  const PRINT_HEX_STRING = `1B401B61011B45012020202020202057414C4D41525420535550455243454E54455220202020200A2031323334204D41494E205354524545542C20414E59544F574E2C205553410A2020202020202054454C3A202835353529203132332D3435363720202020200A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A51545920204954454D2020202020202020205052494345202020544F54414C0A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A20312020204D494C4B20312047414C20202024332E343920202024332E34390A20322020204252454144204C4F414620202024312E393920202024332E39380A20312020204547475320444F5A454E20202024322E373920202024322E37390A20332020204150504C45532020202020202024302E393920202024322E39370A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A535542544F54414C20202020202020202020202020202020202431332E32330A5441582028382E3235252920202020202020202020202020202024312E30390A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A544F54414C20202020202020202020202020202020202020202431342E33320A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A434153482020202020202020202020202020202020202020202432302E30300A4348414E4745202020202020202020202020202020202020202024352E36380A2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D2D0A202020205448414E4B20594F5520464F522053484F5050494E4720202020200A20202020202020504C4541534520564953495420414741494E2020202020200A1B45001B61005369676E61747572653A205061747269636B2058750A1B6102446174653A20323032362D30322D30370A0A0A`;
-
-  function setStatus(connected, extra = "") {
-    const s = document.getElementById("status");
-    const btnConnect = document.getElementById("btnConnect");
-    const btnDisconnect = document.getElementById("btnDisconnect");
-    const btnPrint = document.getElementById("btnPrint");
-
-    if (connected) {
-      s.className = "status ok";
-      s.textContent = "Status: Connected" + (extra ? (" — " + extra) : "");
-      btnConnect.disabled = true;
-      btnDisconnect.disabled = false;
-      btnPrint.disabled = false;
-    } else {
-      s.className = "status bad";
-      s.textContent = "Status: Disconnected" + (extra ? (" — " + extra) : "");
-      btnConnect.disabled = false;
-      btnDisconnect.disabled = true;
-      btnPrint.disabled = true;
-    }
-  }
-
-  function log(msg) {
-    const el = document.getElementById("log");
-    const ts = new Date().toLocaleTimeString();
-    el.textContent += `\n[${ts}] ${msg}`;
-    el.scrollTop = el.scrollHeight;
-  }
-
-  function connectWs() {
-    const url = document.getElementById("wsUrl").value.trim();
-    if (!url) return alert("Please input WebSocket URL");
-
-    try {
-      log("Connecting to: " + url);
-      ws = new WebSocket(url);
-
-      ws.onopen = () => {
-        setStatus(true);
-        log("Connected.");
-      };
-
-      ws.onclose = (e) => {
-        log(`Disconnected. code=${e.code}, reason=${e.reason || "(none)"}`);
-        setStatus(false);
-        ws = null;
-      };
-
-      ws.onerror = (e) => {
-        log("WebSocket error.");
-        setStatus(false, "error");
-      };
-
-      ws.onmessage = (e) => {
-        log("Received: " + e.data);
-      };
-    } catch (err) {
-      log("Connect failed: " + err.message);
-      setStatus(false, "connect failed");
-    }
-  }
-
-  function disconnectWs() {
-    if (!ws) return;
-    log("Closing connection...");
-    ws.close(1000, "client disconnect");
-  }
-
-  function printHexString() {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      alert("WebSocket not connected");
-      return;
+    function updatePrintImageButtonState() {
+      const btnPrintImage = document.getElementById("btnPrintImage");
+      const fileInput = document.getElementById("imageFile");
+      const isConnected = !!ws && ws.readyState === WebSocket.OPEN;
+      const hasImage = !!fileInput && !!fileInput.files && fileInput.files.length > 0;
+      btnPrintImage.disabled = !(isConnected && hasImage);
     }
 
-    const hex = (PRINT_HEX_STRING || "").trim();
-    if (!hex) {
-      alert("PRINT_HEX_STRING is empty in the HTML file.");
-      return;
+    function updateStatus(connected) {
+      const status = document.getElementById("status");
+      const btnConnect = document.getElementById("btnConnect");
+      const btnDisconnect = document.getElementById("btnDisconnect");
+      const btnTest = document.getElementById("btnTest");
+      const btnSend = document.getElementById("btnSend");
+
+      if (connected) {
+        status.textContent = "Status: Connected";
+        status.className = "status connected";
+        btnConnect.disabled = true;
+        btnDisconnect.disabled = false;
+        btnTest.disabled = false;
+        btnSend.disabled = false;
+      } else {
+        status.textContent = "Status: Disconnected";
+        status.className = "status disconnected";
+        btnConnect.disabled = false;
+        btnDisconnect.disabled = true;
+        btnTest.disabled = true;
+        btnSend.disabled = true;
+      }
+      updatePrintImageButtonState();
     }
 
-    const payload = hex.replace(/\s+/g, "");
-    ws.send(payload);
-    log("Sent hex string (" + (payload.length / 2) + " bytes): " + payload);
-  }
+    function connect() {
+      const url = document.getElementById("serverUrl").value;
 
-  setStatus(false);
-</script>
+      try {
+        ws = new WebSocket(url);
+
+        ws.onopen = function() {
+          updateStatus(true);
+        };
+
+        ws.onclose = function() {
+          updateStatus(false);
+          ws = null;
+        };
+
+        ws.onerror = function() {
+          updateStatus(false);
+        };
+
+        ws.onmessage = function() {};
+      } catch (error) {
+        updateStatus(false);
+      }
+    }
+
+    function disconnect() {
+      if (ws) {
+        ws.close();
+      }
+    }
+
+    function sendData(data) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      try {
+        ws.send(data);
+      } catch (error) {}
+    }
+
+    function sendHexData(hexString) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      try {
+        ws.send(hexString);
+      } catch (error) {}
+    }
+
+    function sendTestPrint() {
+      let hexData = "";
+
+      const content2Inch =
+        "       WALMART SUPERCENTER     \n" +
+        " 1234 MAIN STREET, ANYTOWN, USA\n" +
+        "       TEL: (555) 123-4567     \n" +
+        "-------------------------------\n" +
+        "QTY  ITEM         PRICE   TOTAL\n" +
+        "-------------------------------\n" +
+        " 1   MILK 1 GAL   $3.49   $3.49\n" +
+        " 2   BREAD LOAF   $1.99   $3.98\n" +
+        " 1   EGGS DOZEN   $2.79   $2.79\n" +
+        " 3   APPLES       $0.99   $2.97\n" +
+        "-------------------------------\n" +
+        "SUBTOTAL                 $13.23\n" +
+        "TAX (8.25%)               $1.09\n" +
+        "-------------------------------\n" +
+        "TOTAL                    $14.32\n" +
+        "-------------------------------\n" +
+        "CASH                     $20.00\n" +
+        "CHANGE                    $5.68\n" +
+        "-------------------------------\n" +
+        "    THANK YOU FOR SHOPPING     \n" +
+        "       PLEASE VISIT AGAIN      ";
+
+      hexData += "1B40";
+      hexData += "1B6101";
+      hexData += "1B4501";
+      hexData += textToHex(content2Inch);
+      hexData += "0A";
+      hexData += "1B4500";
+      hexData += "1B6100";
+      hexData += textToHex("Signature: Patrick Xu\n");
+      hexData += "1B6102";
+      hexData += textToHex("Date: " + new Date().toLocaleString("en-US") + "\n");
+      hexData += "0A";
+      hexData += "1B6101";
+      hexData += "0A";
+
+      sendHexData(hexData);
+    }
+
+    function textToHex(text) {
+      const encoder = new TextEncoder();
+      const utf8Bytes = encoder.encode(text);
+
+      let hex = "";
+      for (let i = 0; i < utf8Bytes.length; i++) {
+        hex += utf8Bytes[i].toString(16).padStart(2, "0").toUpperCase();
+      }
+      return hex;
+    }
+
+    function sendCustomData() {
+      const data = document.getElementById("customData").value;
+      if (!data) {
+        return;
+      }
+      sendData(data);
+    }
+
+    async function printImage() {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      let command = { type: "image" };
+      const fileInput = document.getElementById("imageFile");
+      if (!fileInput.files || !fileInput.files[0]) {
+        return;
+      }
+      const base64Data = await imageToBase64(fileInput.files[0]);
+      command.data = base64Data;
+      ws.send(JSON.stringify(command));
+    }
+
+    function previewImage() {
+      const fileInput = document.getElementById("imageFile");
+      const canvas = document.getElementById("imagePreview");
+
+      if (!fileInput.files || !fileInput.files[0]) {
+        canvas.style.display = "none";
+        updatePrintImageButtonState();
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const img = new Image();
+
+        img.onload = function() {
+          const maxWidth = 400;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.style.display = "block";
+        };
+
+        img.src = e.target.result;
+      };
+
+      reader.readAsDataURL(file);
+      updatePrintImageButtonState();
+    }
+
+    function imageToBase64(file) {
+      return new Promise(function(resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function() {
+          const base64 = reader.result.split(",")[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
 </body>
 </html>
