@@ -1,5 +1,6 @@
 package com.example.posdemo
 
+import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Intent
 import android.device.DeviceManager
@@ -14,11 +15,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doOnTextChanged
 import com.example.posdemo.databinding.ActivityEntryBinding
 import com.example.posdemo.printers.WebPrintActivity
+import com.example.posdemo.receivers.MyDeviceAdminReceiver
 
 const val START_PRINT_SERVICE = "startPrintService"
 class EntryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEntryBinding
+
+    private lateinit var dpm: DevicePolicyManager
+    private lateinit var admin: ComponentName
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +47,17 @@ class EntryActivity : AppCompatActivity() {
                 true
             }
             false
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        dpm = getSystemService(DevicePolicyManager::class.java)
+        admin = ComponentName(this, MyDeviceAdminReceiver::class.java)
+        if (dpm.isDeviceOwnerApp(packageName)) {
+            val group = getSharedPreferences("mdm", MODE_PRIVATE)
+                .getString("group", "default")
+            Toast.makeText(this, "This app is Device Owner ($group)\nTest: Enter 6759 to lock screen.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -73,6 +89,13 @@ class EntryActivity : AppCompatActivity() {
             "4631" -> {
                 intent.component = ComponentName(packageName, "$packageName.PinpadActivity")
                 startActivity(intent)
+            }
+            "6759" -> {
+                try {
+                    dpm.lockNow()
+                } catch (_: Exception) {
+                    Toast.makeText(this, "ERROR. NOT Device Owner.", Toast.LENGTH_SHORT).show()
+                }
             }
             else -> {
                 Toast.makeText(this, "Please contact Urovo to use this...", Toast.LENGTH_SHORT).show()

@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -11,8 +13,8 @@ android {
         applicationId = "com.example.posdemo"
         minSdk = 30
         targetSdk = 33
-        versionCode = 3
-        versionName = "1.0.26022401"
+        versionCode = 20
+        versionName = "1.0.26042601"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -33,8 +35,8 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
             buildConfigField("String", "MQTT_HOST", "\"39.101.193.145\"")
-            buildConfigField("String", "LIST_OF_POS", "\"SQ68,SQ29M,SQ29MB,SQ29WR,SQ65A,SQ65B,\"")
-            buildConfigField("String", "LIST_OF_PDA", "\"SQ53,SQ53ST,SQ66,SQ58C,SQ58CU,\"")
+            buildConfigField("String", "LIST_OF_POS", "\"SQ68,SQ29M,SQ29MB,SQ29WR,SQ65A,SQ65B\"")
+            buildConfigField("String", "LIST_OF_PDA", "\"SQ53,SQ53ST,SQ66,SQ58C,SQ58CU\"")
         }
         release {
             isMinifyEnabled = false // Minify the naming of the codes
@@ -45,8 +47,8 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("String", "MQTT_HOST", "\"39.101.193.145\"")
-            buildConfigField("String", "LIST_OF_POS", "SQ68,SQ29M,SQ29MB,SQ29WR,SQ65A,SQ65B,")
-            buildConfigField("String", "LIST_OF_PDA", "SQ53,SQ53ST,SQ66,SQ58C,SQ58CU,")
+            buildConfigField("String", "LIST_OF_POS", "\"SQ68,SQ29M,SQ29MB,SQ29WR,SQ65A,SQ65B\"")
+            buildConfigField("String", "LIST_OF_PDA", "\"SQ53,SQ53ST,SQ66,SQ58C,SQ58CU\"")
         }
     }
     compileOptions {
@@ -72,6 +74,16 @@ android {
         aidl = true
     }
 
+    android {
+        applicationVariants.all {
+            outputs.all {
+                val buildType = buildType.name
+                val versionName = versionName
+                (this as BaseVariantOutputImpl).outputFileName =
+                    "PosDemoPatrick_v${versionName}_${buildType}.apk"
+            }
+        }
+    }
 }
 
 dependencies {
