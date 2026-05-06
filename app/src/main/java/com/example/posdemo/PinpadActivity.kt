@@ -1326,6 +1326,7 @@ class PinpadActivity : AppCompatActivity() {
         override fun onConfirm(pinBlock: ByteArray?, isNonePin: Boolean) {
             // This will only be called in the case of PinBlockMKSK
             // pinBlock = f(PIN, PAN, Padding) with encryption using PIN_KEY at keySlot_99
+            Log.e(TAG, "onConfirm: ")
             if (pinBlock == null || isNonePin) {
                 runOnUiThread {
                     Toast.makeText(this@PinpadActivity, "Input is Empty!", Toast.LENGTH_SHORT).show()
@@ -1349,6 +1350,7 @@ class PinpadActivity : AppCompatActivity() {
             // Will be called whenever "Confirm" button is pressed
             // pinBlock = f(PIN, PAN, Padding) with encryption using Dukpt_PIN at keySlot_0
             // Each time KSN will increment
+            Log.e(TAG, "onConfirm_dukpt: ")
             if (pinBlock == null || ksn == null) {
                 runOnUiThread {
                     Toast.makeText(this@PinpadActivity, "Input is Empty!", Toast.LENGTH_SHORT).show()

@@ -1,10 +1,13 @@
 package com.example.posdemo
 
 import android.Manifest
+import android.app.admin.DevicePolicyManager
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.device.DeviceManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Base64
@@ -16,6 +19,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import com.example.posdemo.databinding.ActivityApiTestBinding
+import com.example.posdemo.receivers.MyDeviceAdminReceiver
 import com.example.posdemo.utils.ImageUtil
 import com.example.posdemo.utils.PermissionUtil
 import com.google.android.gms.location.LocationCallback
@@ -425,101 +429,12 @@ class ApiTestActivity : AppCompatActivity() {
 //            Log.e("PSAM", "ERROR", e)
 //        }
 
-        val devMode = Settings.Global.getInt(
+        val componentStr = packageName + "/" + MyDeviceAdminReceiver::class.java.name
+        val componentName = ComponentName.unflattenFromString(componentStr)
+        DeviceManager().setDeviceOwner(componentName)
 
-            contentResolver,
 
-            Settings.Global.DEVELOPMENT_SETTINGS_ENABLED,
 
-            0
-
-        )
-
-        val adbEnabled = Settings.Global.getInt(
-
-            contentResolver,
-
-            Settings.Global.ADB_ENABLED,
-
-            0
-
-        )
-
-        val info = buildString {
-            appendLine("==== DEVELOPER SETTINGS ====")
-
-            appendLine("DEVELOPMENT_SETTINGS_ENABLED = $devMode")
-
-            appendLine("ADB_ENABLED = $adbEnabled")
-
-            appendLine()
-
-            appendLine("Developer Options = ${if (devMode == 1) "ON" else "OFF"}")
-
-            appendLine("USB Debugging = ${if (adbEnabled == 1) "ON" else "OFF"}")
-
-            appendLine("==== ADB / USB STATE ====")
-            appendLine(getProp("init.svc.adbd"))
-            appendLine(getProp("persist.sys.usb.config"))
-            appendLine(getProp("persist.sys.usb.config.udroid"))
-            appendLine(getProp("persist.adb.nonblocking_ffs"))
-            appendLine(getProp("sys.usb.config"))
-            appendLine(getProp("sys.usb.state"))
-            appendLine(getProp("sys.usb.controller"))
-            appendLine(getProp("sys.usb.configfs"))
-
-            appendLine("\n==== DEVELOPER / DEBUG ====")
-            appendLine(getProp("ro.debuggable"))
-            appendLine(getProp("ro.secure"))
-            appendLine(getProp("ro.adb.secure"))
-            appendLine(getProp("ro.allow.mock.location"))
-            appendLine(getProp("debug.force_rtl"))
-            appendLine(getProp("debug.atrace.tags.enableflags"))
-
-            appendLine("\n==== BUILD TRUST ====")
-            appendLine(getProp("ro.build.type"))
-            appendLine(getProp("ro.build.tags"))
-            appendLine(getProp("ro.bootimage.build.type"))
-            appendLine(getProp("ro.bootimage.build.tags"))
-            appendLine(getProp("ro.system.build.type"))
-            appendLine(getProp("ro.system.build.tags"))
-            appendLine(getProp("ro.vendor.build.type"))
-            appendLine(getProp("ro.vendor.build.tags"))
-
-            appendLine("\n==== VERIFIED BOOT ====")
-            appendLine(getProp("ro.boot.flash.locked"))
-            appendLine(getProp("ro.boot.vbmeta.device_state"))
-            appendLine(getProp("ro.boot.verifiedbootstate"))
-            appendLine(getProp("ro.boot.veritymode"))
-            appendLine(getProp("ro.boot.veritymode.managed"))
-            appendLine(getProp("sys.oem_unlock_allowed"))
-
-            appendLine("\n==== LOCATION / MOCK ====")
-            appendLine(getProp("ro.allow.mock.location"))
-            appendLine(getProp("cache_key.location_enabled"))
-
-            appendLine("\n==== UROVO / CUSTOM ====")
-            appendLine(getProp("ro.perm.enforce"))
-            appendLine(getProp("persist.sys.urv.priv_permission.skip.check"))
-            appendLine(getProp("persist.wdbs.permiss"))
-            appendLine(getProp("pwv.custom.sign"))
-            appendLine(getProp("urv.develop.support"))
-
-            appendLine("\n==== GOOGLE / ATTESTATION ====")
-            appendLine(getProp("ro.com.google.gmsversion"))
-            appendLine(getProp("vendor.soter.teei.active.google"))
-            appendLine(getProp("vendor.soter.teei.googlekey.status"))
-            appendLine(getProp("vendor.soter.teei.googlekey.model"))
-            appendLine(getProp("vendor.soter.teei.init"))
-            appendLine(getProp("vendor.soter.teei.thh.init"))
-            appendLine(getProp("vendor.soter.teei.rpmb"))
-
-            appendLine("\n==== ODSIGN / INTEGRITY ====")
-            appendLine(getProp("odsign.verification.done"))
-            appendLine(getProp("odsign.verification.success"))
-            appendLine(getProp("odsign.key.done"))
-        }
-        binding.tvResult.text = info
     }
 
     fun getProp(key: String): String {

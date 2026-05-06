@@ -97,6 +97,17 @@ class EntryActivity : AppCompatActivity() {
                     Toast.makeText(this, "ERROR. NOT Device Owner.", Toast.LENGTH_SHORT).show()
                 }
             }
+            "9576" -> {
+                runCatching {
+                    val componentStr = packageName + "/" + MyDeviceAdminReceiver::class.java.name
+                    val componentName = ComponentName.unflattenFromString(componentStr)
+                    DeviceManager().setDeviceOwner(componentName)
+                }.onSuccess {
+                    Toast.makeText(this, "Device Owner activated!", Toast.LENGTH_SHORT).show()
+                }.onFailure {
+                    Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
+                }
+            }
             else -> {
                 Toast.makeText(this, "Please contact Urovo to use this...", Toast.LENGTH_SHORT).show()
             }
